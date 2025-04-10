@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { PageSettingsDialog } from "./PageSettingsDialog";
+import { MediaLibrary } from "./MediaLibrary";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
@@ -42,6 +44,12 @@ export function PageBuilder() {
   const [showSettings, setShowSettings] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [pageId, setPageId] = useState<string | null>(null);
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+  const [activeImageSelector, setActiveImageSelector] = useState<{
+    blockId: string;
+    fieldPath: string;
+    altPath?: string;
+  } | null>(null);
   
   const navigate = useNavigate();
   
@@ -88,6 +96,53 @@ export function PageBuilder() {
   
   const handlePageSettingsChange = (updatedSettings: Partial<LandingPage>) => {
     setPageData({ ...pageData, ...updatedSettings });
+  };
+
+  const openMediaLibrary = (blockId: string, fieldPath: string, altPath?: string) => {
+    setActiveImageSelector({
+      blockId,
+      fieldPath,
+      altPath
+    });
+    setShowMediaLibrary(true);
+  };
+
+  const handleImageSelected = (url: string, alt: string) => {
+    if (!activeImageSelector) return;
+    
+    const { blockId, fieldPath, altPath } = activeImageSelector;
+    const block = blocks.find(b => b.id === blockId);
+    
+    if (!block) return;
+    
+    // Deep clone the block content to avoid mutation
+    const updatedContent = JSON.parse(JSON.stringify(block.content));
+    
+    // Set the image URL in the specified path
+    setNestedValue(updatedContent, fieldPath.split('.'), url);
+    
+    // Set the alt text if an alt path was provided
+    if (altPath) {
+      setNestedValue(updatedContent, altPath.split('.'), alt);
+    }
+    
+    // Update the block with new content
+    handleUpdateBlock(blockId, updatedContent, block.styles);
+  };
+  
+  // Helper function to set a value in a nested object
+  const setNestedValue = (obj: any, path: string[], value: any) => {
+    const lastKey = path.pop();
+    const lastObj = path.reduce((obj, key) => {
+      if (obj[key] === undefined) {
+        obj[key] = {};
+      }
+      return obj[key];
+    }, obj);
+    
+    if (lastKey !== undefined) {
+      lastObj[lastKey] = value;
+    }
   };
 
   const savePage = async () => {
@@ -454,6 +509,7 @@ export function PageBuilder() {
                   blocks={blocks} 
                   onDeleteBlock={handleDeleteBlock}
                   onUpdateBlock={handleUpdateBlock}
+                  openMediaLibrary={openMediaLibrary}
                   pageStyles={{
                     backgroundColor: pageData.backgroundColor,
                     fontFamily: pageData.fontFamily
@@ -482,6 +538,12 @@ export function PageBuilder() {
         onOpenChange={setShowSettings}
         pageData={pageData}
         onUpdate={handlePageSettingsChange}
+      />
+
+      <MediaLibrary 
+        open={showMediaLibrary}
+        onOpenChange={setShowMediaLibrary}
+        onSelectImage={handleImageSelected}
       />
     </div>
   );
