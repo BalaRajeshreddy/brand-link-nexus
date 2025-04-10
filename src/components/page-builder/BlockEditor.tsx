@@ -153,7 +153,7 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
         return (
           <div className="space-y-4">
             {(content.testimonials || [{ text: '', author: '' }, { text: '', author: '' }]).map((testimonial: any, index: number) => (
-              <div key={index} className="space-y-2 border p-3 rounded-md">
+              <div key={index.toString()} className="space-y-2 border p-3 rounded-md">
                 <Label>Testimonial #{index + 1}</Label>
                 <div>
                   <Label htmlFor={`testimonial-text-${index}`} className="text-sm">Quote</Label>
@@ -193,7 +193,7 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
         return (
           <div className="space-y-4">
             {(content.members || [{ name: '', role: '', photo: '' }, { name: '', role: '', photo: '' }, { name: '', role: '', photo: '' }]).map((member: any, index: number) => (
-              <div key={index} className="space-y-2 border p-3 rounded-md">
+              <div key={index.toString()} className="space-y-2 border p-3 rounded-md">
                 <Label>Team Member #{index + 1}</Label>
                 <div>
                   <Label htmlFor={`member-name-${index}`} className="text-sm">Name</Label>

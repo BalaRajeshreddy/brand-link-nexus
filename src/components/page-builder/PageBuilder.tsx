@@ -109,13 +109,17 @@ export function PageBuilder() {
       
       // If page doesn't exist yet, create it first
       if (!landingPageId) {
-        const { data: pageData, error: pageError } = await supabase
+        // Generate a temporary slug to meet the schema requirements
+        const tempSlug = `${pageData.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+        
+        const { data: newPageData, error: pageError } = await supabase
           .from('landing_pages')
           .insert({
             title: pageData.title,
             background_color: pageData.backgroundColor,
             font_family: pageData.fontFamily,
             user_id: user.id,
+            slug: tempSlug // Add the temporary slug to meet the database requirements
           })
           .select('id, slug')
           .single();
@@ -124,9 +128,9 @@ export function PageBuilder() {
           throw pageError;
         }
         
-        landingPageId = pageData.id;
+        landingPageId = newPageData.id;
         setPageId(landingPageId);
-        toast.success(`Page created with slug: ${pageData.slug}`);
+        toast.success(`Page created with slug: ${newPageData.slug}`);
       } else {
         // Update existing page
         const { error: updateError } = await supabase
