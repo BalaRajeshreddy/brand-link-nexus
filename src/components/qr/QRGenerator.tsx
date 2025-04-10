@@ -1,14 +1,35 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { QRCustomizer } from "./QRCustomizer";
 import { Palette, Link as LinkIcon, LayoutTemplate } from "lucide-react";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
+interface LandingPageOption {
+  id: string;
+  title: string;
+  slug: string;
+}
 
 export function QRGenerator() {
   const [url, setUrl] = useState('');
+  const [qrType, setQrType] = useState('direct');
+  const [landingPages, setLandingPages] = useState<LandingPageOption[]>([]);
+  const [selectedPageId, setSelectedPageId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  
   const [qrCodeData, setQRCodeData] = useState({
     url: '',
     color: '#3F51B5',
@@ -19,13 +40,56 @@ export function QRGenerator() {
   });
   
   const [step, setStep] = useState(1);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch landing pages if user is logged in
+    const fetchLandingPages = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data, error } = await supabase
+            .from('landing_pages')
+            .select('id, title, slug')
+            .order('created_at', { ascending: false });
+            
+          if (error) throw error;
+          setLandingPages(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching landing pages:', error);
+      }
+    };
+    
+    fetchLandingPages();
+  }, []);
 
   const generateQRCode = () => {
-    if (!url) return;
+    let finalUrl = '';
+    
+    if (qrType === 'landing-page') {
+      if (!selectedPageId) {
+        toast.error("Please select a landing page");
+        return;
+      }
+      
+      const selectedPage = landingPages.find(page => page.id === selectedPageId);
+      if (selectedPage) {
+        // Here you would use your actual domain
+        finalUrl = `${window.location.origin}/${selectedPage.slug}`;
+      }
+    } else {
+      if (!url) {
+        toast.error("Please enter a URL");
+        return;
+      }
+      finalUrl = url;
+    }
     
     setQRCodeData({
       ...qrCodeData,
-      url,
+      url: finalUrl,
     });
     
     setStep(2);
@@ -49,35 +113,93 @@ export function QRGenerator() {
               </TabsList>
               <TabsContent value="url" className="mt-4">
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="url">Enter URL</Label>
-                    <div className="flex mt-1">
-                      <div className="relative flex-grow">
-                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="url"
-                          placeholder="https://example.com"
-                          className="pl-9"
-                          value={url}
-                          onChange={(e) => setUrl(e.target.value)}
-                        />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div 
+                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${qrType === 'landing-page' ? 'border-primary bg-primary/5' : 'hover:border-primary'}`}
+                      onClick={() => setQrType('landing-page')}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <LayoutTemplate className="h-5 w-5 text-primary" />
+                        <h3 className="font-medium">Landing Page</h3>
                       </div>
-                      <Button onClick={generateQRCode} className="ml-2" disabled={!url}>
-                        Next
-                      </Button>
+                      <p className="text-sm text-muted-foreground">Create a custom landing page for your QR code</p>
+                      
+                      {qrType === 'landing-page' && (
+                        <div className="mt-4">
+                          <Label htmlFor="landing-page">Select Landing Page</Label>
+                          {landingPages.length > 0 ? (
+                            <div className="flex mt-1">
+                              <Select 
+                                value={selectedPageId} 
+                                onValueChange={setSelectedPageId}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Select a landing page" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {landingPages.map(page => (
+                                    <SelectItem key={page.id} value={page.id}>
+                                      {page.title}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          ) : (
+                            <div className="mt-2 flex flex-col">
+                              <p className="text-sm text-muted-foreground mb-2">
+                                No landing pages found. Create one first.
+                              </p>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => navigate('/dashboard/brand/create-page')}
+                              >
+                                Create Landing Page
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div 
+                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${qrType === 'direct' ? 'border-primary bg-primary/5' : 'hover:border-primary'}`}
+                      onClick={() => setQrType('direct')}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <LinkIcon className="h-5 w-5 text-primary" />
+                        <h3 className="font-medium">Direct URL</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Link directly to any website</p>
+                      
+                      {qrType === 'direct' && (
+                        <div className="mt-4">
+                          <Label htmlFor="url">Enter URL</Label>
+                          <div className="flex mt-1">
+                            <div className="relative flex-grow">
+                              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                id="url"
+                                placeholder="https://example.com"
+                                className="pl-9"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-colors">
-                      <h3 className="font-medium">Landing Page</h3>
-                      <p className="text-sm text-muted-foreground mt-1">Create a custom landing page for your QR code</p>
-                    </div>
-                    <div className="border rounded-lg p-4 hover:border-primary cursor-pointer transition-colors">
-                      <h3 className="font-medium">Direct URL</h3>
-                      <p className="text-sm text-muted-foreground mt-1">Link directly to any website</p>
-                    </div>
-                  </div>
+                  <Button 
+                    onClick={generateQRCode} 
+                    className="w-full"
+                    disabled={(qrType === 'direct' && !url) || (qrType === 'landing-page' && !selectedPageId)}
+                  >
+                    Next
+                  </Button>
                 </div>
               </TabsContent>
               <TabsContent value="text" className="mt-4">
