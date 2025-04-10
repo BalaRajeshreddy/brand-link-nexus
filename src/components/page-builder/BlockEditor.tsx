@@ -156,18 +156,18 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
               <div key={index.toString()} className="space-y-2 border p-3 rounded-md">
                 <Label>Testimonial #{index + 1}</Label>
                 <div>
-                  <Label htmlFor={`testimonial-text-${index}`} className="text-sm">Quote</Label>
+                  <Label htmlFor={`testimonial-text-${index.toString()}`} className="text-sm">Quote</Label>
                   <Textarea
-                    id={`testimonial-text-${index}`}
+                    id={`testimonial-text-${index.toString()}`}
                     value={testimonial.text || ''}
                     onChange={(e) => updateNestedContent(['testimonials', index, 'text'], e.target.value)}
                     placeholder="This product is amazing!"
                   />
                 </div>
                 <div>
-                  <Label htmlFor={`testimonial-author-${index}`} className="text-sm">Author</Label>
+                  <Label htmlFor={`testimonial-author-${index.toString()}`} className="text-sm">Author</Label>
                   <Input
-                    id={`testimonial-author-${index}`}
+                    id={`testimonial-author-${index.toString()}`}
                     value={testimonial.author || ''}
                     onChange={(e) => updateNestedContent(['testimonials', index, 'author'], e.target.value)}
                     placeholder="John Doe"
@@ -196,27 +196,27 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
               <div key={index.toString()} className="space-y-2 border p-3 rounded-md">
                 <Label>Team Member #{index + 1}</Label>
                 <div>
-                  <Label htmlFor={`member-name-${index}`} className="text-sm">Name</Label>
+                  <Label htmlFor={`member-name-${index.toString()}`} className="text-sm">Name</Label>
                   <Input
-                    id={`member-name-${index}`}
+                    id={`member-name-${index.toString()}`}
                     value={member.name || ''}
                     onChange={(e) => updateNestedContent(['members', index, 'name'], e.target.value)}
                     placeholder="John Doe"
                   />
                 </div>
                 <div>
-                  <Label htmlFor={`member-role-${index}`} className="text-sm">Role</Label>
+                  <Label htmlFor={`member-role-${index.toString()}`} className="text-sm">Role</Label>
                   <Input
-                    id={`member-role-${index}`}
+                    id={`member-role-${index.toString()}`}
                     value={member.role || ''}
                     onChange={(e) => updateNestedContent(['members', index, 'role'], e.target.value)}
                     placeholder="CEO"
                   />
                 </div>
                 <div>
-                  <Label htmlFor={`member-photo-${index}`} className="text-sm">Photo URL</Label>
+                  <Label htmlFor={`member-photo-${index.toString()}`} className="text-sm">Photo URL</Label>
                   <Input
-                    id={`member-photo-${index}`}
+                    id={`member-photo-${index.toString()}`}
                     value={member.photo || ''}
                     onChange={(e) => updateNestedContent(['members', index, 'photo'], e.target.value)}
                     placeholder="https://example.com/photo.jpg"
