@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +45,6 @@ export function PageBuilder() {
   
   const navigate = useNavigate();
   
-  // Setup DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor)
@@ -96,7 +94,6 @@ export function PageBuilder() {
     try {
       setIsSaving(true);
       
-      // Check if user is authenticated
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -107,9 +104,7 @@ export function PageBuilder() {
       
       let landingPageId = pageId;
       
-      // If page doesn't exist yet, create it first
       if (!landingPageId) {
-        // Generate a temporary slug to meet the schema requirements
         const tempSlug = `${pageData.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
         
         const { data: newPageData, error: pageError } = await supabase
@@ -119,7 +114,7 @@ export function PageBuilder() {
             background_color: pageData.backgroundColor,
             font_family: pageData.fontFamily,
             user_id: user.id,
-            slug: tempSlug // Add the temporary slug to meet the database requirements
+            slug: tempSlug
           })
           .select('id, slug')
           .single();
@@ -132,7 +127,6 @@ export function PageBuilder() {
         setPageId(landingPageId);
         toast.success(`Page created with slug: ${newPageData.slug}`);
       } else {
-        // Update existing page
         const { error: updateError } = await supabase
           .from('landing_pages')
           .update({
@@ -147,7 +141,6 @@ export function PageBuilder() {
         }
       }
       
-      // Delete existing components first to avoid conflicts
       if (landingPageId) {
         await supabase
           .from('page_components')
@@ -155,23 +148,20 @@ export function PageBuilder() {
           .eq('page_id', landingPageId);
       }
       
-      // Insert all components with updated positions
-      if (blocks.length > 0) {
-        const componentsToInsert = blocks.map((block, index) => ({
-          page_id: landingPageId,
-          type: block.type,
-          content: block.content,
-          position: index,
-          styles: block.styles,
-        }));
-        
-        const { error: componentsError } = await supabase
-          .from('page_components')
-          .insert(componentsToInsert);
+      const componentsToInsert = blocks.map((block, index) => ({
+        page_id: landingPageId,
+        type: block.type,
+        content: block.content,
+        position: index,
+        styles: block.styles,
+      }));
+      
+      const { error: componentsError } = await supabase
+        .from('page_components')
+        .insert(componentsToInsert);
           
-        if (componentsError) {
-          throw componentsError;
-        }
+      if (componentsError) {
+        throw componentsError;
       }
       
       toast.success("Landing page saved successfully!");
@@ -189,16 +179,46 @@ export function PageBuilder() {
         return { text: "Add Your Heading Here" };
       case 'text':
         return { text: "Add your text content here. This can be a paragraph explaining your product, service, or any information you want to share with your audience." };
+      case 'heading + text':
+        return { 
+          heading: "Add Your Heading Here",
+          text: "Add your text content here. This can be a paragraph explaining your product, service, or any information you want to share with your audience."
+        };
       case 'image':
         return { src: "", alt: "Image description" };
+      case 'images':
+        return { 
+          images: [
+            { src: "", alt: "Image 1" },
+            { src: "", alt: "Image 2" },
+            { src: "", alt: "Image 3" }
+          ],
+          displayType: "grid"
+        };
+      case 'images + links':
+        return { 
+          images: [
+            { src: "", alt: "Image 1", link: "", title: "Link 1" },
+            { src: "", alt: "Image 2", link: "", title: "Link 2" },
+            { src: "", alt: "Image 3", link: "", title: "Link 3" }
+          ],
+          displayType: "grid"
+        };
       case 'video':
-        return { src: "", thumbnail: "" };
+        return { src: "", thumbnail: "", provider: "youtube" };
       case 'testimonials':
         return { 
           testimonials: [
             { text: "This product is amazing!", author: "John Doe" },
             { text: "I love using this service!", author: "Jane Smith" }
-          ] 
+          ],
+          displayType: "cards"
+        };
+      case 'smart feedback':
+        return { 
+          question: "How would you rate our service?",
+          options: ["Very satisfied", "Satisfied", "Neutral", "Dissatisfied", "Very dissatisfied"],
+          allowComments: true
         };
       case 'map':
         return { location: "New York, NY" };
@@ -208,10 +228,30 @@ export function PageBuilder() {
             { platform: "twitter", url: "" },
             { platform: "facebook", url: "" },
             { platform: "instagram", url: "" }
-          ] 
+          ],
+          displayType: "icons"
         };
-      case 'buy button':
-        return { text: "Buy Now", url: "" };
+      case 'links':
+        return {
+          links: [
+            { text: "Link 1", url: "", icon: "" },
+            { text: "Link 2", url: "", icon: "" },
+            { text: "Link 3", url: "", icon: "" }
+          ],
+          displayType: "buttons"
+        };
+      case 'button':
+        return { text: "Click Here", url: "", style: "filled" };
+      case 'form':
+        return { 
+          fields: [
+            { type: "text", label: "Name", required: true, placeholder: "Enter your name" },
+            { type: "email", label: "Email", required: true, placeholder: "Enter your email" },
+            { type: "textarea", label: "Message", required: false, placeholder: "Enter your message" }
+          ],
+          submitText: "Submit",
+          submitAction: "email"
+        };
       case 'contact form':
         return { 
           fields: ["name", "email", "message"],
@@ -223,7 +263,58 @@ export function PageBuilder() {
             { name: "Team Member 1", role: "CEO", photo: "" },
             { name: "Team Member 2", role: "CTO", photo: "" },
             { name: "Team Member 3", role: "Designer", photo: "" }
-          ] 
+          ],
+          displayType: "cards"
+        };
+      case 'products':
+        return {
+          products: [
+            { name: "Product 1", description: "Product description", image: "", price: "99.99", link: "" },
+            { name: "Product 2", description: "Product description", image: "", price: "149.99", link: "" },
+            { name: "Product 3", description: "Product description", image: "", price: "199.99", link: "" }
+          ],
+          displayType: "grid"
+        };
+      case 'appointment/calendar':
+        return {
+          availableDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          timeSlots: ["9:00", "10:00", "11:00", "13:00", "14:00", "15:00"],
+          contactRequired: true
+        };
+      case 'business hours':
+        return {
+          hours: [
+            { day: "Monday", open: "9:00 AM", close: "5:00 PM", closed: false },
+            { day: "Tuesday", open: "9:00 AM", close: "5:00 PM", closed: false },
+            { day: "Wednesday", open: "9:00 AM", close: "5:00 PM", closed: false },
+            { day: "Thursday", open: "9:00 AM", close: "5:00 PM", closed: false },
+            { day: "Friday", open: "9:00 AM", close: "5:00 PM", closed: false },
+            { day: "Saturday", open: "10:00 AM", close: "2:00 PM", closed: false },
+            { day: "Sunday", open: "", close: "", closed: true }
+          ]
+        };
+      case 'pdf gallery':
+        return {
+          pdfs: [
+            { title: "Document 1", file: "", thumbnail: "" },
+            { title: "Document 2", file: "", thumbnail: "" },
+            { title: "Document 3", file: "", thumbnail: "" }
+          ],
+          displayType: "grid"
+        };
+      case 'other details':
+        return {
+          sections: [
+            { title: "Address", content: "123 Street Name, City, Country" },
+            { title: "Phone", content: "+1 234 567 890" },
+            { title: "Email", content: "contact@example.com" }
+          ]
+        };
+      case 'image + text':
+        return {
+          image: { src: "", alt: "Image description" },
+          text: "Add your text content here.",
+          layout: "image-left"
         };
       default:
         return {};
@@ -244,14 +335,63 @@ export function PageBuilder() {
         return { ...baseStyles, fontSize: "32px", fontWeight: "bold" };
       case 'text':
         return { ...baseStyles, fontSize: "16px" };
-      case 'buy button':
+      case 'heading + text':
+        return { ...baseStyles, headingSize: "24px", textSize: "16px" };
+      case 'button':
         return { 
           ...baseStyles, 
           backgroundColor: "#3B82F6", 
           textColor: "#FFFFFF",
           borderRadius: "8px",
           textAlign: "center",
-          padding: "12px 24px"
+          padding: "12px 24px",
+          hoverColor: "#2563EB"
+        };
+      case 'images':
+      case 'images + links':
+        return {
+          ...baseStyles,
+          gap: "16px",
+          aspectRatio: "1/1",
+          borderRadius: "8px",
+          shadow: "none"
+        };
+      case 'testimonials':
+      case 'team':
+      case 'products':
+        return {
+          ...baseStyles,
+          cardBgColor: "#FFFFFF",
+          cardBorderRadius: "8px",
+          cardPadding: "16px",
+          cardShadow: "sm",
+          gap: "16px"
+        };
+      case 'form':
+      case 'contact form':
+        return {
+          ...baseStyles,
+          fieldBgColor: "#FFFFFF",
+          fieldBorderRadius: "4px",
+          fieldBorderColor: "#E2E8F0",
+          buttonColor: "#3B82F6",
+          buttonTextColor: "#FFFFFF"
+        };
+      case 'social links':
+      case 'links':
+        return {
+          ...baseStyles,
+          iconSize: "24px",
+          iconColor: "#3B82F6",
+          hoverColor: "#2563EB",
+          gap: "16px"
+        };
+      case 'image + text':
+        return {
+          ...baseStyles,
+          gap: "24px",
+          imageWidth: "50%",
+          textWidth: "50%"
         };
       default:
         return baseStyles;

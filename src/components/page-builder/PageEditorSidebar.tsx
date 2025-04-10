@@ -12,7 +12,17 @@ import {
   Share2, 
   ShoppingCart,
   Mail,
-  Users
+  Users,
+  Calendar,
+  ThumbsUp,
+  FormInput,
+  Link,
+  Clock,
+  Layout,
+  FileImage,
+  FileText as PDFIcon,
+  Briefcase,
+  ClipboardList
 } from "lucide-react";
 
 interface PageEditorSidebarProps {
@@ -23,14 +33,26 @@ export function PageEditorSidebar({ onAddBlock }: PageEditorSidebarProps) {
   const blockComponents = [
     { name: "Heading", icon: <Type size={16} />, description: "Add a title or subtitle to your page" },
     { name: "Text", icon: <FileText size={16} />, description: "Add paragraphs of text content" },
+    { name: "Heading + Text", icon: <Layout size={16} />, description: "Add a heading with descriptive text" },
     { name: "Image", icon: <Image size={16} />, description: "Upload or embed images" },
+    { name: "Images", icon: <FileImage size={16} />, description: "Add multiple images as a gallery" },
+    { name: "Images + Links", icon: <Link size={16} />, description: "Image gallery with clickable links" },
     { name: "Video", icon: <Video size={16} />, description: "Embed videos from YouTube or other sources" },
+    { name: "PDF Gallery", icon: <PDFIcon size={16} />, description: "Display PDF documents" },
     { name: "Testimonials", icon: <MessageSquare size={16} />, description: "Add customer reviews and feedback" },
+    { name: "Smart Feedback", icon: <ThumbsUp size={16} />, description: "Interactive feedback collection" },
     { name: "Map", icon: <Map size={16} />, description: "Show your location on a map" },
     { name: "Social Links", icon: <Share2 size={16} />, description: "Add links to your social media profiles" },
-    { name: "Buy Button", icon: <ShoppingCart size={16} />, description: "Add a call-to-action button for purchases" },
+    { name: "Links", icon: <Link size={16} />, description: "Add multiple custom links" },
+    { name: "Button", icon: <ShoppingCart size={16} />, description: "Add a call-to-action button" },
+    { name: "Form", icon: <FormInput size={16} />, description: "Add custom form fields" },
     { name: "Contact Form", icon: <Mail size={16} />, description: "Add a form for visitors to contact you" },
     { name: "Team", icon: <Users size={16} />, description: "Showcase your team members" },
+    { name: "Products", icon: <ShoppingCart size={16} />, description: "Display products or services" },
+    { name: "Appointment/Calendar", icon: <Calendar size={16} />, description: "Schedule appointments" },
+    { name: "Business Hours", icon: <Clock size={16} />, description: "Display business hours" },
+    { name: "Other Details", icon: <ClipboardList size={16} />, description: "Add miscellaneous information" },
+    { name: "Image + Text", icon: <Layout size={16} />, description: "Combine images with descriptive text" },
   ];
   
   const templates = [
