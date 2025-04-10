@@ -160,7 +160,7 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
                   <Textarea
                     id={`testimonial-text-${index.toString()}`}
                     value={testimonial.text || ''}
-                    onChange={(e) => updateNestedContent(['testimonials', index, 'text'], e.target.value)}
+                    onChange={(e) => updateNestedContent(['testimonials', index.toString(), 'text'], e.target.value)}
                     placeholder="This product is amazing!"
                   />
                 </div>
@@ -169,7 +169,7 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
                   <Input
                     id={`testimonial-author-${index.toString()}`}
                     value={testimonial.author || ''}
-                    onChange={(e) => updateNestedContent(['testimonials', index, 'author'], e.target.value)}
+                    onChange={(e) => updateNestedContent(['testimonials', index.toString(), 'author'], e.target.value)}
                     placeholder="John Doe"
                   />
                 </div>
@@ -200,7 +200,7 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
                   <Input
                     id={`member-name-${index.toString()}`}
                     value={member.name || ''}
-                    onChange={(e) => updateNestedContent(['members', index, 'name'], e.target.value)}
+                    onChange={(e) => updateNestedContent(['members', index.toString(), 'name'], e.target.value)}
                     placeholder="John Doe"
                   />
                 </div>
@@ -209,7 +209,7 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
                   <Input
                     id={`member-role-${index.toString()}`}
                     value={member.role || ''}
-                    onChange={(e) => updateNestedContent(['members', index, 'role'], e.target.value)}
+                    onChange={(e) => updateNestedContent(['members', index.toString(), 'role'], e.target.value)}
                     placeholder="CEO"
                   />
                 </div>
@@ -218,7 +218,7 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
                   <Input
                     id={`member-photo-${index.toString()}`}
                     value={member.photo || ''}
-                    onChange={(e) => updateNestedContent(['members', index, 'photo'], e.target.value)}
+                    onChange={(e) => updateNestedContent(['members', index.toString(), 'photo'], e.target.value)}
                     placeholder="https://example.com/photo.jpg"
                   />
                 </div>
