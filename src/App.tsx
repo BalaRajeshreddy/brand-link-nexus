@@ -1,9 +1,18 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Pages
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import BrandDashboard from "./pages/BrandDashboard";
+import QRCreator from "./pages/QRCreator";
+import PageCreator from "./pages/PageCreator";
+import AdminDashboard from "./pages/AdminDashboard";
+import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -15,8 +24,22 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/auth" element={<Auth />} />
+          
+          {/* Brand Routes */}
+          <Route path="/dashboard/brand" element={<BrandDashboard />} />
+          <Route path="/dashboard/brand/create-qr" element={<QRCreator />} />
+          <Route path="/dashboard/brand/create-page" element={<PageCreator />} />
+          
+          {/* Admin Routes */}
+          <Route path="/dashboard/admin" element={<AdminDashboard />} />
+          
+          {/* User Routes */}
+          <Route path="/dashboard/user" element={<UserDashboard />} />
+          
+          {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
