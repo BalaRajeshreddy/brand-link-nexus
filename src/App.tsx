@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React from "react"; // Add this import
 
 // Pages
 import Index from "./pages/Index";
@@ -18,33 +19,35 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          
-          {/* Brand Routes */}
-          <Route path="/dashboard/brand" element={<BrandDashboard />} />
-          <Route path="/dashboard/brand/create-qr" element={<QRCreator />} />
-          <Route path="/dashboard/brand/create-page" element={<PageCreator />} />
-          
-          {/* Admin Routes */}
-          <Route path="/dashboard/admin" element={<AdminDashboard />} />
-          
-          {/* User Routes */}
-          <Route path="/dashboard/user" element={<UserDashboard />} />
-          
-          {/* 404 Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            
+            {/* Brand Routes */}
+            <Route path="/dashboard/brand" element={<BrandDashboard />} />
+            <Route path="/dashboard/brand/create-qr" element={<QRCreator />} />
+            <Route path="/dashboard/brand/create-page" element={<PageCreator />} />
+            
+            {/* Admin Routes */}
+            <Route path="/dashboard/admin" element={<AdminDashboard />} />
+            
+            {/* User Routes */}
+            <Route path="/dashboard/user" element={<UserDashboard />} />
+            
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
       </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
 
 export default App;

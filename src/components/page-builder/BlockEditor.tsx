@@ -289,13 +289,13 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
             <Input
               id="background-color"
               type="color"
-              value={styles.backgroundColor === 'transparent' ? '#ffffff' : styles.backgroundColor}
+              value={styles.backgroundColor === 'transparent' ? '#ffffff' : styles.backgroundColor || '#ffffff'}
               onChange={(e) => updateStyle('backgroundColor', e.target.value === '#ffffff' ? 'transparent' : e.target.value)}
               className="w-14 h-10 p-1"
             />
             <Input 
               type="text"
-              value={styles.backgroundColor}
+              value={styles.backgroundColor || 'transparent'}
               onChange={(e) => updateStyle('backgroundColor', e.target.value)}
               className="flex-1"
             />
