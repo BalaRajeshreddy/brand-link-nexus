@@ -30,3 +30,7 @@ export interface PageSettingsDialogProps {
   pageData: LandingPage;
   onUpdate: (updatedSettings: Partial<LandingPage>) => void;
 }
+
+export interface PageBuilderProps {
+  userId: string;
+}

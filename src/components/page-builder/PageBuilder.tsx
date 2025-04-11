@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,12 +5,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageEditorSidebar } from "./PageEditorSidebar";
 import { PageEditorCanvas } from "./PageEditorCanvas";
 import { PageEditorPreview } from "./PageEditorPreview";
+import { PageSettingsDialog } from "./PageSettingsDialog";
+import { MediaLibrary } from "./MediaLibrary";
 import { SaveIcon, Share2, Smartphone, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { PageSettingsDialog } from "./PageSettingsDialog";
-import { MediaLibrary } from "./MediaLibrary";
+import { PageBuilderProps } from "./interfaces";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
@@ -31,7 +31,7 @@ export interface LandingPage {
   published: boolean;
 }
 
-export function PageBuilder() {
+export function PageBuilder({ userId }: PageBuilderProps) {
   const [pageData, setPageData] = useState<LandingPage>({
     title: "Untitled Landing Page",
     backgroundColor: "#FFFFFF",
@@ -115,22 +115,17 @@ export function PageBuilder() {
     
     if (!block) return;
     
-    // Deep clone the block content to avoid mutation
     const updatedContent = JSON.parse(JSON.stringify(block.content));
     
-    // Set the image URL in the specified path
     setNestedValue(updatedContent, fieldPath.split('.'), url);
     
-    // Set the alt text if an alt path was provided
     if (altPath) {
       setNestedValue(updatedContent, altPath.split('.'), alt);
     }
     
-    // Update the block with new content
     handleUpdateBlock(blockId, updatedContent, block.styles);
   };
   
-  // Helper function to set a value in a nested object
   const setNestedValue = (obj: any, path: string[], value: any) => {
     const lastKey = path.pop();
     const lastObj = path.reduce((obj, key) => {
@@ -149,9 +144,7 @@ export function PageBuilder() {
     try {
       setIsSaving(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
+      if (!userId) {
         toast.error("You need to be logged in to save a page");
         navigate("/auth");
         return;
@@ -168,7 +161,7 @@ export function PageBuilder() {
             title: pageData.title,
             background_color: pageData.backgroundColor,
             font_family: pageData.fontFamily,
-            user_id: user.id,
+            user_id: userId,
             slug: tempSlug
           })
           .select('id, slug')
