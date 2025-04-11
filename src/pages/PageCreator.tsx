@@ -2,12 +2,13 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PageBuilder } from "@/components/page-builder/PageBuilder";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const PageCreator = () => {
   const navigate = useNavigate();
+  const { pageId } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState("...");
   const [userEmail, setUserEmail] = useState("");
@@ -61,7 +62,7 @@ const PageCreator = () => {
 
   return (
     <DashboardLayout userType="Brand" userName={userName}>
-      <PageBuilder userId={userId} />
+      <PageBuilder userId={userId} pageId={pageId} />
     </DashboardLayout>
   );
 };

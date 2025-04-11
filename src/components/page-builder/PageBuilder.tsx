@@ -31,7 +31,7 @@ export interface LandingPage {
   published: boolean;
 }
 
-export function PageBuilder({ userId }: PageBuilderProps) {
+export function PageBuilder({ userId, pageId }: PageBuilderProps) {
   const [pageData, setPageData] = useState<LandingPage>({
     title: "Untitled Landing Page",
     backgroundColor: "#FFFFFF",
@@ -43,7 +43,8 @@ export function PageBuilder({ userId }: PageBuilderProps) {
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [pageId, setPageId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(pageId ? true : false);
+  const [currentPageId, setCurrentPageId] = useState<string | null>(null);
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [activeImageSelector, setActiveImageSelector] = useState<{
     blockId: string;
@@ -57,6 +58,71 @@ export function PageBuilder({ userId }: PageBuilderProps) {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor)
   );
+
+  useEffect(() => {
+    const loadPageData = async () => {
+      if (!pageId) return;
+      
+      try {
+        setIsLoading(true);
+        
+        const { data: pageData, error: pageError } = await supabase
+          .from('landing_pages')
+          .select('*')
+          .eq('id', pageId)
+          .single();
+        
+        if (pageError) {
+          toast.error("Failed to load page data");
+          console.error(pageError);
+          return;
+        }
+        
+        if (pageData) {
+          setPageData({
+            id: pageData.id,
+            title: pageData.title,
+            slug: pageData.slug,
+            backgroundColor: pageData.background_color || "#FFFFFF",
+            fontFamily: pageData.font_family || "Inter, sans-serif",
+            published: pageData.published || false
+          });
+          
+          setCurrentPageId(pageData.id);
+          
+          const { data: components, error: componentsError } = await supabase
+            .from('page_components')
+            .select('*')
+            .eq('page_id', pageId)
+            .order('position', { ascending: true });
+          
+          if (componentsError) {
+            toast.error("Failed to load page components");
+            console.error(componentsError);
+            return;
+          }
+          
+          if (components && components.length > 0) {
+            const loadedBlocks = components.map(component => ({
+              id: `block-${component.id}`,
+              type: component.type,
+              content: component.content || {},
+              styles: component.styles || getDefaultStylesForBlockType(component.type)
+            }));
+            
+            setBlocks(loadedBlocks);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading page:", error);
+        toast.error("Failed to load page");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPageData();
+  }, [pageId]);
 
   const handleAddBlock = (blockType: string) => {
     const newBlock = {
@@ -150,7 +216,7 @@ export function PageBuilder({ userId }: PageBuilderProps) {
         return;
       }
       
-      let landingPageId = pageId;
+      let landingPageId = currentPageId;
       
       if (!landingPageId) {
         const tempSlug = `${pageData.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
@@ -172,7 +238,7 @@ export function PageBuilder({ userId }: PageBuilderProps) {
         }
         
         landingPageId = newPageData.id;
-        setPageId(landingPageId);
+        setCurrentPageId(landingPageId);
         toast.success(`Page created with slug: ${newPageData.slug}`);
       } else {
         const { error: updateError } = await supabase
@@ -446,6 +512,14 @@ export function PageBuilder({ userId }: PageBuilderProps) {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="border-b py-3 px-6 flex items-center justify-between bg-white">
@@ -473,7 +547,7 @@ export function PageBuilder({ userId }: PageBuilderProps) {
           >
             <Smartphone size={18} />
           </Button>
-          <Button variant="outline" disabled={!pageId}>
+          <Button variant="outline" disabled={!currentPageId}>
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>

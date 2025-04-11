@@ -1,20 +1,22 @@
 
-import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from "@/components/ui/table";
-import { LayoutPanelLeft, Edit, Trash, QrCode, Eye, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, Edit, Trash2, Eye, QrCode } from "lucide-react";
+import { format } from "date-fns";
 
 interface LandingPage {
   id: string;
@@ -26,56 +28,48 @@ interface LandingPage {
 }
 
 const LandingPagesList = () => {
-  const navigate = useNavigate();
+  const [pages, setPages] = useState<LandingPage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState("...");
-  const [landingPages, setLandingPages] = useState<LandingPage[]>([]);
-
+  const navigate = useNavigate();
+  
   useEffect(() => {
-    const checkAuth = async () => {
-      setIsLoading(true);
+    const fetchPages = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
         
-        if (error) {
-          throw error;
-        }
-        
-        if (!data.session) {
-          toast.error("You need to be logged in to access this page");
-          navigate("/auth");
-          return;
-        }
-        
-        // Session exists, get user data
-        const { user } = data.session;
         if (user) {
           setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "Brand User");
           
-          // Fetch landing pages for the user
-          const { data: pages, error: fetchError } = await supabase
+          // Get pages
+          const { data, error } = await supabase
             .from('landing_pages')
             .select('*')
+            .eq('user_id', user.id)
             .order('created_at', { ascending: false });
             
-          if (fetchError) {
-            throw fetchError;
-          }
+          if (error) throw error;
           
-          setLandingPages(pages || []);
+          if (data) {
+            setPages(data);
+          }
+        } else {
+          toast.error("Not authenticated");
+          navigate("/auth");
         }
       } catch (error) {
-        console.error("Error:", error);
-        toast.error("Something went wrong");
+        console.error("Error fetching pages:", error);
+        toast.error("Failed to load landing pages");
       } finally {
         setIsLoading(false);
       }
     };
-
-    checkAuth();
+    
+    fetchPages();
   }, [navigate]);
-
-  const handleDelete = async (id: string) => {
+  
+  const handleDeletePage = async (id: string) => {
     try {
       const { error } = await supabase
         .from('landing_pages')
@@ -84,17 +78,26 @@ const LandingPagesList = () => {
         
       if (error) throw error;
       
-      setLandingPages(prevPages => prevPages.filter(page => page.id !== id));
-      toast.success("Landing page deleted successfully");
+      setPages(pages.filter(page => page.id !== id));
+      toast.success("Landing page deleted");
     } catch (error) {
-      console.error("Delete error:", error);
+      console.error("Error deleting page:", error);
       toast.error("Failed to delete landing page");
     }
   };
-
-  const getPageUrl = (slug: string) => {
-    // Use current domain for the URL
-    return `${window.location.origin}/${slug}`;
+  
+  const handleEditPage = (id: string) => {
+    navigate(`/dashboard/brand/edit-page/${id}`);
+  };
+  
+  const handleViewPage = (slug: string) => {
+    // In a real implementation, this would navigate to the public URL of the page
+    toast.info(`Viewing page with slug: ${slug} (Would open landing page in new tab)`);
+  };
+  
+  const handleCreateQR = (pageId: string, pageTitle: string) => {
+    // Navigate to QR creator with page reference
+    navigate(`/dashboard/brand/create-qr?pageId=${pageId}&pageTitle=${encodeURIComponent(pageTitle)}`);
   };
 
   if (isLoading) {
@@ -109,91 +112,77 @@ const LandingPagesList = () => {
 
   return (
     <DashboardLayout userType="Brand" userName={userName}>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">Landing Pages</h1>
-          <Link to="/dashboard/brand/create-page">
-            <Button className="gap-2">
-              <LayoutPanelLeft size={16} />
-              Create New Page
-            </Button>
-          </Link>
+      <div className="container mx-auto py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Landing Pages</h1>
+          <Button asChild>
+            <Link to="/dashboard/brand/create-page">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Landing Page
+            </Link>
+          </Button>
         </div>
-
+        
         <Card>
           <CardHeader>
             <CardTitle>Your Landing Pages</CardTitle>
           </CardHeader>
           <CardContent>
-            {landingPages.length > 0 ? (
+            {pages.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Title</TableHead>
-                    <TableHead>URL</TableHead>
+                    <TableHead>Slug</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {landingPages.map((page) => (
+                  {pages.map((page) => (
                     <TableRow key={page.id}>
-                      <TableCell className="font-medium">{page.title}</TableCell>
+                      <TableCell>{page.title}</TableCell>
+                      <TableCell>{page.slug}</TableCell>
+                      <TableCell>{format(new Date(page.created_at), 'MM/dd/yyyy')}</TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <code className="bg-muted px-1 py-0.5 rounded text-sm">
-                            /{page.slug}
-                          </code>
-                          <a 
-                            href={getPageUrl(page.slug)} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="text-primary hover:text-primary/80"
-                          >
-                            <ExternalLink size={16} />
-                          </a>
-                        </div>
-                      </TableCell>
-                      <TableCell>{new Date(page.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${page.published ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                          {page.published ? 'Published' : 'Draft'}
-                        </span>
+                        <Badge variant={page.published ? "default" : "secondary"}>
+                          {page.published ? "Published" : "Draft"}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate(`/dashboard/brand/edit-page/${page.id}`)}
-                            title="Edit"
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            title="Edit Page"
+                            onClick={() => handleEditPage(page.id)}
                           >
-                            <Edit size={16} />
+                            <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate(`/dashboard/brand/create-qr?pageId=${page.id}`)}
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            title="View Page"
+                            onClick={() => handleViewPage(page.slug)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
                             title="Create QR Code"
+                            onClick={() => handleCreateQR(page.id, page.title)}
                           >
-                            <QrCode size={16} />
+                            <QrCode className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => window.open(getPageUrl(page.slug), '_blank')}
-                            title="Preview"
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            title="Delete Page"
+                            onClick={() => handleDeletePage(page.id)}
                           >
-                            <Eye size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(page.id)}
-                            title="Delete"
-                          >
-                            <Trash size={16} className="text-red-500" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
@@ -202,11 +191,9 @@ const LandingPagesList = () => {
                 </TableBody>
               </Table>
             ) : (
-              <div className="text-center py-8 space-y-4">
-                <LayoutPanelLeft className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="text-lg font-medium">No landing pages yet</h3>
-                <p className="text-muted-foreground">You haven't created any landing pages yet.</p>
-                <Button asChild>
+              <div className="text-center py-8 text-muted-foreground">
+                <p>You haven't created any landing pages yet.</p>
+                <Button className="mt-4" asChild>
                   <Link to="/dashboard/brand/create-page">Create Your First Page</Link>
                 </Button>
               </div>

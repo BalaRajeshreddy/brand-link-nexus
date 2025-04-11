@@ -33,4 +33,5 @@ export interface PageSettingsDialogProps {
 
 export interface PageBuilderProps {
   userId: string;
+  pageId?: string;
 }
