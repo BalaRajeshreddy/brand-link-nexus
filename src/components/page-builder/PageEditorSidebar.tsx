@@ -1,4 +1,3 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ import {
   FileImage,
   FileText as PDFIcon,
   ChevronRight,
-  Toggle,
   Plus,
   ArrowUpDown
 } from "lucide-react";
@@ -119,7 +117,6 @@ export function PageEditorSidebar({ onAddBlock }: PageEditorSidebarProps) {
   ];
 
   const handleTemplateSelect = (template: any) => {
-    // This would need to be implemented by passing template blocks to the parent
     template.blocks.forEach((blockType: string) => {
       onAddBlock(blockType);
     });
