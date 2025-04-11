@@ -1,20 +1,16 @@
-
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { toast } from "sonner";
+import React from 'react';
+import { BlockStyles } from '@/types/block';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 interface FormField {
   type: string;
   label: string;
   required: boolean;
-  placeholder: string;
-  options?: string[];
+  placeholder?: string;
 }
 
 interface FormBlockProps {
@@ -23,166 +19,165 @@ interface FormBlockProps {
     submitText: string;
     submitAction: string;
   };
-  styles: Record<string, any>;
+  styles?: {
+    container?: BlockStyles;
+    input?: BlockStyles;
+    label?: BlockStyles;
+    button?: BlockStyles;
+  };
 }
 
-export const FormBlock = ({ content, styles }: FormBlockProps) => {
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  const [submitted, setSubmitted] = useState(false);
+export function FormBlock({ content, styles = {} }: FormBlockProps) {
+  // Helper function to apply container styles
+  const applyContainerStyles = (additionalClasses?: string) => {
+    const containerStyles = styles.container || {};
+    const textAlignClass = containerStyles.textAlign ? {
+      'text-left': containerStyles.textAlign === 'left',
+      'text-center': containerStyles.textAlign === 'center',
+      'text-right': containerStyles.textAlign === 'right',
+    } : {};
 
-  const handleInputChange = (label: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [label]: value
-    }));
+    return {
+      className: cn(
+        'space-y-4',
+        additionalClasses,
+        textAlignClass
+      ),
+      style: {
+        backgroundColor: containerStyles.backgroundColor || 'transparent',
+        padding: containerStyles.padding || '0',
+        margin: containerStyles.margin,
+        borderRadius: containerStyles.borderRadius || '0',
+        borderWidth: containerStyles.borderWidth || '0',
+        borderColor: containerStyles.borderColor,
+        borderStyle: containerStyles.borderStyle,
+        boxShadow: containerStyles.boxShadow,
+        width: containerStyles.width,
+        minHeight: containerStyles.minHeight,
+        maxWidth: containerStyles.maxWidth
+      }
+    };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real app, this would submit the form data according to submitAction
-    setSubmitted(true);
-    toast.success("Form submitted successfully!");
+  // Helper function to apply input styles
+  const applyInputStyles = (additionalClasses?: string) => {
+    const inputStyles = styles.input || {};
+    return {
+      className: cn('w-full', additionalClasses),
+      style: {
+        backgroundColor: inputStyles.backgroundColor || 'transparent',
+        color: inputStyles.textColor || 'inherit',
+        borderRadius: inputStyles.borderRadius || '0.375rem',
+        borderWidth: inputStyles.borderWidth || '1px',
+        borderColor: inputStyles.borderColor || 'hsl(var(--input))',
+        borderStyle: inputStyles.borderStyle || 'solid',
+        fontSize: inputStyles.fontSize,
+        padding: inputStyles.padding || '0.5rem',
+        fontFamily: inputStyles.fontFamily,
+        '&:focus': {
+          outline: 'none',
+          borderColor: inputStyles.borderColor || 'hsl(var(--input))',
+          backgroundColor: inputStyles.backgroundColor || 'transparent',
+        }
+      }
+    };
   };
 
-  const renderField = (field: FormField, index: number) => {
-    switch (field.type.toLowerCase()) {
-      case 'text':
-      case 'email':
-      case 'tel':
-      case 'number':
-        return (
-          <div key={index} className="space-y-2">
-            <Label htmlFor={`field-${index}`}>
-              {field.label} {field.required && <span className="text-red-500">*</span>}
-            </Label>
-            <Input
-              id={`field-${index}`}
-              type={field.type}
-              placeholder={field.placeholder}
-              required={field.required}
-              value={formData[field.label] || ''}
-              onChange={(e) => handleInputChange(field.label, e.target.value)}
-              style={{
-                backgroundColor: styles.fieldBgColor || '#FFFFFF',
-                borderRadius: styles.fieldBorderRadius || '4px',
-                borderColor: styles.fieldBorderColor || '#E2E8F0',
-              }}
-            />
-          </div>
-        );
+  // Helper function to apply label styles
+  const applyLabelStyles = (additionalClasses?: string) => {
+    const labelStyles = styles.label || {};
+    const textAlignClass = labelStyles.textAlign ? {
+      'text-left': labelStyles.textAlign === 'left',
+      'text-center': labelStyles.textAlign === 'center',
+      'text-right': labelStyles.textAlign === 'right',
+    } : {};
+
+    return {
+      className: cn('block mb-2', additionalClasses, textAlignClass),
+      style: {
+        color: labelStyles.textColor || 'inherit',
+        fontSize: labelStyles.fontSize,
+        fontWeight: labelStyles.fontWeight || '500',
+        fontFamily: labelStyles.fontFamily
+      }
+    };
+  };
+
+  // Helper function to apply button styles
+  const applyButtonStyles = () => {
+    const buttonStyles = styles.button || {};
+    const textAlignClass = buttonStyles.textAlign ? {
+      'text-left': buttonStyles.textAlign === 'left',
+      'text-center': buttonStyles.textAlign === 'center',
+      'text-right': buttonStyles.textAlign === 'right',
+    } : {};
+
+    return {
+      className: cn(
+        'mt-6 w-full transition-colors duration-200',
+        textAlignClass
+      ),
+      style: {
+        backgroundColor: buttonStyles.backgroundColor || 'hsl(var(--primary))',
+        color: buttonStyles.textColor || 'hsl(var(--primary-foreground))',
+        borderRadius: buttonStyles.borderRadius || '0.375rem',
+        padding: buttonStyles.padding || '0.5rem 1rem',
+        fontSize: buttonStyles.fontSize,
+        fontWeight: buttonStyles.fontWeight || '500',
+        borderWidth: buttonStyles.borderWidth || '0',
+        borderColor: buttonStyles.borderColor,
+        borderStyle: buttonStyles.borderStyle,
+        cursor: 'pointer',
+        fontFamily: buttonStyles.fontFamily,
+        '&:hover': {
+          opacity: 0.9
+        }
+      }
+    };
+  };
+
+  const renderField = (field: FormField) => {
+    switch (field.type) {
       case 'textarea':
         return (
-          <div key={index} className="space-y-2">
-            <Label htmlFor={`field-${index}`}>
-              {field.label} {field.required && <span className="text-red-500">*</span>}
+          <div key={field.label} className="space-y-2">
+            <Label {...applyLabelStyles()}>
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
             </Label>
             <Textarea
-              id={`field-${index}`}
+              {...applyInputStyles()}
               placeholder={field.placeholder}
               required={field.required}
-              value={formData[field.label] || ''}
-              onChange={(e) => handleInputChange(field.label, e.target.value)}
-              style={{
-                backgroundColor: styles.fieldBgColor || '#FFFFFF',
-                borderRadius: styles.fieldBorderRadius || '4px',
-                borderColor: styles.fieldBorderColor || '#E2E8F0',
-              }}
             />
-          </div>
-        );
-      case 'checkbox':
-        return (
-          <div key={index} className="flex items-center space-x-2">
-            <Checkbox
-              id={`field-${index}`}
-              checked={!!formData[field.label]}
-              onCheckedChange={(checked) => handleInputChange(field.label, checked)}
-            />
-            <Label htmlFor={`field-${index}`}>
-              {field.label} {field.required && <span className="text-red-500">*</span>}
-            </Label>
-          </div>
-        );
-      case 'select':
-        return (
-          <div key={index} className="space-y-2">
-            <Label htmlFor={`field-${index}`}>
-              {field.label} {field.required && <span className="text-red-500">*</span>}
-            </Label>
-            <Select 
-              value={formData[field.label] || ''} 
-              onValueChange={(value) => handleInputChange(field.label, value)}
-            >
-              <SelectTrigger id={`field-${index}`}>
-                <SelectValue placeholder={field.placeholder} />
-              </SelectTrigger>
-              <SelectContent>
-                {field.options?.map((option, i) => (
-                  <SelectItem key={i} value={option}>{option}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         );
       default:
-        return null;
+        return (
+          <div key={field.label} className="space-y-2">
+            <Label {...applyLabelStyles()}>
+              {field.label}
+              {field.required && <span className="text-red-500 ml-1">*</span>}
+            </Label>
+            <Input
+              type={field.type}
+              {...applyInputStyles()}
+              placeholder={field.placeholder}
+              required={field.required}
+            />
+          </div>
+        );
     }
   };
 
-  if (submitted) {
-    return (
-      <div 
-        className="form-block w-full my-4"
-        style={{
-          backgroundColor: styles.backgroundColor || 'transparent',
-          padding: styles.padding || '16px',
-          borderRadius: styles.borderRadius || '8px',
-        }}
-      >
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <h3 className="text-xl font-medium mb-2" style={{ color: styles.textColor || '#000000' }}>Thank You!</h3>
-            <p className="text-muted-foreground">Your form has been submitted successfully.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div 
-      className="form-block w-full my-4"
-      style={{
-        backgroundColor: styles.backgroundColor || 'transparent',
-        padding: styles.padding || '16px',
-        borderRadius: styles.borderRadius || '8px',
-      }}
-    >
-      <Card>
-        <CardHeader>
-          <CardTitle style={{ color: styles.textColor || '#000000' }}>
-            Form
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {content.fields.map(renderField)}
-          </form>
-        </CardContent>
-        <CardFooter>
-          <Button
-            type="submit"
-            className="w-full"
-            onClick={handleSubmit}
-            style={{
-              backgroundColor: styles.buttonColor || '#3B82F6',
-              color: styles.buttonTextColor || '#FFFFFF',
-            }}
-          >
-            {content.submitText}
-          </Button>
-        </CardFooter>
-      </Card>
+    <div {...applyContainerStyles('rounded-lg')}>
+      <form className="space-y-4">
+        {content.fields.map(renderField)}
+        <button {...applyButtonStyles()}>
+          {content.submitText}
+        </button>
+      </form>
     </div>
   );
-};
+}

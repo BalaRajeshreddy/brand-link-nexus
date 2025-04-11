@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Dialog,
@@ -21,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Block } from "./PageBuilder";
+import { BlockStyles } from "@/types/block";
 import {
   Carousel,
   CarouselContent,
@@ -29,22 +29,31 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Switch } from "@/components/ui/switch";
+import { FileSelector } from '@/components/FileSelector';
+import { FileAsset } from '@/types/file';
+import { ColorPicker } from '@/components/ColorPicker';
 
-interface BlockEditorProps {
-  block: Block;
-  onSave: (blockId: string, content: Record<string, any>, styles: Record<string, any>) => void;
-  onCancel: () => void;
+interface EditorBlock {
+  id: string;
+  type: string;
+  content: Record<string, any>;
+  brandId: string;
+  styles?: Record<string, any>;
 }
 
-export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
+interface BlockEditorProps {
+  block: EditorBlock;
+  onUpdateBlock: (block: EditorBlock) => void;
+  openMediaLibrary?: () => void;
+}
+
+export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEditorProps) {
   const [content, setContent] = useState<Record<string, any>>(block.content);
-  const [styles, setStyles] = useState<Record<string, any>>(block.styles);
-  
-  const updateContent = (key: string, value: any) => {
-    setContent((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+  const [isOpen, setIsOpen] = useState(true);
+
+  const updateContent = (field: string, value: any) => {
+    const newContent = { ...content, [field]: value };
+    setContent(newContent);
   };
   
   const updateNestedContent = (path: string[], value: any) => {
@@ -66,17 +75,38 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
     });
   };
   
-  const updateStyle = (key: string, value: any) => {
-    setStyles((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-  
   const handleSave = () => {
-    onSave(block.id, content, styles);
+    const updatedBlock = {
+      ...block,
+      content: content,
+      styles: block.type === 'form' ? block.styles : {
+        ...block.styles,
+        ...content
+      }
+    };
+    onUpdateBlock(updatedBlock);
+    setIsOpen(false);
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      handleSave();
+    }
   };
   
+  const handleStyleChange = (componentType: 'container' | 'input' | 'label' | 'button', style: Partial<BlockStyles>) => {
+    onUpdateBlock({
+      ...block,
+      styles: {
+        ...block.styles,
+        [componentType]: {
+          ...(block.styles?.[componentType] || {}),
+          ...style
+        }
+      }
+    });
+  };
+
   const renderContentEditor = () => {
     switch (block.type) {
       case 'heading':
@@ -135,16 +165,17 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="image-src">Image URL</Label>
-              <Input
-                id="image-src"
-                placeholder="https://example.com/image.jpg"
-                value={content.src || ''}
-                onChange={(e) => updateContent('src', e.target.value)}
+              <Label>Image</Label>
+              <FileSelector
+                type="image"
+                onSelect={(file) => {
+                  if (file && 'url' in file) {
+                    updateContent('src', (file as FileAsset).url);
+                  }
+                }}
+                brandId={block.brandId}
+                value={content.src}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Enter the URL of the image you want to display
-              </p>
             </div>
             <div>
               <Label htmlFor="image-alt">Alt Text</Label>
@@ -1310,7 +1341,111 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
     }
   };
   
-  const renderStylesEditor = () => {
+  const renderStyleFields = () => {
+    if (block.type === 'FORM') {
+      return (
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Container Styles</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Background Color</Label>
+                <ColorPicker
+                  value={block.styles?.container?.backgroundColor || ''}
+                  onChange={(color) => handleStyleChange('container', { backgroundColor: color })}
+                />
+              </div>
+              <div>
+                <Label>Padding</Label>
+                <Select
+                  value={block.styles?.container?.padding || '16px'}
+                  onValueChange={(value) => handleStyleChange('container', { padding: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select padding" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="8px">Small (8px)</SelectItem>
+                    <SelectItem value="16px">Medium (16px)</SelectItem>
+                    <SelectItem value="24px">Large (24px)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Label Styles</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Text Color</Label>
+                <ColorPicker
+                  value={block.styles?.label?.textColor || ''}
+                  onChange={(color) => handleStyleChange('label', { textColor: color })}
+                />
+              </div>
+              <div>
+                <Label>Font Size</Label>
+                <Select
+                  value={block.styles?.label?.fontSize || 'inherit'}
+                  onValueChange={(value) => handleStyleChange('label', { fontSize: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0.875rem">Small (14px)</SelectItem>
+                    <SelectItem value="1rem">Medium (16px)</SelectItem>
+                    <SelectItem value="1.125rem">Large (18px)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Input Styles</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Background Color</Label>
+                <ColorPicker
+                  value={block.styles?.input?.backgroundColor || ''}
+                  onChange={(color) => handleStyleChange('input', { backgroundColor: color })}
+                />
+              </div>
+              <div>
+                <Label>Border Color</Label>
+                <ColorPicker
+                  value={block.styles?.input?.borderColor || ''}
+                  onChange={(color) => handleStyleChange('input', { borderColor: color })}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Button Styles</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Background Color</Label>
+                <ColorPicker
+                  value={block.styles?.button?.backgroundColor || ''}
+                  onChange={(color) => handleStyleChange('button', { backgroundColor: color })}
+                />
+              </div>
+              <div>
+                <Label>Text Color</Label>
+                <ColorPicker
+                  value={block.styles?.button?.textColor || ''}
+                  onChange={(color) => handleStyleChange('button', { textColor: color })}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-4">
         {/* Text Color */}
@@ -1319,19 +1454,19 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
           <div className="flex items-center gap-2">
             <div 
               className="w-6 h-6 border rounded-md" 
-              style={{ backgroundColor: styles.textColor }}
+              style={{ backgroundColor: content.textColor }}
             />
             <Input
               id="text-color"
               type="color"
-              value={styles.textColor || '#000000'}
-              onChange={(e) => updateStyle('textColor', e.target.value)}
+              value={content.textColor || '#000000'}
+              onChange={(e) => updateContent('textColor', e.target.value)}
               className="w-14 h-10 p-1"
             />
             <Input 
               type="text"
-              value={styles.textColor || '#000000'}
-              onChange={(e) => updateStyle('textColor', e.target.value)}
+              value={content.textColor || '#000000'}
+              onChange={(e) => updateContent('textColor', e.target.value)}
               className="flex-1"
             />
           </div>
@@ -1343,19 +1478,19 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
           <div className="flex items-center gap-2">
             <div 
               className="w-6 h-6 border rounded-md" 
-              style={{ backgroundColor: styles.backgroundColor === 'transparent' ? '#ffffff' : styles.backgroundColor }}
+              style={{ backgroundColor: content.backgroundColor === 'transparent' ? '#ffffff' : content.backgroundColor }}
             />
             <Input
               id="background-color"
               type="color"
-              value={styles.backgroundColor === 'transparent' ? '#ffffff' : styles.backgroundColor || '#ffffff'}
-              onChange={(e) => updateStyle('backgroundColor', e.target.value === '#ffffff' ? 'transparent' : e.target.value)}
+              value={content.backgroundColor === 'transparent' ? '#ffffff' : content.backgroundColor || '#ffffff'}
+              onChange={(e) => updateContent('backgroundColor', e.target.value === '#ffffff' ? 'transparent' : e.target.value)}
               className="w-14 h-10 p-1"
             />
             <Input 
               type="text"
-              value={styles.backgroundColor || 'transparent'}
-              onChange={(e) => updateStyle('backgroundColor', e.target.value)}
+              value={content.backgroundColor || 'transparent'}
+              onChange={(e) => updateContent('backgroundColor', e.target.value)}
               className="flex-1"
             />
           </div>
@@ -1365,8 +1500,8 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
         <div>
           <Label htmlFor="padding" className="mb-1">Padding</Label>
           <Select
-            value={styles.padding || '16px'}
-            onValueChange={(value) => updateStyle('padding', value)}
+            value={content.padding || '16px'}
+            onValueChange={(value) => updateContent('padding', value)}
           >
             <SelectTrigger id="padding">
               <SelectValue placeholder="Select padding" />
@@ -1385,8 +1520,8 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
         <div>
           <Label htmlFor="border-radius" className="mb-1">Border Radius</Label>
           <Select
-            value={styles.borderRadius || '4px'}
-            onValueChange={(value) => updateStyle('borderRadius', value)}
+            value={content.borderRadius || '4px'}
+            onValueChange={(value) => updateContent('borderRadius', value)}
           >
             <SelectTrigger id="border-radius">
               <SelectValue placeholder="Select border radius" />
@@ -1405,8 +1540,8 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
         <div>
           <Label htmlFor="text-align" className="mb-1">Text Alignment</Label>
           <Select
-            value={styles.textAlign || 'left'}
-            onValueChange={(value: any) => updateStyle('textAlign', value)}
+            value={content.textAlign || 'left'}
+            onValueChange={(value: any) => updateContent('textAlign', value)}
           >
             <SelectTrigger id="text-align">
               <SelectValue placeholder="Select text alignment" />
@@ -1427,13 +1562,13 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
               <div className="flex items-center gap-2">
                 <div 
                   className="w-6 h-6 border rounded-md" 
-                  style={{ backgroundColor: styles.hoverColor }}
+                  style={{ backgroundColor: content.hoverColor }}
                 />
                 <Input
                   id="hover-color"
                   type="color"
-                  value={styles.hoverColor || '#2563EB'}
-                  onChange={(e) => updateStyle('hoverColor', e.target.value)}
+                  value={content.hoverColor || '#2563EB'}
+                  onChange={(e) => updateContent('hoverColor', e.target.value)}
                   className="w-14 h-10 p-1"
                 />
               </div>
@@ -1446,8 +1581,8 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
             <div>
               <Label htmlFor="gap" className="mb-1">Gap Between Items</Label>
               <Select
-                value={styles.gap || '16px'}
-                onValueChange={(value) => updateStyle('gap', value)}
+                value={content.gap || '16px'}
+                onValueChange={(value) => updateContent('gap', value)}
               >
                 <SelectTrigger id="gap">
                   <SelectValue placeholder="Select gap" />
@@ -1469,13 +1604,13 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
                   <div className="flex items-center gap-2">
                     <div 
                       className="w-6 h-6 border rounded-md" 
-                      style={{ backgroundColor: styles.cardBgColor || '#FFFFFF' }}
+                      style={{ backgroundColor: content.cardBgColor || '#FFFFFF' }}
                     />
                     <Input
                       id="card-bg-color"
                       type="color"
-                      value={styles.cardBgColor || '#FFFFFF'}
-                      onChange={(e) => updateStyle('cardBgColor', e.target.value)}
+                      value={content.cardBgColor || '#FFFFFF'}
+                      onChange={(e) => updateContent('cardBgColor', e.target.value)}
                       className="w-14 h-10 p-1"
                     />
                   </div>
@@ -1484,8 +1619,8 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
                 <div>
                   <Label htmlFor="card-shadow" className="mb-1">Card Shadow</Label>
                   <Select
-                    value={styles.cardShadow || 'sm'}
-                    onValueChange={(value) => updateStyle('cardShadow', value)}
+                    value={content.cardShadow || 'sm'}
+                    onValueChange={(value) => updateContent('cardShadow', value)}
                   >
                     <SelectTrigger id="card-shadow">
                       <SelectValue placeholder="Select shadow" />
@@ -1509,16 +1644,16 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
               <Label className="mb-1">Image Width</Label>
               <div className="pt-4 pb-2">
                 <Slider
-                  defaultValue={[parseInt(styles.imageWidth?.replace('%', '') || '50')]}
+                  defaultValue={[parseInt(content.imageWidth?.replace('%', '') || '50')]}
                   min={20}
                   max={80}
                   step={5}
-                  onValueChange={(value) => updateStyle('imageWidth', `${value[0]}%`)}
+                  onValueChange={(value) => updateContent('imageWidth', `${value[0]}%`)}
                 />
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Narrow</span>
-                <span>{styles.imageWidth}</span>
+                <span>{content.imageWidth}</span>
                 <span>Wide</span>
               </div>
             </div>
@@ -1529,29 +1664,18 @@ export function BlockEditor({ block, onSave, onCancel }: BlockEditorProps) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={() => onCancel()}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit {block.type.charAt(0).toUpperCase() + block.type.slice(1)} Block</DialogTitle>
+          <DialogTitle>Edit {block.type}</DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="content">
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="content">Content</TabsTrigger>
-            <TabsTrigger value="styles">Styles</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="content" className="space-y-4 py-4">
-            {renderContentEditor()}
-          </TabsContent>
-          
-          <TabsContent value="styles" className="space-y-4 py-4">
-            {renderStylesEditor()}
-          </TabsContent>
-        </Tabs>
+        <div className="space-y-4">
+          {renderContentEditor()}
+          {renderStyleFields()}
+        </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
           <Button onClick={handleSave}>Save Changes</Button>
         </DialogFooter>
       </DialogContent>

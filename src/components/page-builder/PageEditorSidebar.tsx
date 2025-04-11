@@ -1,4 +1,3 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -124,14 +123,14 @@ export function PageEditorSidebar({ onAddBlock }: PageEditorSidebarProps) {
   };
 
   return (
-    <div className="w-72 border-r bg-white flex flex-col">
-      <div className="p-4 border-b">
+    <div className="w-72 border-r bg-white flex flex-col h-[calc(100vh-4rem)]">
+      <div className="p-4 border-b bg-white">
         <h3 className="font-medium">Page Editor</h3>
         <p className="text-xs text-muted-foreground mt-1">Add blocks to build your page</p>
       </div>
       
       <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
-        <div className="border-b">
+        <div className="border-b bg-white">
           <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
             <TabsTrigger 
               value="blocks" 
@@ -148,47 +147,42 @@ export function PageEditorSidebar({ onAddBlock }: PageEditorSidebarProps) {
           </TabsList>
         </div>
         
-        <TabsContent value="blocks" className="p-0 flex-1 overflow-hidden mt-0">
-          <ScrollArea className="h-full">
-            <div className="p-4 space-y-4">
+        <TabsContent value="blocks" className="flex-1 mt-0 relative">
+          <ScrollArea className="h-[calc(100vh-16rem)] absolute inset-0">
+            <div className="p-4 space-y-6 pb-10">
               {blockComponents.map((category) => (
                 <div key={category.category} className="space-y-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">{category.category}</h4>
+                  <div className="bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75 sticky top-0 py-2 -mx-4 px-4 z-10">
+                    <h4 className="text-sm font-medium text-muted-foreground">{category.category}</h4>
+                  </div>
                   <div className="space-y-1">
                     {category.items.map((block) => (
                       <Button 
                         key={block.name}
                         variant="ghost"
-                        className="w-full justify-start h-auto py-2.5 px-3"
+                        className="w-full justify-start h-auto py-2.5 px-3 hover:bg-gray-50"
                         onClick={() => onAddBlock(block.name.toLowerCase())}
                       >
                         <div className="flex items-center w-full">
                           <span className="mr-2 text-primary">{block.icon}</span>
-                          <span className="text-sm">{block.name}</span>
-                          <ChevronRight size={14} className="ml-auto text-muted-foreground" />
+                          <div className="flex flex-col items-start flex-1 min-w-0">
+                            <span className="text-sm font-medium truncate w-full">{block.name}</span>
+                            <span className="text-xs text-muted-foreground truncate w-full">{block.description}</span>
+                          </div>
+                          <ChevronRight size={14} className="ml-2 text-muted-foreground shrink-0" />
                         </div>
                       </Button>
                     ))}
                   </div>
                 </div>
               ))}
-              
-              <div className="py-4 border-t mt-4">
-                <Button 
-                  className="w-full flex items-center"
-                  onClick={() => onAddBlock('heading')}
-                >
-                  <Plus size={16} className="mr-2" />
-                  Add Component
-                </Button>
-              </div>
             </div>
           </ScrollArea>
         </TabsContent>
         
-        <TabsContent value="templates" className="p-0 flex-1 overflow-hidden mt-0">
-          <ScrollArea className="h-full">
-            <div className="p-4 space-y-4">
+        <TabsContent value="templates" className="flex-1 mt-0 relative">
+          <ScrollArea className="h-[calc(100vh-16rem)] absolute inset-0">
+            <div className="p-4 space-y-4 pb-10">
               {templates.map((template) => (
                 <div 
                   key={template.id} 

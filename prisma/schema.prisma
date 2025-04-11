@@ -1,0 +1,194 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Base User model with role-based access
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Authentication
+  email     String  @unique
+  password  String
+  role      Role    @default(CUSTOMER)
+  
+  // Profile fields
+  firstName String?
+  lastName  String?
+  age       Int?
+  gender    String?
+  phone     String?
+  avatar    String?
+  
+  // Relations
+  brands    Brand[]
+  files     File[]
+  reviews   Review[]
+  customerProfile CustomerProfile?
+  adminProfile    AdminProfile?
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  BRAND
+  CUSTOMER
+}
+
+// Customer Profile model
+model CustomerProfile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Additional profile fields
+  preferences Json? // {notifications, language, timezone}
+  savedBrands String[] // Array of brand IDs
+
+  @@map("customer_profiles")
+}
+
+// Brand model
+model Brand {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files     File[]
+  reviews   Review[]
+
+  // Basic Info
+  name          String
+  logo          String
+  tagline       String?
+  description   String
+  videoUrl      String?
+  mission       String?
+  vision        String?
+  foundingYear  Int?
+
+  // Contact Info
+  email     String
+  phone     String?
+  address   Json? // Stored as JSON {street, city, state, country, postalCode}
+
+  // Social Links - stored as JSON
+  socialLinks Json? // {website, facebook, instagram, linkedin}
+
+  // Credentials - stored as JSON arrays
+  certifications Json? // [{name, issuer, year, documentUrl}]
+  awards         Json? // [{title, organization, year, description, documentUrl}]
+  pressFeatures  Json? // [{title, publisher, date, url}]
+
+  // Products
+  featuredProducts Json? // [{id, name, image, description, price}]
+  newLaunchProducts Json? // [{id, name, image, description, price, launchDate}]
+
+  // Campaigns
+  campaigns Json? // [{title, description, startDate, endDate, discount, terms}]
+
+  // Settings
+  isActive    Boolean @default(true)
+  isVerified  Boolean @default(false)
+  settings    Json?   // {allowPublicProfile, enableNotifications, language, timezone}
+
+  @@index([userId])
+  @@map("brands")
+}
+
+// Admin Profile model
+model AdminProfile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Admin specific fields
+  permissions String[] // Array of permission strings
+  department  String?
+  isSuperAdmin Boolean @default(false)
+
+  @@map("admin_profiles")
+}
+
+// Review model
+model Review {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandId   String
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  // Review content
+  rating    Int
+  comment   String?
+  images    String[] // Array of image URLs
+
+  @@index([userId])
+  @@index([brandId])
+  @@map("reviews")
+}
+
+// File model
+model File {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandId   String
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  // File info
+  name        String
+  type        FileType
+  size        Int      // in bytes
+  mimeType    String
+  url         String
+  thumbnailUrl String?
+
+  // Metadata stored as JSON
+  metadata    Json?   // {width, height, duration, pages}
+
+  // Organization
+  folder      String?
+  tags        String[] // Array of tags
+  description String?
+
+  // Usage tracking
+  usageCount  Int      @default(0)
+  lastUsed    DateTime?
+
+  @@index([userId])
+  @@index([brandId])
+  @@map("files")
+}
+
+enum FileType {
+  IMAGE
+  PDF
+  VIDEO
+} 

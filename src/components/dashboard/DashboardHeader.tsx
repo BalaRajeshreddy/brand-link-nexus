@@ -1,4 +1,3 @@
-
 import { Bell, Search, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   userType: 'Brand' | 'User' | 'Admin';
@@ -17,6 +17,8 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ userType, userName }: DashboardHeaderProps) {
+  const navigate = useNavigate();
+  
   return (
     <header className="border-b py-4 px-6 bg-background">
       <div className="flex items-center justify-between">
@@ -43,7 +45,7 @@ export function DashboardHeader({ userType, userName }: DashboardHeaderProps) {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/profile')}>Profile</DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Logout</DropdownMenuItem>

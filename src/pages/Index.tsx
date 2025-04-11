@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { QrCode, LayoutPanelLeft, BarChart2, Users } from "lucide-react";
@@ -48,7 +47,7 @@ const Index = () => {
             <div className="relative w-full max-w-3xl">
               <div className="absolute -top-6 -left-6 -right-6 -bottom-6 rounded-xl bg-primary-blue/5 -z-10 animate-float"></div>
               <img 
-                src="/lovable-uploads/cc660eba-8b70-4587-b566-10790d11492b.png"
+                src="https://placehold.co/800x400/png"
                 alt="QR Code Builder Interface" 
                 className="rounded-lg shadow-2xl border border-gray-200 w-full"
               />

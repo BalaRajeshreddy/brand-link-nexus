@@ -1,7 +1,6 @@
-
 import { 
   Facebook, Twitter, Instagram, Linkedin, Youtube, 
-  Github, Dribbble, Figma, Twitch, Slack, TikTok 
+  Github, Dribbble, Figma, Twitch, Slack, Music 
 } from "lucide-react";
 
 interface SocialLink {
@@ -47,7 +46,7 @@ export const SocialLinksBlock = ({ content, styles }: SocialLinksBlockProps) => 
       case 'slack':
         return <Slack {...iconProps} />;
       case 'tiktok':
-        return <TikTok {...iconProps} />;
+        return <Music {...iconProps} />;
       default:
         return <Linkedin {...iconProps} />;
     }

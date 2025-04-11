@@ -1,91 +1,89 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { BlockEditor } from './BlockEditor';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Grip, Trash2 } from 'lucide-react';
+import { Grip, Trash2, Pencil } from 'lucide-react';
 import { Block } from './PageBuilder';
 import { BlockEditorMain } from './block-renderers/BlockEditorMain';
+import { BlockContent } from './block-renderers/BlockEditorMain';
 
 interface SortableBlockProps {
   block: Block;
-  onDeleteBlock: (id: string) => void;
-  onUpdateBlock: (id: string, content: Record<string, any>, styles: Record<string, any>) => void;
+  onDeleteBlock: (blockId: string) => void;
+  onUpdateBlock: (blockId: string, content: BlockContent, styles: Record<string, string>) => void;
   openMediaLibrary: (blockId: string, fieldPath: string, altPath?: string) => void;
 }
 
 const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }: SortableBlockProps) => {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: block.id });
+  const [isEditing, setIsEditing] = useState(false);
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: block.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
-    position: 'relative' as 'relative',
-    zIndex: isDragging ? 1000 : 1,
+  };
+
+  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; brandId: string }) => {
+    onUpdateBlock(updatedBlock.id, updatedBlock.content as BlockContent, {});
+    setIsEditing(false);
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} className="mb-4 group">
-      <div className="border border-dashed border-gray-200 rounded-md p-2 hover:border-gray-300 bg-white">
-        <div className="flex items-center justify-between mb-2 text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-6 w-6 opacity-50 hover:opacity-100 cursor-grab" 
-              {...listeners}
-            >
-              <Grip size={12} />
-            </Button>
-            <span>{block.type.charAt(0).toUpperCase() + block.type.slice(1)}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-6 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              {isEditing ? 'Preview' : 'Edit'}
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-6 w-6 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" 
-              onClick={() => onDeleteBlock(block.id)}
-            >
-              <Trash2 size={12} />
-            </Button>
-          </div>
-        </div>
-        
-        {isEditing ? (
-          <BlockEditor
-            block={block}
-            onUpdateBlock={onUpdateBlock}
-            openMediaLibrary={openMediaLibrary}
-          />
-        ) : (
-          <div className="py-2">
-            <BlockEditorMain
-              blockType={block.type}
-              content={block.content}
-              styles={block.styles}
-            />
-          </div>
-        )}
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative group border rounded-lg p-4 mb-4 bg-white"
+    >
+      <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => setIsEditing(true)}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => onDeleteBlock(block.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 cursor-grab"
+          {...attributes}
+          {...listeners}
+        >
+          <Grip className="h-4 w-4" />
+        </Button>
       </div>
+
+      {isEditing ? (
+        <BlockEditor
+          block={{
+            id: block.id,
+            type: block.type,
+            content: block.content,
+            brandId: block.brandId || ''
+          }}
+          onUpdateBlock={handleUpdateBlock}
+          openMediaLibrary={() => openMediaLibrary(block.id, 'content.image.src', 'content.image.alt')}
+        />
+      ) : (
+        <div className="py-2">
+          <BlockEditorMain
+            blockType={block.type}
+            content={block.content as BlockContent}
+            styles={{}}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -109,8 +107,8 @@ export function PageEditorCanvas({
   pageStyles
 }: PageEditorCanvasProps) {
   return (
-    <div className="flex-1 h-full flex flex-col">
-      <ScrollArea className="flex-1">
+    <div className="flex-1 h-[calc(100vh-4rem)] flex flex-col">
+      <ScrollArea className="flex-1 h-full">
         <div 
           className="p-8 min-h-full"
           style={{
@@ -118,22 +116,24 @@ export function PageEditorCanvas({
             fontFamily: pageStyles.fontFamily
           }}
         >
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             {blocks.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64">
                 <p className="text-muted-foreground mb-4">No blocks added yet</p>
                 <p className="text-muted-foreground text-sm mb-4">Use the sidebar to add content blocks</p>
               </div>
             ) : (
-              blocks.map((block) => (
-                <SortableBlock
-                  key={block.id}
-                  block={block}
-                  onDeleteBlock={onDeleteBlock}
-                  onUpdateBlock={onUpdateBlock}
-                  openMediaLibrary={openMediaLibrary}
-                />
-              ))
+              <div className="space-y-6">
+                {blocks.map((block) => (
+                  <SortableBlock
+                    key={block.id}
+                    block={block}
+                    onDeleteBlock={onDeleteBlock}
+                    onUpdateBlock={onUpdateBlock}
+                    openMediaLibrary={openMediaLibrary}
+                  />
+                ))}
+              </div>
             )}
           </div>
         </div>

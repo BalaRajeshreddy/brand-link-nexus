@@ -567,7 +567,7 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
           onDragEnd={handleDragEnd}
         >
           <div className="flex-1 overflow-hidden flex">
-            <div className={`flex-1 ${showMobilePreview ? 'w-2/3' : 'w-full'} h-full overflow-hidden`}>
+            <div className={`flex-1 ${showMobilePreview ? 'w-1/2' : 'w-full'} h-full overflow-hidden`}>
               <SortableContext
                 items={blocks.map(block => block.id)}
                 strategy={verticalListSortingStrategy}
@@ -586,7 +586,7 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
             </div>
             
             {showMobilePreview && (
-              <div className="w-1/3 border-l bg-gray-50">
+              <div className="w-1/2 border-l bg-gray-50">
                 <PageEditorPreview 
                   blocks={blocks} 
                   pageStyles={{
