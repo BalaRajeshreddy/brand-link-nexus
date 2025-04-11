@@ -15,8 +15,20 @@ interface MediaLibraryProps {
   onSelectImage: (url: string, alt: string) => void;
 }
 
+// Define a type for media items
+interface MediaItem {
+  id: string;
+  name: string;
+  url: string;
+  file_path?: string;
+  file_size?: number;
+  mime_type?: string;
+  created_at?: string;
+  user_id?: string;
+}
+
 export function MediaLibrary({ open, onOpenChange, onSelectImage }: MediaLibraryProps) {
-  const [uploadedImages, setUploadedImages] = useState<Array<{ url: string; name: string; id: string }>>([]);
+  const [uploadedImages, setUploadedImages] = useState<MediaItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [altText, setAltText] = useState("");
@@ -32,11 +44,12 @@ export function MediaLibrary({ open, onOpenChange, onSelectImage }: MediaLibrary
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Use any() to avoid type issues with the media_library table
       const { data, error } = await supabase
         .from('media_library')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as { data: MediaItem[] | null, error: any };
 
       if (error) throw error;
       setUploadedImages(data || []);
@@ -87,7 +100,7 @@ export function MediaLibrary({ open, onOpenChange, onSelectImage }: MediaLibrary
           .from('media')
           .getPublicUrl(filePath);
 
-        // Store reference in database
+        // Store reference in database - use insert() without type constraints
         const { error: dbError } = await supabase
           .from('media_library')
           .insert({
@@ -97,7 +110,7 @@ export function MediaLibrary({ open, onOpenChange, onSelectImage }: MediaLibrary
             user_id: user.id,
             file_size: file.size,
             mime_type: file.type
-          });
+          } as any);
 
         if (dbError) throw dbError;
       }

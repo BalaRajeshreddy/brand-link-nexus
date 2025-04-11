@@ -45,6 +45,39 @@ export type Database = {
         }
         Relationships: []
       }
+      media_library: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          name: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          name: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          name?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       page_components: {
         Row: {
           content: Json
