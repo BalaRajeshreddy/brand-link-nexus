@@ -2,14 +2,20 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { QRGenerator } from "@/components/qr/QRGenerator";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const QRCreator = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userName, setUserName] = useState("...");
+  const [userId, setUserId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Get pageId from query params if provided
+  const queryParams = new URLSearchParams(location.search);
+  const pageId = queryParams.get('pageId');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -30,6 +36,7 @@ const QRCreator = () => {
         // Session exists, get user data
         const { user } = data.session;
         if (user) {
+          setUserId(user.id);
           setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "Brand User");
         }
       } catch (error) {
@@ -61,7 +68,7 @@ const QRCreator = () => {
           <h1 className="text-2xl font-bold tracking-tight">Create QR Code</h1>
         </div>
         
-        <QRGenerator />
+        <QRGenerator userId={userId} initialPageId={pageId} />
       </div>
     </DashboardLayout>
   );

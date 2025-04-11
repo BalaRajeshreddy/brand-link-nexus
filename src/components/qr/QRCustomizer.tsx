@@ -1,194 +1,173 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Download, Share2, Palette, Image, QrCode } from "lucide-react";
-import { toast } from "sonner";
-
-interface QRCodeData {
-  url: string;
-  color: string;
-  backgroundColor: string;
-  logo: string;
-  shape: string;
-  frame: string;
-}
+import { Download, ArrowLeft } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 interface QRCustomizerProps {
-  qrData: QRCodeData;
+  qrData: {
+    url: string;
+    color: string;
+    backgroundColor: string;
+    logo: string;
+    shape: string;
+    frame: string;
+  };
   onBack: () => void;
+  onSave?: (qrImageUrl: string) => void;
+  isSaving?: boolean;
 }
 
-export function QRCustomizer({ qrData, onBack }: QRCustomizerProps) {
-  const [customization, setCustomization] = useState(qrData);
+export function QRCustomizer({ qrData, onBack, onSave, isSaving = false }: QRCustomizerProps) {
+  const [color, setColor] = useState(qrData.color);
+  const [backgroundColor, setBackgroundColor] = useState(qrData.backgroundColor);
+  const [cornerRadius, setCornerRadius] = useState(0);
+  const [size, setSize] = useState(300);
   
-  const shapes = ['square', 'rounded', 'circular'];
-  const frames = ['none', 'square', 'rounded'];
-  
-  const handleColorChange = (color: string) => {
-    setCustomization({
-      ...customization,
-      color,
-    });
+  // Mock QR code image generation - in real app, this would use a QR code library
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(qrData.url)}&bgcolor=${backgroundColor.replace('#', '')}&color=${color.replace('#', '')}`;
+
+  const handleDownload = () => {
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = qrImageUrl;
+    link.download = 'qrcode.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
-  
-  const handleShapeChange = (shape: string) => {
-    setCustomization({
-      ...customization,
-      shape,
-    });
-  };
-  
-  const handleFrameChange = (frame: string) => {
-    setCustomization({
-      ...customization,
-      frame,
-    });
-  };
-  
-  const saveQRCode = () => {
-    toast.success("QR Code saved successfully!");
-  };
-  
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-2 space-y-6">
-        <Button variant="outline" size="sm" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-        
-        <Tabs defaultValue="style">
-          <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="style">Style</TabsTrigger>
-            <TabsTrigger value="logo">Logo</TabsTrigger>
-            <TabsTrigger value="frame">Frame</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="style" className="space-y-4 mt-4">
-            <div>
-              <Label>Colors</Label>
-              <div className="grid grid-cols-2 gap-4 mt-2">
-                <div>
-                  <Label htmlFor="foregroundColor" className="text-xs">QR Color</Label>
-                  <div className="flex mt-1">
-                    <div 
-                      className="w-9 h-9 rounded border mr-2" 
-                      style={{ backgroundColor: customization.color }}
-                    />
-                    <Input
-                      id="foregroundColor"
-                      type="color"
-                      value={customization.color}
-                      onChange={(e) => handleColorChange(e.target.value)}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="backgroundColor" className="text-xs">Background Color</Label>
-                  <div className="flex mt-1">
-                    <div 
-                      className="w-9 h-9 rounded border mr-2" 
-                      style={{ backgroundColor: customization.backgroundColor }}
-                    />
-                    <Input
-                      id="backgroundColor"
-                      type="color"
-                      value={customization.backgroundColor}
-                      onChange={(e) => setCustomization({ ...customization, backgroundColor: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <Label>QR Style</Label>
-              <div className="grid grid-cols-3 gap-4 mt-2">
-                {shapes.map((shape) => (
-                  <div 
-                    key={shape}
-                    className={`qr-option-card ${customization.shape === shape ? 'selected' : ''}`}
-                    onClick={() => handleShapeChange(shape)}
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="w-12 h-12 bg-primary/20 rounded flex items-center justify-center">
-                        <QrCode size={28} />
-                      </div>
-                      <span className="text-xs mt-2 capitalize">{shape}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="logo" className="space-y-4 mt-4">
-            <div>
-              <Label>Upload Logo</Label>
-              <div className="mt-2 border-2 border-dashed rounded-lg p-6 text-center">
-                <Image className="mx-auto h-12 w-12 text-muted-foreground" />
-                <div className="mt-2">
-                  <Button variant="outline">Upload Logo</Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">PNG, JPG or SVG, max 2MB</p>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="frame" className="space-y-4 mt-4">
-            <div>
-              <Label>Frame Style</Label>
-              <div className="grid grid-cols-3 gap-4 mt-2">
-                {frames.map((frame) => (
-                  <div 
-                    key={frame}
-                    className={`qr-option-card ${customization.frame === frame ? 'selected' : ''}`}
-                    onClick={() => handleFrameChange(frame)}
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="w-12 h-12 bg-primary/20 rounded flex items-center justify-center">
-                        <QrCode size={28} />
-                      </div>
-                      <span className="text-xs mt-2 capitalize">{frame === 'none' ? 'No Frame' : frame}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+    <div className="space-y-6">
+      <Button variant="outline" className="gap-2" onClick={onBack}>
+        <ArrowLeft size={16} />
+        Back to QR Settings
+      </Button>
       
-      <div className="bg-gray-50 rounded-lg p-6">
-        <div className="text-center">
-          <h3 className="font-medium">Preview</h3>
-          
-          <div className="mt-4 bg-white rounded-lg p-6 shadow-sm mx-auto w-48 h-48 flex items-center justify-center">
-            <div className="relative">
-              <QrCode size={120} />
-              {customization.logo && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-white p-1 rounded-md">
-                    <img src={customization.logo} alt="Logo" className="w-8 h-8" />
-                  </div>
-                </div>
-              )}
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="rounded-lg border overflow-hidden bg-white">
+          <div className="p-4 border-b">
+            <h3 className="text-lg font-semibold">Preview</h3>
           </div>
+          <div 
+            className="flex flex-col items-center justify-center p-8"
+            style={{ backgroundColor }}
+          >
+            <div className="bg-white p-4 rounded shadow-sm">
+              <img 
+                src={qrImageUrl} 
+                alt="QR Code preview" 
+                className="mx-auto"
+                style={{ borderRadius: `${cornerRadius}px` }}
+              />
+            </div>
+            <p className="mt-4 text-sm text-center">
+              Scans to: <a href={qrData.url} className="text-primary underline" target="_blank" rel="noreferrer">{qrData.url}</a>
+            </p>
+          </div>
+        </div>
+        
+        <div>
+          <Tabs defaultValue="design" className="w-full">
+            <TabsList className="grid grid-cols-3 w-full">
+              <TabsTrigger value="design">Design</TabsTrigger>
+              <TabsTrigger value="shape">Shape</TabsTrigger>
+              <TabsTrigger value="frame">Frame</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="design" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="qr-color">QR Color</Label>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-6 h-6 border rounded" 
+                    style={{ backgroundColor: color }}
+                  />
+                  <Input 
+                    id="qr-color"
+                    type="color"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    className="w-12 h-9 p-1"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="background-color">Background Color</Label>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-6 h-6 border rounded" 
+                    style={{ backgroundColor: backgroundColor }}
+                  />
+                  <Input 
+                    id="background-color"
+                    type="color"
+                    value={backgroundColor}
+                    onChange={(e) => setBackgroundColor(e.target.value)}
+                    className="w-12 h-9 p-1"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>QR Size</Label>
+                <div className="flex items-center gap-2">
+                  <Slider
+                    value={[size]}
+                    min={100}
+                    max={800}
+                    step={10}
+                    onValueChange={(value) => setSize(value[0])}
+                    className="flex-1"
+                  />
+                  <span className="text-sm">{size}px</span>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="shape" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label>Corner Radius</Label>
+                <div className="flex items-center gap-2">
+                  <Slider
+                    value={[cornerRadius]}
+                    min={0}
+                    max={20}
+                    step={1}
+                    onValueChange={(value) => setCornerRadius(value[0])}
+                    className="flex-1"
+                  />
+                  <span className="text-sm">{cornerRadius}px</span>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="frame" className="space-y-4 mt-4">
+              <p className="text-muted-foreground">Frame options coming soon</p>
+            </TabsContent>
+          </Tabs>
           
-          <div className="mt-6 space-y-3">
-            <Button className="w-full" onClick={saveQRCode}>
-              <Download className="mr-2 h-4 w-4" />
-              Save QR Code
+          <div className="mt-6 space-y-4">
+            <Button 
+              variant="default" 
+              className="w-full gap-2"
+              onClick={onSave ? () => onSave(qrImageUrl) : undefined}
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "Save QR Code"}
             </Button>
             
-            <Button variant="outline" className="w-full">
-              <Share2 className="mr-2 h-4 w-4" />
-              Share
+            <Button 
+              variant="outline" 
+              className="w-full gap-2"
+              onClick={handleDownload}
+            >
+              <Download size={16} />
+              Download Image
             </Button>
           </div>
         </div>

@@ -23,12 +23,20 @@ interface LandingPageOption {
   slug: string;
 }
 
-export function QRGenerator() {
+interface QRGeneratorProps {
+  userId: string;
+  initialPageId?: string | null;
+}
+
+export function QRGenerator({ userId, initialPageId }: QRGeneratorProps) {
   const [url, setUrl] = useState('');
-  const [qrType, setQrType] = useState('direct');
+  const [qrType, setQrType] = useState(initialPageId ? 'landing-page' : 'direct');
   const [landingPages, setLandingPages] = useState<LandingPageOption[]>([]);
-  const [selectedPageId, setSelectedPageId] = useState<string>('');
+  const [selectedPageId, setSelectedPageId] = useState<string>(initialPageId || '');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [qrTitle, setQrTitle] = useState('');
+  const [qrDescription, setQrDescription] = useState('');
   
   const [qrCodeData, setQRCodeData] = useState({
     url: '',
@@ -45,28 +53,36 @@ export function QRGenerator() {
   useEffect(() => {
     // Fetch landing pages if user is logged in
     const fetchLandingPages = async () => {
+      setIsLoading(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          const { data, error } = await supabase
-            .from('landing_pages')
-            .select('id, title, slug')
-            .order('created_at', { ascending: false });
-            
-          if (error) throw error;
-          setLandingPages(data || []);
+        const { data, error } = await supabase
+          .from('landing_pages')
+          .select('id, title, slug')
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        setLandingPages(data || []);
+
+        // If initialPageId is provided, select it
+        if (initialPageId) {
+          setSelectedPageId(initialPageId);
         }
       } catch (error) {
         console.error('Error fetching landing pages:', error);
+        toast.error('Failed to load landing pages');
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    fetchLandingPages();
-  }, []);
+    if (userId) {
+      fetchLandingPages();
+    }
+  }, [userId, initialPageId]);
 
   const generateQRCode = () => {
     let finalUrl = '';
+    let finalTitle = qrTitle.trim() || 'My QR Code';
     
     if (qrType === 'landing-page') {
       if (!selectedPageId) {
@@ -76,15 +92,25 @@ export function QRGenerator() {
       
       const selectedPage = landingPages.find(page => page.id === selectedPageId);
       if (selectedPage) {
-        // Here you would use your actual domain
+        // Generate the custom URL using the slug
         finalUrl = `${window.location.origin}/${selectedPage.slug}`;
+        if (!qrTitle) finalTitle = `QR for ${selectedPage.title}`;
+      } else {
+        toast.error("Invalid landing page selection");
+        return;
       }
     } else {
       if (!url) {
         toast.error("Please enter a URL");
         return;
       }
-      finalUrl = url;
+
+      // Make sure URL has http:// or https:// prefix
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        finalUrl = `https://${url}`;
+      } else {
+        finalUrl = url;
+      }
     }
     
     setQRCodeData({
@@ -93,6 +119,35 @@ export function QRGenerator() {
     });
     
     setStep(2);
+  };
+
+  const saveQRCode = async (qrImageUrl: string) => {
+    setIsSaving(true);
+    
+    try {
+      const qrData = {
+        user_id: userId,
+        title: qrTitle || 'My QR Code',
+        description: qrDescription,
+        url: qrCodeData.url,
+        landing_page_id: qrType === 'landing-page' ? selectedPageId : null
+      };
+      
+      const { data, error } = await supabase
+        .from('qr_codes')
+        .insert(qrData)
+        .select();
+        
+      if (error) throw error;
+      
+      toast.success('QR Code saved successfully');
+      navigate('/dashboard/brand/qr-codes');
+    } catch (error) {
+      console.error('Error saving QR code:', error);
+      toast.error('Failed to save QR code');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -105,6 +160,28 @@ export function QRGenerator() {
       <div className="p-6">
         {step === 1 ? (
           <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="qr-title">QR Code Title</Label>
+                <Input
+                  id="qr-title"
+                  placeholder="My Product QR"
+                  value={qrTitle}
+                  onChange={(e) => setQrTitle(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="qr-description">Description (Optional)</Label>
+                <Input
+                  id="qr-description"
+                  placeholder="QR code for my product landing page"
+                  value={qrDescription}
+                  onChange={(e) => setQrDescription(e.target.value)}
+                />
+              </div>
+            </div>
+            
             <Tabs defaultValue="url" className="w-full">
               <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="url">URL</TabsTrigger>
@@ -122,7 +199,7 @@ export function QRGenerator() {
                         <LayoutTemplate className="h-5 w-5 text-primary" />
                         <h3 className="font-medium">Landing Page</h3>
                       </div>
-                      <p className="text-sm text-muted-foreground">Create a custom landing page for your QR code</p>
+                      <p className="text-sm text-muted-foreground">Create a QR code for your custom landing page</p>
                       
                       {qrType === 'landing-page' && (
                         <div className="mt-4">
@@ -159,6 +236,19 @@ export function QRGenerator() {
                               </Button>
                             </div>
                           )}
+                          
+                          {selectedPageId && (
+                            <div className="mt-3">
+                              <Label>Generated URL</Label>
+                              <div className="mt-1 p-2 bg-gray-50 rounded border text-sm font-mono break-all">
+                                {window.location.origin}/
+                                {landingPages.find(p => p.id === selectedPageId)?.slug || '...'}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                This URL will be opened when the QR code is scanned
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -181,13 +271,16 @@ export function QRGenerator() {
                               <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                               <Input
                                 id="url"
-                                placeholder="https://example.com"
+                                placeholder="example.com"
                                 className="pl-9"
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                               />
                             </div>
                           </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            https:// will be added automatically if not included
+                          </p>
                         </div>
                       )}
                     </div>
@@ -246,7 +339,12 @@ export function QRGenerator() {
             </Tabs>
           </div>
         ) : (
-          <QRCustomizer qrData={qrCodeData} onBack={() => setStep(1)} />
+          <QRCustomizer 
+            qrData={qrCodeData} 
+            onBack={() => setStep(1)}
+            onSave={saveQRCode}
+            isSaving={isSaving}
+          />
         )}
       </div>
     </div>

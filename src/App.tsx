@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import React from "react"; // Add this import
+import React from "react";
 
 // Pages
 import Index from "./pages/Index";
@@ -12,6 +12,8 @@ import Auth from "./pages/Auth";
 import BrandDashboard from "./pages/BrandDashboard";
 import QRCreator from "./pages/QRCreator";
 import PageCreator from "./pages/PageCreator";
+import LandingPagesList from "./pages/LandingPagesList";
+import QRCodesList from "./pages/QRCodesList";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
@@ -34,6 +36,8 @@ const App = () => (
             <Route path="/dashboard/brand" element={<BrandDashboard />} />
             <Route path="/dashboard/brand/create-qr" element={<QRCreator />} />
             <Route path="/dashboard/brand/create-page" element={<PageCreator />} />
+            <Route path="/dashboard/brand/landing-pages" element={<LandingPagesList />} />
+            <Route path="/dashboard/brand/qr-codes" element={<QRCodesList />} />
             
             {/* Admin Routes */}
             <Route path="/dashboard/admin" element={<AdminDashboard />} />

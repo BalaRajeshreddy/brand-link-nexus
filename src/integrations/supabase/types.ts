@@ -119,12 +119,59 @@ export type Database = {
           },
         ]
       }
+      qr_codes: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          landing_page_id: string | null
+          title: string
+          updated_at: string | null
+          url: string
+          user_id: string
+          views: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          landing_page_id?: string | null
+          title: string
+          updated_at?: string | null
+          url: string
+          user_id: string
+          views?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          landing_page_id?: string | null
+          title?: string
+          updated_at?: string | null
+          url?: string
+          user_id?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_codes_landing_page_id_fkey"
+            columns: ["landing_page_id"]
+            isOneToOne: false
+            referencedRelation: "landing_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_qr_view: {
+        Args: { qr_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

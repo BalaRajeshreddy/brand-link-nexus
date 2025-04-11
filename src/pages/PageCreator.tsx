@@ -11,6 +11,7 @@ const PageCreator = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState("...");
   const [userEmail, setUserEmail] = useState("");
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -31,6 +32,7 @@ const PageCreator = () => {
         // Session exists, get user data
         const { user } = data.session;
         if (user) {
+          setUserId(user.id); // Store the user ID for saving pages
           setUserEmail(user.email || "");
           // Use email as username if no name is available
           setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "Brand User");
@@ -59,7 +61,7 @@ const PageCreator = () => {
 
   return (
     <DashboardLayout userType="Brand" userName={userName}>
-      <PageBuilder />
+      <PageBuilder userId={userId} />
     </DashboardLayout>
   );
 };
