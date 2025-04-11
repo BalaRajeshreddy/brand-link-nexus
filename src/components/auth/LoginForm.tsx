@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface LoginFormProps {
   userType: string;
@@ -13,26 +15,38 @@ export function LoginForm({ userType }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Just simulating authentication for now
-    setTimeout(() => {
-      toast.success(`Successfully logged in as ${userType}`);
-      setIsLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success(`Successfully logged in`);
       
-      // In a real implementation, we would use Supabase authentication here
-      // and redirect to the appropriate dashboard
+      // Redirect based on user type
       const redirectPath = userType === 'Brand' 
         ? '/dashboard/brand' 
         : userType === 'Admin' 
           ? '/dashboard/admin' 
           : '/dashboard/user';
           
-      window.location.href = redirectPath;
-    }, 1000);
+      navigate(redirectPath);
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

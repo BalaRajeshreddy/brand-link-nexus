@@ -9,15 +9,31 @@ import { toast } from "sonner";
 const PageCreator = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [userName, setUserName] = useState("...");
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
     const checkAuth = async () => {
       setIsLoading(true);
       try {
-        const { data } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+        
         if (!data.session) {
           toast.error("You need to be logged in to access this page");
           navigate("/auth");
+          return;
+        }
+        
+        // Session exists, get user data
+        const { user } = data.session;
+        if (user) {
+          setUserEmail(user.email || "");
+          // Use email as username if no name is available
+          setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "Brand User");
         }
       } catch (error) {
         console.error("Authentication error:", error);
@@ -42,7 +58,7 @@ const PageCreator = () => {
   }
 
   return (
-    <DashboardLayout userType="Brand" userName="Acme Inc.">
+    <DashboardLayout userType="Brand" userName={userName}>
       <PageBuilder />
     </DashboardLayout>
   );

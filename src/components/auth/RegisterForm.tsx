@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface RegisterFormProps {
   userType: string;
@@ -16,6 +18,7 @@ export function RegisterForm({ userType }: RegisterFormProps) {
   const [password, setPassword] = useState('');
   const [category, setCategory] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
   
   const categories = [
     'Food & Beverages', 
@@ -31,21 +34,40 @@ export function RegisterForm({ userType }: RegisterFormProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    // Just simulating registration for now
-    setTimeout(() => {
+    try {
+      // Register user with Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            userType,
+            ...(userType === 'Brand' && { category })
+          }
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
       toast.success(`Successfully registered as ${userType}`);
-      setIsLoading(false);
       
-      // In a real implementation, we would use Supabase authentication here
-      // and redirect to the appropriate dashboard
+      // Redirect based on user type
       const redirectPath = userType === 'Brand' 
         ? '/dashboard/brand' 
         : userType === 'Admin' 
           ? '/dashboard/admin' 
           : '/dashboard/user';
           
-      window.location.href = redirectPath;
-    }, 1000);
+      navigate(redirectPath);
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
