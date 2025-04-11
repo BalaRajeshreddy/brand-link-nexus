@@ -1,4 +1,3 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Trash2, Edit, ChevronUp, ChevronDown, Palette } from "lucide-react";
@@ -19,6 +18,7 @@ interface PageEditorCanvasProps {
   blocks: Block[];
   onDeleteBlock: (blockId: string) => void;
   onUpdateBlock: (blockId: string, content: Record<string, any>, styles: Record<string, any>) => void;
+  openMediaLibrary: (blockId: string, fieldPath: string, altPath?: string) => void;
   pageStyles: {
     backgroundColor: string;
     fontFamily: string;
@@ -247,7 +247,6 @@ function SortableBlock({ block, onDelete, onEdit, pageStyles }: {
         }
       
       case 'video':
-        // Basic iframe for demo purposes - would need proper embed handling in production
         return block.content.src ? (
           <div className="aspect-w-16 aspect-h-9">
             <iframe 
@@ -332,7 +331,6 @@ function SortableBlock({ block, onDelete, onEdit, pageStyles }: {
             </div>
           );
         } else {
-          // Default cards display
           return (
             <div 
               className="grid grid-cols-1 md:grid-cols-2"
@@ -477,7 +475,6 @@ function SortableBlock({ block, onDelete, onEdit, pageStyles }: {
             </div>
           );
         } else {
-          // Default 'icons' display
           return (
             <div 
               className="flex"
@@ -566,7 +563,6 @@ function SortableBlock({ block, onDelete, onEdit, pageStyles }: {
             </div>
           );
         } else {
-          // Default 'buttons' display
           return (
             <div 
               className="flex flex-wrap"
@@ -773,7 +769,6 @@ function SortableBlock({ block, onDelete, onEdit, pageStyles }: {
             </div>
           );
         } else {
-          // Default 'cards' display
           return (
             <div 
               className="grid grid-cols-3 gap-4"
@@ -913,7 +908,6 @@ function SortableBlock({ block, onDelete, onEdit, pageStyles }: {
             </div>
           );
         } else {
-          // Default 'grid' display
           return (
             <div 
               className="grid grid-cols-3"
@@ -1075,7 +1069,6 @@ function SortableBlock({ block, onDelete, onEdit, pageStyles }: {
             </div>
           );
         } else {
-          // Default 'grid' display
           return (
             <div 
               className="grid grid-cols-3"
@@ -1169,7 +1162,6 @@ function SortableBlock({ block, onDelete, onEdit, pageStyles }: {
             </div>
           );
         } else {
-          // image-top or image-bottom
           return (
             <div 
               className="flex flex-col"
@@ -1260,7 +1252,7 @@ function SortableBlock({ block, onDelete, onEdit, pageStyles }: {
   );
 }
 
-export function PageEditorCanvas({ blocks, onDeleteBlock, onUpdateBlock, pageStyles }: PageEditorCanvasProps) {
+export function PageEditorCanvas({ blocks, onDeleteBlock, onUpdateBlock, openMediaLibrary, pageStyles }: PageEditorCanvasProps) {
   const [editingBlock, setEditingBlock] = useState<Block | null>(null);
 
   const handleStartEdit = (block: Block) => {
