@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { FileAsset } from '@/types/file';
 import { FileUpload } from './FileUpload';
@@ -28,11 +29,7 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
   const [url, setUrl] = useState(value || '');
 
   const handleFileSelect = (file: FileAsset) => {
-    onSelect({
-      url: file.url,
-      alt: file.name,
-      file: file.file
-    });
+    onSelect(file);
     setShowFileManager(false);
   };
 
@@ -41,21 +38,28 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
       alert(`File size must be less than 5MB`);
       return;
     }
-    onSelect({
-      url: URL.createObjectURL(file),
-      alt: file.name,
-      file: file
-    });
+    onSelect(file);
     setShowUpload(false);
   };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = e.target.value;
     setUrl(newUrl);
-    onSelect({
+    // Create a minimal FileAsset object with just the needed properties
+    const fileAsset: Partial<FileAsset> = {
       url: newUrl,
-      alt: 'Image'
-    });
+      name: 'External resource',
+      type: type === 'image' ? 'image' : 'pdf',
+      size: 0,
+      mimeType: type === 'image' ? 'image/jpeg' : 'application/pdf',
+      id: `external-${Date.now()}`,
+      userId: '',
+      brandId: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      usageCount: 0
+    };
+    onSelect(fileAsset as FileAsset);
   };
 
   return (
@@ -104,8 +108,8 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
               </DialogHeader>
               <FileManager
                 brandId={brandId}
-                onSelect={handleFileSelect}
-                allowedTypes={[type]}
+                onFileSelect={handleFileSelect}
+                filterType={type}
               />
             </DialogContent>
           </Dialog>
@@ -113,4 +117,4 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
       </Tabs>
     </div>
   );
-}; 
+};

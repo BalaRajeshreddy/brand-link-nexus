@@ -70,6 +70,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
             id: block.id,
             type: block.type,
             content: block.content,
+            brandId: block.brandId || ''
           }}
           onSave={handleUpdateBlock}
           openMediaLibrary={() => openMediaLibrary(block.id, 'content.image.src', 'content.image.alt')}

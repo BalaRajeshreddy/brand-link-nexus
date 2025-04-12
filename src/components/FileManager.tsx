@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { FileAsset } from '@/types/file';
 import { Input } from './ui/input';
@@ -10,6 +11,7 @@ interface FileManagerProps {
   brandId: string;
   onFileSelect: (file: FileAsset) => void;
   filterType?: 'image' | 'pdf';
+  allowedTypes?: ('image' | 'pdf')[];
 }
 
 type FileType = 'IMAGE' | 'PDF';
@@ -17,7 +19,8 @@ type FileType = 'IMAGE' | 'PDF';
 export const FileManager: React.FC<FileManagerProps> = ({
   brandId,
   onFileSelect,
-  filterType
+  filterType,
+  allowedTypes
 }) => {
   const [files, setFiles] = useState<FileAsset[]>([]);
   const [search, setSearch] = useState('');
@@ -50,7 +53,10 @@ export const FileManager: React.FC<FileManagerProps> = ({
     const matchesType = !filterType || 
       (filterType === 'image' && (file.type as FileType) === 'IMAGE') ||
       (filterType === 'pdf' && (file.type as FileType) === 'PDF');
-    return matchesSearch && matchesType;
+    const matchesAllowedTypes = !allowedTypes || 
+      (allowedTypes.includes('image') && (file.type as FileType) === 'IMAGE') ||
+      (allowedTypes.includes('pdf') && (file.type as FileType) === 'PDF');
+    return matchesSearch && matchesType && matchesAllowedTypes;
   });
 
   if (error) {

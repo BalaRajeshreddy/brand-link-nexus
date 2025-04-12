@@ -1,9 +1,9 @@
+
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { 
   BlockContent, 
   HeadingTextContent, 
-  ImageContent, 
   ImagesContent, 
   ImagesLinksContent, 
   ButtonContent, 
@@ -48,11 +48,10 @@ export function SortableBlock({ block, onUpdate, onDelete, onDuplicate, onMove }
           </div>
         );
       case 'image':
-        const imageContent = block.content as ImageContent;
         return (
           <img 
-            src={imageContent.src} 
-            alt={imageContent.alt} 
+            src={(block.content as any).src || (block.content as any).image?.src} 
+            alt={(block.content as any).alt || (block.content as any).image?.alt || "Image"} 
             className="w-full h-auto"
           />
         );
@@ -64,7 +63,7 @@ export function SortableBlock({ block, onUpdate, onDelete, onDuplicate, onMove }
               <div key={index} className="text-center">
                 <img 
                   src={image.src} 
-                  alt={image.alt} 
+                  alt={image.alt || `Image ${index + 1}`} 
                   className="w-full h-auto"
                 />
               </div>
@@ -80,7 +79,7 @@ export function SortableBlock({ block, onUpdate, onDelete, onDuplicate, onMove }
                 <a href={image.link} target="_blank" rel="noopener noreferrer">
                   <img 
                     src={image.src} 
-                    alt={image.alt} 
+                    alt={image.alt || `Image ${index + 1}`} 
                     className="w-full h-auto"
                   />
                 </a>
@@ -183,4 +182,4 @@ export function SortableBlock({ block, onUpdate, onDelete, onDuplicate, onMove }
       </div>
     </div>
   );
-} 
+}

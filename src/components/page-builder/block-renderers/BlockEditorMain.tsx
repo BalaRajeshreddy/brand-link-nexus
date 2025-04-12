@@ -24,6 +24,49 @@ import { cn } from '@/lib/utils';
 
 // Define type interfaces for each block content type
 export interface BaseBlockContent {
+  // Common styling properties
+  backgroundColor?: string;
+  textColor?: string;
+  padding?: string;
+  margin?: string;
+  borderRadius?: string;
+  borderWidth?: string;
+  borderColor?: string;
+  borderStyle?: string;
+  boxShadow?: string;
+  width?: string;
+  height?: string;
+  minHeight?: string;
+  maxWidth?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  fontFamily?: string;
+  lineHeight?: string;
+  letterSpacing?: string;
+  opacity?: string;
+  transform?: string;
+  transition?: string;
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
+  display?: string;
+  flexDirection?: string;
+  alignItems?: string;
+  justifyContent?: string;
+  gap?: string;
+  
+  // Common content properties
+  title?: string;
+  text?: string;
+  description?: string;
+  heading?: string;
+  location?: string;
+  image?: {
+    url?: string;
+    src?: string;
+    alt?: string;
+  };
+  src?: string;
+  alt?: string;
+  
   styles?: Record<string, any>;
 }
 
@@ -427,31 +470,31 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
 
       case 'images':
         if (isImagesContent(content)) {
-          return <ImagesBlock content={content} styles={styles} />;
+          return <ImagesBlock content={content as ImagesContent} styles={styles} />;
         }
         return <div>Invalid images content</div>;
       
       case 'images + links':
         if (isImagesLinksContent(content)) {
-          return <ImagesLinksBlock content={content} styles={styles} />;
+          return <ImagesLinksBlock content={content as ImagesLinksContent} styles={styles} />;
         }
         return <div>Invalid images+links content</div>;
       
       case 'video':
         if (isVideoContent(content)) {
-          return <VideoBlock content={content} styles={styles} />;
+          return <VideoBlock content={content as VideoContent} styles={styles} />;
         }
         return <div>Invalid video content</div>;
       
       case 'testimonials':
         if (isTestimonialsContent(content)) {
-          return <TestimonialsBlock content={content} styles={styles} />;
+          return <TestimonialsBlock content={content as TestimonialsContent} styles={styles} />;
         }
         return <div>Invalid testimonials content</div>;
 
       case 'smart feedback':
         if (isSmartFeedbackContent(content)) {
-          return <SmartFeedbackBlock content={content} styles={styles} />;
+          return <SmartFeedbackBlock content={content as SmartFeedbackContent} styles={styles} />;
         }
         return <div>Invalid smart feedback content</div>;
 
@@ -477,25 +520,25 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
       
       case 'social links':
         if (isSocialLinksContent(content)) {
-          return <SocialLinksBlock content={content} styles={styles} />;
+          return <SocialLinksBlock content={content as SocialLinksContent} styles={styles} />;
         }
         return <div>Invalid social links content</div>;
 
       case 'links':
         if (isLinksContent(content)) {
-          return <LinksBlock content={content} styles={styles} />;
+          return <LinksBlock content={content as LinksContent} styles={styles} />;
         }
         return <div>Invalid links content</div>;
 
       case 'button':
         if (isButtonContent(content)) {
-          return <ButtonBlock content={content} styles={styles} />;
+          return <ButtonBlock content={content as ButtonContent} styles={styles} />;
         }
         return <div>Invalid button content</div>;
       
       case 'form':
         if (isFormContent(content)) {
-          return <FormBlock content={content} styles={styles} />;
+          return <FormBlock content={content as FormContent} styles={styles} />;
         }
         return <div>Invalid form content</div>;
       
@@ -510,50 +553,50 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
               ],
               submitText: 'Send Message',
               submitAction: 'email'
-            }}
+            } as FormContent}
             styles={styles}
           />
         );
       
       case 'team':
         if (isTeamContent(content)) {
-          return <TeamBlock content={content} styles={styles} />;
+          return <TeamBlock content={content as TeamContent} styles={styles} />;
         }
         return <div>Invalid team content</div>;
       
       case 'products':
         if (isProductsContent(content)) {
-          return <ProductsBlock content={content} styles={styles} />;
+          return <ProductsBlock content={content as ProductsContent} styles={styles} />;
         }
         return <div>Invalid products content</div>;
       
       case 'appointment/calendar':
         if (isAppointmentCalendarContent(content)) {
-          return <AppointmentCalendarBlock content={content} styles={styles} />;
+          return <AppointmentCalendarBlock content={content as AppointmentCalendarContent} styles={styles} />;
         }
         return <div>Invalid appointment/calendar content</div>;
       
       case 'business hours':
         if (isBusinessHoursContent(content)) {
-          return <BusinessHoursBlock content={content} styles={styles} />;
+          return <BusinessHoursBlock content={content as BusinessHoursContent} styles={styles} />;
         }
         return <div>Invalid business hours content</div>;
       
       case 'pdf gallery':
         if (isPDFGalleryContent(content)) {
-          return <PDFGalleryBlock content={content} styles={styles} />;
+          return <PDFGalleryBlock content={content as PDFGalleryContent} styles={styles} />;
         }
         return <div>Invalid pdf gallery content</div>;
       
       case 'other details':
         if (isOtherDetailsContent(content)) {
-          return <OtherDetailsBlock content={content} styles={styles} />;
+          return <OtherDetailsBlock content={content as OtherDetailsContent} styles={styles} />;
         }
         return <div>Invalid other details content</div>;
       
       case 'image + text':
         if (isImageTextContent(content)) {
-          return <ImageTextBlock content={content} styles={styles} />;
+          return <ImageTextBlock content={content as ImageTextContent} styles={styles} />;
         }
         return <div>Invalid image + text content</div>;
       
