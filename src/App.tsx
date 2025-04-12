@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,6 +18,7 @@ import QRCodesList from "./pages/QRCodesList";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
+import PublishedLandingPage from "./pages/PublishedLandingPage";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,9 @@ const App = () => (
           
           {/* Profile Route */}
           <Route path="/profile" element={<ProfilePage />} />
+          
+          {/* Published Landing Page Route */}
+          <Route path="/:slug" element={<PublishedLandingPage />} />
           
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />

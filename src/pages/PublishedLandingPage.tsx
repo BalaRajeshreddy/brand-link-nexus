@@ -1,0 +1,153 @@
+
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
+import { Block } from '@/components/page-builder/PageBuilder';
+import { BlockEditorMain } from '@/components/page-builder/block-renderers/BlockEditorMain';
+import { toast } from "sonner";
+
+interface LandingPageData {
+  id: string;
+  title: string;
+  slug: string;
+  background_color: string;
+  font_family: string;
+  published: boolean;
+}
+
+const PublishedLandingPage = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const [pageData, setPageData] = useState<LandingPageData | null>(null);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPageContent = async () => {
+      console.log('Fetching page with slug:', slug);
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // First, get the landing page by slug
+        const { data: pageData, error: pageError } = await supabase
+          .from('landing_pages')
+          .select('*')
+          .eq('slug', slug)
+          .single();
+
+        if (pageError) {
+          console.error('Error fetching landing page:', pageError);
+          setError(`Page not found: ${slug}`);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!pageData) {
+          console.error('No page found with slug:', slug);
+          setError(`Page not found: ${slug}`);
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('Found landing page:', pageData);
+        setPageData(pageData);
+
+        // Then get all components for this page
+        const { data: components, error: componentsError } = await supabase
+          .from('page_components')
+          .select('*')
+          .eq('page_id', pageData.id)
+          .order('position', { ascending: true });
+
+        if (componentsError) {
+          console.error('Error fetching page components:', componentsError);
+          toast.error("Failed to load page components");
+          setError("Failed to load page content");
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('Found components:', components);
+        
+        if (components && components.length > 0) {
+          const loadedBlocks = components.map(component => ({
+            id: `block-${component.id}`,
+            type: component.type,
+            content: component.content || {},
+            styles: component.styles || {}
+          }));
+          
+          setBlocks(loadedBlocks);
+        } else {
+          console.log('No components found for this page');
+        }
+
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        setError("An unexpected error occurred");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (slug) {
+      fetchPageContent();
+    } else {
+      setError("Invalid page URL");
+      setIsLoading(false);
+    }
+  }, [slug]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">Page Not Found</h1>
+        <p className="text-gray-600 mb-6">{error}</p>
+        <a href="/" className="text-primary hover:underline">
+          Go to Homepage
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="min-h-screen"
+      style={{
+        backgroundColor: pageData?.background_color || '#FFFFFF',
+        fontFamily: pageData?.font_family || 'Inter, sans-serif'
+      }}
+    >
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {blocks.length === 0 ? (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-semibold text-gray-700">This page has no content</h2>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {blocks.map((block) => (
+              <div key={block.id}>
+                <BlockEditorMain
+                  blockType={block.type}
+                  content={block.content}
+                  styles={block.styles}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PublishedLandingPage;
