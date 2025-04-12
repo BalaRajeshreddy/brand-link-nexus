@@ -99,7 +99,6 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
               <DialogHeader>
                 <DialogTitle>Select {type === 'image' ? 'Image' : 'PDF'}</DialogTitle>
               </DialogHeader>
-              {/* Update the prop from onSelect to onFileSelect to match FileManager component */}
               <FileManager
                 brandId={brandId}
                 onFileSelect={handleFileSelect}

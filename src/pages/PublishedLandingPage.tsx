@@ -78,6 +78,7 @@ const PublishedLandingPage = () => {
             styles: component.styles || {}
           }));
           
+          console.log('Mapped blocks:', loadedBlocks);
           setBlocks(loadedBlocks);
         } else {
           console.log('No components found for this page');
@@ -92,8 +93,10 @@ const PublishedLandingPage = () => {
     };
 
     if (slug) {
+      console.log('Starting fetch for slug:', slug);
       fetchPageContent();
     } else {
+      console.error('No slug provided in URL');
       setError("Invalid page URL");
       setIsLoading(false);
     }
@@ -137,7 +140,7 @@ const PublishedLandingPage = () => {
             {blocks.map((block) => (
               <div key={block.id}>
                 <BlockEditorMain
-                  blockType={block.type as BlockType}
+                  blockType={block.type as BlockType | string}
                   content={block.content}
                   styles={block.styles}
                 />
