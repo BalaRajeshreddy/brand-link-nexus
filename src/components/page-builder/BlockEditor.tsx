@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Block, BlockStyles } from "@/types/block";
+import { Block, BlockStyles, BlockType } from "@/types/block";
 import {
   Carousel,
   CarouselContent,
@@ -42,7 +42,7 @@ interface EditorBlock {
 
 interface BlockEditorProps {
   block: Block;
-  onUpdateBlock: (block: { id: string; type: string; content: Record<string, any>; }) => void;
+  onUpdateBlock: (block: { id: string; type: string; content: Record<string, any>; styles?: Record<string, any> }) => void;
   openMediaLibrary?: () => void;
 }
 
@@ -76,10 +76,11 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
   
   const handleSave = () => {
     const updatedBlock = {
-      ...block,
+      id: block.id,
+      type: block.type,
       content: content,
-      styles: block.type === 'form' ? block.styles : {
-        ...block.styles,
+      styles: block.type === BlockType.FORM || block.type === 'form' ? block.styles : {
+        ...(block.styles || {}),
         ...content
       }
     };
@@ -95,9 +96,11 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
   
   const handleStyleChange = (componentType: 'container' | 'input' | 'label' | 'button', style: Partial<BlockStyles>) => {
     onUpdateBlock({
-      ...block,
+      id: block.id,
+      type: block.type,
+      content: block.content,
       styles: {
-        ...block.styles,
+        ...(block.styles || {}),
         [componentType]: {
           ...(block.styles?.[componentType] || {}),
           ...style
@@ -108,6 +111,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
 
   const renderContentEditor = () => {
     switch (block.type) {
+      case BlockType.HEADING:
       case 'heading':
         return (
           <div className="space-y-4">
@@ -122,6 +126,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
           </div>
         );
       
+      case BlockType.TEXT:
       case 'text':
         return (
           <div className="space-y-4">
@@ -137,6 +142,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
           </div>
         );
         
+      case BlockType.HEADING_TEXT:
       case 'heading + text':
         return (
           <div className="space-y-4">
@@ -160,6 +166,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
           </div>
         );
       
+      case BlockType.IMAGE:
       case 'image':
         return (
           <div className="space-y-4">
@@ -188,6 +195,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
           </div>
         );
         
+      case BlockType.IMAGES:
       case 'images':
         return (
           <div className="space-y-4">

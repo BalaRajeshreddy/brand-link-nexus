@@ -1,6 +1,6 @@
 export interface Block {
   id: string;
-  type: BlockType;
+  type: BlockType | string;
   content: BlockContent;
   order: number;
   isActive: boolean;
@@ -20,7 +20,20 @@ export enum BlockType {
   IMAGE_TEXT = 'IMAGE_TEXT',
   HEADING = 'HEADING',
   TEXT = 'TEXT',
-  HEADING_TEXT = 'HEADING_TEXT'
+  HEADING_TEXT = 'HEADING_TEXT',
+  IMAGES = 'images',
+  IMAGES_LINKS = 'images + links',
+  VIDEO_BLOCK = 'video',
+  TESTIMONIALS_BLOCK = 'testimonials',
+  SMART_FEEDBACK = 'smart feedback',
+  TEAM = 'team',
+  BUTTON = 'button',
+  FORM = 'form',
+  CONTACT_FORM = 'contact form',
+  MAP = 'map',
+  SOCIAL_LINKS = 'social links',
+  LINKS = 'links',
+  PRODUCTS = 'products'
 }
 
 export interface BlockStyles {

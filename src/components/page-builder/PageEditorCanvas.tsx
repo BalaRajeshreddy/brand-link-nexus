@@ -25,8 +25,8 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
     transition,
   };
 
-  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; }) => {
-    onUpdateBlock(updatedBlock.id, updatedBlock.content, block.styles || {});
+  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; styles?: Record<string, any> }) => {
+    onUpdateBlock(updatedBlock.id, updatedBlock.content, updatedBlock.styles || {});
     setIsEditing(false);
   };
 

@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { BlockEditorMain } from '@/components/page-builder/block-renderers/BlockEditorMain';
-import { Block } from '@/types/block';
+import { Block, BlockType } from '@/types/block';
 import { LoaderCircle } from 'lucide-react';
 
 interface LandingPageData {
@@ -69,6 +69,8 @@ export default function PublishedLandingPage() {
             type: component.type,
             content: component.content || {},
             styles: component.styles || {},
+            order: component.position || 0,
+            isActive: true,
             brandId: ''
           }));
           
