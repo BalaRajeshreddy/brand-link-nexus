@@ -1,5 +1,4 @@
-
-import { Block } from "@/types/block";
+import { Block } from "./PageBuilder";
 import { BlockEditorMain } from "./block-renderers/BlockEditorMain";
 
 interface PageEditorPreviewProps {

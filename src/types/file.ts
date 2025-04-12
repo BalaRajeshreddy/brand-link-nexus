@@ -1,4 +1,3 @@
-
 export type FileType = 'image' | 'pdf';
 
 export interface FileAsset {
@@ -10,18 +9,6 @@ export interface FileAsset {
   folder?: string;
   file?: File;
   alt?: string;
-  userId?: string;
-  brandId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  usageCount?: number;
-  thumbnailUrl?: string;
-  description?: string;
-  tags?: string[];
-  metadata?: {
-    width?: number;
-    height?: number;
-  };
 }
 
 export interface FileUploadConfig {

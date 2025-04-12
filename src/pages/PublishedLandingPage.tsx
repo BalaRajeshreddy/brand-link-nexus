@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { BlockEditorMain } from '@/components/page-builder/block-renderers/BlockEditorMain';
-import { Block, BlockType } from '@/types/block';
+import type { Block } from '@/components/page-builder/PageBuilder';
 import { LoaderCircle } from 'lucide-react';
 
 interface LandingPageData {
@@ -25,26 +25,22 @@ export default function PublishedLandingPage() {
     async function fetchLandingPage() {
       try {
         setIsLoading(true);
-        console.log('Fetching landing page with slug:', slug);
         
         // First, get the landing page data based on the slug
         const { data: pageData, error: pageError } = await supabase
           .from('landing_pages')
           .select('*')
           .eq('slug', slug)
+          .eq('published', true)
           .single();
         
         if (pageError) {
-          console.error('Landing page fetch error:', pageError);
           throw new Error('Landing page not found');
         }
 
         if (!pageData) {
-          console.error('No landing page found with slug:', slug);
-          throw new Error('No landing page found with this slug');
+          throw new Error('No published landing page found with this slug');
         }
-
-        console.log('Found landing page:', pageData);
         
         // Format the page data
         const formattedPageData = {
@@ -64,20 +60,15 @@ export default function PublishedLandingPage() {
           .order('position', { ascending: true });
         
         if (componentsError) {
-          console.error('Components fetch error:', componentsError);
           throw new Error('Failed to load page components');
         }
-        
-        console.log('Found components:', components);
         
         if (components && components.length > 0) {
           const formattedBlocks = components.map(component => ({
             id: `block-${component.id}`,
-            type: component.type as BlockType | string,
+            type: component.type,
             content: component.content || {},
             styles: component.styles || {},
-            order: component.position || 0,
-            isActive: true,
             brandId: ''
           }));
           
@@ -103,22 +94,17 @@ export default function PublishedLandingPage() {
     async function incrementQRViews() {
       if (!pageData?.id) return;
       
-      try {
-        // Find QR codes associated with this landing page
-        const { data: qrData } = await supabase
-          .from('qr_codes')
-          .select('id')
-          .eq('landing_page_id', pageData.id);
-        
-        if (qrData && qrData.length > 0) {
-          // Increment view count for each associated QR code
-          qrData.forEach(async (qr) => {
-            await supabase.rpc('increment_qr_view', { qr_id: qr.id });
-          });
-          console.log('Incremented QR views for', qrData.length, 'QR codes');
-        }
-      } catch (error) {
-        console.error('Error incrementing QR views:', error);
+      // Find QR codes associated with this landing page
+      const { data: qrData } = await supabase
+        .from('qr_codes')
+        .select('id')
+        .eq('landing_page_id', pageData.id);
+      
+      if (qrData && qrData.length > 0) {
+        // Increment view count for each associated QR code
+        qrData.forEach(async (qr) => {
+          await supabase.rpc('increment_qr_view', { qr_id: qr.id });
+        });
       }
     }
     
@@ -146,7 +132,7 @@ export default function PublishedLandingPage() {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <h1 className="text-2xl font-bold text-red-500 mb-4">Page Not Found</h1>
-        <p className="text-gray-600">The requested landing page does not exist.</p>
+        <p className="text-gray-600">The requested landing page does not exist or is not published.</p>
       </div>
     );
   }
@@ -155,8 +141,8 @@ export default function PublishedLandingPage() {
     <div 
       className="min-h-screen"
       style={{
-        backgroundColor: pageData?.backgroundColor || '#FFFFFF',
-        fontFamily: pageData?.fontFamily || 'Inter, sans-serif'
+        backgroundColor: pageData.backgroundColor,
+        fontFamily: pageData.fontFamily
       }}
     >
       <div className="max-w-4xl mx-auto py-8 px-4">

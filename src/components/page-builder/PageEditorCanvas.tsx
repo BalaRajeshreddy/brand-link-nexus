@@ -6,7 +6,7 @@ import { BlockEditor } from './BlockEditor';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Grip, Trash2, Pencil } from 'lucide-react';
-import { Block } from '@/types/block';
+import { Block } from './PageBuilder';
 import { BlockEditorMain, BlockContent } from './block-renderers/BlockEditorMain';
 
 interface SortableBlockProps {
@@ -25,8 +25,8 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
     transition,
   };
 
-  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; styles?: Record<string, any> }) => {
-    onUpdateBlock(updatedBlock.id, updatedBlock.content, updatedBlock.styles || {});
+  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; }) => {
+    onUpdateBlock(updatedBlock.id, updatedBlock.content, block.styles || {});
     setIsEditing(false);
   };
 
@@ -66,8 +66,12 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
 
       {isEditing ? (
         <BlockEditor
-          block={block}
-          onUpdateBlock={handleUpdateBlock}
+          block={{
+            id: block.id,
+            type: block.type,
+            content: block.content,
+          }}
+          onSave={handleUpdateBlock}
           openMediaLibrary={() => openMediaLibrary(block.id, 'content.image.src', 'content.image.alt')}
         />
       ) : (

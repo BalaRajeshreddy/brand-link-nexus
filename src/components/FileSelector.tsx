@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { FileAsset } from '@/types/file';
 import { FileUpload } from './FileUpload';
@@ -29,7 +28,11 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
   const [url, setUrl] = useState(value || '');
 
   const handleFileSelect = (file: FileAsset) => {
-    onSelect(file);
+    onSelect({
+      url: file.url,
+      alt: file.name,
+      file: file.file
+    });
     setShowFileManager(false);
   };
 
@@ -38,22 +41,21 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
       alert(`File size must be less than 5MB`);
       return;
     }
-    onSelect(file);
+    onSelect({
+      url: URL.createObjectURL(file),
+      alt: file.name,
+      file: file
+    });
     setShowUpload(false);
   };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = e.target.value;
     setUrl(newUrl);
-    // Create a minimal FileAsset object with just the needed properties
-    const fileAsset: FileAsset = {
+    onSelect({
       url: newUrl,
-      name: 'External resource',
-      type: type === 'image' ? 'image' : 'pdf',
-      size: 0,
-      id: `external-${Date.now()}`
-    };
-    onSelect(fileAsset);
+      alt: 'Image'
+    });
   };
 
   return (
@@ -102,8 +104,8 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
               </DialogHeader>
               <FileManager
                 brandId={brandId}
-                onFileSelect={handleFileSelect}
-                filterType={type}
+                onSelect={handleFileSelect}
+                allowedTypes={[type]}
               />
             </DialogContent>
           </Dialog>
@@ -111,4 +113,4 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
       </Tabs>
     </div>
   );
-};
+}; 

@@ -1,4 +1,3 @@
-
 export type FileType = 'image' | 'pdf' | 'video';
 
 export interface FileAsset {
@@ -11,6 +10,7 @@ export interface FileAsset {
   name: string;
   type: FileType;
   size: number; // in bytes
+  mimeType: string;
   url: string;
   thumbnailUrl?: string;
   
@@ -47,4 +47,4 @@ export const DEFAULT_FILE_CONFIG: FileUploadConfig = {
     'image/webp',
     'application/pdf'
   ]
-};
+}; 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BlockFormData, BlockType } from '@/types/block';
 import { HeroBlock } from './blocks/HeroBlock';
@@ -34,11 +33,6 @@ export const BlockForm: React.FC<BlockFormProps> = ({
         [field]: value
       }
     });
-  };
-
-  // Helper function to check if a type matches either string or enum version
-  const isOfType = (type: string | BlockType, value: string | BlockType): boolean => {
-    return type === value || type.toString() === value.toString();
   };
 
   const renderBlockForm = () => {
@@ -136,7 +130,7 @@ export const BlockForm: React.FC<BlockFormProps> = ({
               />
             </div>
 
-            {isOfType(formData.type, BlockType.IMAGE) && (
+            {formData.type === BlockType.IMAGE && (
               <div className="space-y-2">
                 <Label>Image</Label>
                 <FileSelector
@@ -148,7 +142,7 @@ export const BlockForm: React.FC<BlockFormProps> = ({
               </div>
             )}
 
-            {isOfType(formData.type, BlockType.PDF) && (
+            {formData.type === BlockType.PDF && (
               <div className="space-y-2">
                 <Label>PDF Document</Label>
                 <FileSelector
@@ -165,4 +159,4 @@ export const BlockForm: React.FC<BlockFormProps> = ({
   };
 
   return <div className="space-y-4">{renderBlockForm()}</div>;
-};
+}; 

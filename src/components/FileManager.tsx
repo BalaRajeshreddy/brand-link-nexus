@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { FileAsset } from '@/types/file';
 import { Input } from './ui/input';
@@ -11,14 +10,14 @@ interface FileManagerProps {
   brandId: string;
   onFileSelect: (file: FileAsset) => void;
   filterType?: 'image' | 'pdf';
-  allowedTypes?: ('image' | 'pdf')[];
 }
+
+type FileType = 'IMAGE' | 'PDF';
 
 export const FileManager: React.FC<FileManagerProps> = ({
   brandId,
   onFileSelect,
-  filterType,
-  allowedTypes
+  filterType
 }) => {
   const [files, setFiles] = useState<FileAsset[]>([]);
   const [search, setSearch] = useState('');
@@ -48,9 +47,10 @@ export const FileManager: React.FC<FileManagerProps> = ({
 
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name?.toLowerCase().includes(search.toLowerCase());
-    const matchesType = !filterType || file.type === filterType;
-    const matchesAllowedTypes = !allowedTypes || allowedTypes.includes(file.type);
-    return matchesSearch && matchesType && matchesAllowedTypes;
+    const matchesType = !filterType || 
+      (filterType === 'image' && (file.type as FileType) === 'IMAGE') ||
+      (filterType === 'pdf' && (file.type as FileType) === 'PDF');
+    return matchesSearch && matchesType;
   });
 
   if (error) {
@@ -104,7 +104,7 @@ export const FileManager: React.FC<FileManagerProps> = ({
             onClick={() => onFileSelect(file)}
           >
             <div className="flex items-center gap-4">
-              {file.type === 'image' ? (
+              {(file.type as FileType) === 'IMAGE' ? (
                 <ImageIcon className="w-8 h-8 text-gray-400" />
               ) : (
                 <FileIcon className="w-8 h-8 text-gray-400" />
@@ -127,4 +127,4 @@ export const FileManager: React.FC<FileManagerProps> = ({
       )}
     </div>
   );
-};
+}; 

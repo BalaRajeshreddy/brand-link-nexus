@@ -1,6 +1,6 @@
 export interface Block {
   id: string;
-  type: BlockType | string;
+  type: BlockType;
   content: BlockContent;
   order: number;
   isActive: boolean;
@@ -20,20 +20,7 @@ export enum BlockType {
   IMAGE_TEXT = 'IMAGE_TEXT',
   HEADING = 'HEADING',
   TEXT = 'TEXT',
-  HEADING_TEXT = 'HEADING_TEXT',
-  IMAGES = 'images',
-  IMAGES_LINKS = 'images + links',
-  VIDEO_BLOCK = 'video',
-  TESTIMONIALS_BLOCK = 'testimonials',
-  SMART_FEEDBACK = 'smart feedback',
-  TEAM = 'team',
-  BUTTON = 'button',
-  FORM = 'form',
-  CONTACT_FORM = 'contact form',
-  MAP = 'map',
-  SOCIAL_LINKS = 'social links',
-  LINKS = 'links',
-  PRODUCTS = 'products'
+  HEADING_TEXT = 'HEADING_TEXT'
 }
 
 export interface BlockStyles {
@@ -89,7 +76,7 @@ export interface BlockStyles {
 }
 
 export interface BlockFormData {
-  type: BlockType | string;
+  type: BlockType;
   content: BlockContent;
   isActive: boolean;
 }
@@ -135,4 +122,4 @@ export interface BlockContent {
   
   // Block-specific properties
   [key: string]: any;
-}
+} 
