@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
-import { Block } from '@/components/page-builder/PageBuilder';
+import { Block, BlockType } from '@/types/block';
 import { BlockEditorMain } from '@/components/page-builder/block-renderers/BlockEditorMain';
 import { toast } from "sonner";
 
@@ -73,7 +73,7 @@ const PublishedLandingPage = () => {
         if (components && components.length > 0) {
           const loadedBlocks = components.map(component => ({
             id: `block-${component.id}`,
-            type: component.type,
+            type: component.type as BlockType | string,
             content: component.content || {},
             styles: component.styles || {}
           }));
@@ -137,7 +137,7 @@ const PublishedLandingPage = () => {
             {blocks.map((block) => (
               <div key={block.id}>
                 <BlockEditorMain
-                  blockType={block.type}
+                  blockType={block.type as BlockType}
                   content={block.content}
                   styles={block.styles}
                 />

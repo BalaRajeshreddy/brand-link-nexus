@@ -1,4 +1,5 @@
-import { Block } from "./PageBuilder";
+
+import { Block, BlockType } from "@/types/block";
 import { BlockEditorMain } from "./block-renderers/BlockEditorMain";
 
 interface PageEditorPreviewProps {
@@ -41,7 +42,7 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
                 {blocks.map((block) => (
                   <div key={block.id} className="mb-6">
                     <BlockEditorMain
-                      blockType={block.type}
+                      blockType={block.type as BlockType}
                       content={block.content}
                       styles={block.styles}
                     />

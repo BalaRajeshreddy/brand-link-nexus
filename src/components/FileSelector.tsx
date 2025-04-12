@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { FileAsset } from '@/types/file';
 import { FileUpload } from './FileUpload';
@@ -10,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 interface FileSelectorProps {
   type: 'image' | 'pdf';
-  onSelect: (file: File | FileAsset | null) => void;
+  onSelect: (file: any) => void; // Changed to 'any' to accommodate various file types
   brandId: string;
   value?: string;
 }
@@ -28,11 +29,7 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
   const [url, setUrl] = useState(value || '');
 
   const handleFileSelect = (file: FileAsset) => {
-    onSelect({
-      url: file.url,
-      alt: file.name,
-      file: file.file
-    });
+    onSelect(file);
     setShowFileManager(false);
   };
 
@@ -102,10 +99,11 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
               <DialogHeader>
                 <DialogTitle>Select {type === 'image' ? 'Image' : 'PDF'}</DialogTitle>
               </DialogHeader>
+              {/* Adjusted FileManager props to match the component's requirements */}
               <FileManager
                 brandId={brandId}
                 onSelect={handleFileSelect}
-                allowedTypes={[type]}
+                fileTypes={[type]}
               />
             </DialogContent>
           </Dialog>
@@ -113,4 +111,4 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
       </Tabs>
     </div>
   );
-}; 
+};

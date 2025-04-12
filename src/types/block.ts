@@ -17,6 +17,37 @@ export enum BlockType {
   TEAM = 'TEAM',
   PRODUCTS = 'PRODUCTS',
   PDF = 'PDF',
+  // Add missing block types
+  HERO = 'HERO',
+  VIDEO = 'VIDEO',
+  FEATURES = 'FEATURES',
+  TESTIMONIALS = 'TESTIMONIALS',
+  CONTACT = 'CONTACT',
+  CUSTOM = 'CUSTOM',
+  IMAGE_TEXT = 'IMAGE_TEXT',
+  // Add string-based types that are being used
+  HEADING_STRING = 'heading',
+  TEXT_STRING = 'text',
+  HEADING_TEXT_STRING = 'heading + text',
+  IMAGE_STRING = 'image',
+  IMAGES_STRING = 'images',
+  IMAGES_LINKS_STRING = 'images + links',
+  VIDEO_STRING = 'video',
+  TESTIMONIALS_STRING = 'testimonials',
+  SMART_FEEDBACK_STRING = 'smart feedback',
+  SOCIAL_LINKS_STRING = 'social links',
+  LINKS_STRING = 'links',
+  BUTTON_STRING = 'button',
+  FORM_STRING = 'form',
+  CONTACT_FORM_STRING = 'contact form',
+  TEAM_STRING = 'team',
+  PRODUCTS_STRING = 'products',
+  APPOINTMENT_CALENDAR = 'appointment/calendar',
+  BUSINESS_HOURS = 'business hours',
+  PDF_GALLERY = 'pdf gallery',
+  OTHER_DETAILS = 'other details',
+  IMAGE_TEXT_STRING = 'image + text',
+  MAP = 'map'
 }
 
 export interface BlockStyles {
@@ -47,4 +78,13 @@ export interface Block {
   type: BlockType | string;  // Allow both enum values and string values
   content: BlockContent;
   styles: BlockStyles;
+  brandId?: string; // Make brandId optional to fix PageEditorCanvas error
+}
+
+// Add BlockFormData interface to fix BlockForm error
+export interface BlockFormData {
+  type: BlockType | string;
+  content: BlockContent;
+  isActive?: boolean;
+  styles?: BlockStyles;
 }

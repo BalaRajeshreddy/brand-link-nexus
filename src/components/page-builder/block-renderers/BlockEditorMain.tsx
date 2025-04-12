@@ -18,8 +18,7 @@ import {
   ProductsBlock,
   ImageTextBlock
 } from './index';
-import { BlockType, BlockContent, BlockStyles } from '@/types/block';
-import { cn } from '@/lib/utils';
+import { BlockType, BlockStyles, BlockContent as BlockContentType } from '@/types/block';
 
 export interface BaseBlockContent {
   styles?: Record<string, any>;
@@ -185,16 +184,16 @@ export type BlockContent =
   | BusinessHoursContent
   | PDFGalleryContent
   | OtherDetailsContent
-  | ImageTextContent;
+  | ImageTextContent
+  | Record<string, any>;
 
 interface BlockEditorMainProps {
-  blockType: BlockType;
-  content: BlockContent;
+  blockType: BlockType | string;
+  content: BlockContentType;
   styles?: BlockStyles;
 }
 
 export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditorMainProps) {
-  // Helper function to apply styles to a container
   const applyContainerStyles = (additionalClasses?: string) => {
     const containerStyles = {
       backgroundColor: styles.backgroundColor || content.backgroundColor,
@@ -234,7 +233,6 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
     };
   };
 
-  // Helper function to apply text styles
   const applyTextStyles = (additionalClasses?: string) => {
     const textStyles = {
       color: styles.textColor || content.textColor,
@@ -253,7 +251,9 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
   };
 
   const renderContent = () => {
-    switch (blockType) {
+    const blockTypeString = blockType.toString();
+    
+    switch (blockTypeString) {
       case BlockType.HEADING:
         return (
           <div {...applyContainerStyles()}>
@@ -357,7 +357,7 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
                 fontSize: styles.fontSize || '32px',
                 fontWeight: styles.fontWeight || 'bold',
                 color: styles.textColor || '#000000',
-                textAlign: styles.textAlign || 'left',
+                textAlign: styles.textAlign as any || 'left',
               }}
             >
               {content.text}
@@ -373,7 +373,7 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
               style={{
                 fontSize: styles.fontSize || '16px',
                 color: styles.textColor || '#000000',
-                textAlign: styles.textAlign || 'left',
+                textAlign: styles.textAlign as any || 'left',
               }}
             >
               {content.text}
@@ -384,7 +384,7 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
 
       case 'heading + text':
         if ('heading' in content && 'text' in content) {
-          return <HeadingTextBlock content={content} styles={styles} />;
+          return <HeadingTextBlock content={content as any} styles={styles} />;
         }
         return null;
         
@@ -423,31 +423,31 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
       
       case 'images':
         if ('images' in content && 'displayType' in content) {
-          return <ImagesBlock content={content} styles={styles} />;
+          return <ImagesBlock content={content as any} styles={styles} />;
         }
         return null;
       
       case 'images + links':
         if ('images' in content && 'displayType' in content) {
-          return <ImagesLinksBlock content={content} styles={styles} />;
+          return <ImagesLinksBlock content={content as any} styles={styles} />;
         }
         return null;
       
       case 'video':
         if ('src' in content && 'provider' in content) {
-          return <VideoBlock content={content} styles={styles} />;
+          return <VideoBlock content={content as any} styles={styles} />;
         }
         return null;
       
       case 'testimonials':
         if ('testimonials' in content && 'displayType' in content) {
-          return <TestimonialsBlock content={content} styles={styles} />;
+          return <TestimonialsBlock content={content as any} styles={styles} />;
         }
         return null;
 
       case 'smart feedback':
         if ('question' in content && 'options' in content) {
-          return <SmartFeedbackBlock content={content} styles={styles} />;
+          return <SmartFeedbackBlock content={content as any} styles={styles} />;
         }
         return null;
 
@@ -476,25 +476,25 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
       
       case 'social links':
         if ('links' in content && 'displayType' in content) {
-          return <SocialLinksBlock content={content} styles={styles} />;
+          return <SocialLinksBlock content={content as any} styles={styles} />;
         }
         return null;
 
       case 'links':
         if ('links' in content && 'displayType' in content) {
-          return <LinksBlock content={content} styles={styles} />;
+          return <LinksBlock content={content as any} styles={styles} />;
         }
         return null;
 
       case 'button':
         if ('text' in content && 'url' in content) {
-          return <ButtonBlock content={content} styles={styles} />;
+          return <ButtonBlock content={content as any} styles={styles} />;
         }
         return null;
       
       case 'form':
         if ('fields' in content && 'submitText' in content) {
-          return <FormBlock content={content} styles={styles} />;
+          return <FormBlock content={content as any} styles={styles as any} />;
         }
         return null;
       
@@ -510,49 +510,49 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
               submitText: 'Send Message',
               submitAction: 'email'
             }}
-            styles={styles}
+            styles={styles as any}
           />
         );
       
       case 'team':
         if ('members' in content && 'displayType' in content) {
-          return <TeamBlock content={content} styles={styles} />;
+          return <TeamBlock content={content as any} styles={styles} />;
         }
         return null;
       
       case 'products':
         if ('products' in content && 'displayType' in content) {
-          return <ProductsBlock content={content} styles={styles} />;
+          return <ProductsBlock content={content as any} styles={styles} />;
         }
         return null;
       
       case 'appointment/calendar':
         if ('availableDays' in content && 'timeSlots' in content) {
-          return <AppointmentCalendarBlock content={content} styles={styles} />;
+          return <AppointmentCalendarBlock content={content as any} styles={styles} />;
         }
         return null;
       
       case 'business hours':
         if ('hours' in content) {
-          return <BusinessHoursBlock content={content} styles={styles} />;
+          return <BusinessHoursBlock content={content as any} styles={styles} />;
         }
         return null;
       
       case 'pdf gallery':
         if ('pdfs' in content && 'displayType' in content) {
-          return <PDFGalleryBlock content={content} styles={styles} />;
+          return <PDFGalleryBlock content={content as any} styles={styles} />;
         }
         return null;
       
       case 'other details':
         if ('sections' in content) {
-          return <OtherDetailsBlock content={content} styles={styles} />;
+          return <OtherDetailsBlock content={content as any} styles={styles} />;
         }
         return null;
       
       case 'image + text':
         if ('image' in content && 'text' in content) {
-          return <ImageTextBlock content={content} styles={styles} />;
+          return <ImageTextBlock content={content as any} styles={styles} />;
         }
         return null;
       
@@ -562,7 +562,7 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
   };
 
   return (
-    <div {...applyContainerStyles('rounded-lg')}>
+    <div className="rounded-lg">
       {renderContent()}
     </div>
   );

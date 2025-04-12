@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -5,9 +6,9 @@ import { BlockEditor } from './BlockEditor';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Grip, Trash2, Pencil } from 'lucide-react';
-import { Block } from './PageBuilder';
+import { Block, BlockType } from '@/types/block';
 import { BlockEditorMain } from './block-renderers/BlockEditorMain';
-import { BlockContent } from './block-renderers/BlockEditorMain';
+import { BlockContent } from '@/types/block';
 
 interface SortableBlockProps {
   block: Block;
@@ -25,7 +26,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
     transition,
   };
 
-  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; brandId: string }) => {
+  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; brandId?: string }) => {
     onUpdateBlock(updatedBlock.id, updatedBlock.content as BlockContent, {});
     setIsEditing(false);
   };
@@ -78,7 +79,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
       ) : (
         <div className="py-2">
           <BlockEditorMain
-            blockType={block.type}
+            blockType={block.type as BlockType}
             content={block.content as BlockContent}
             styles={{}}
           />
