@@ -19,6 +19,7 @@ import {
   ImageTextBlock
 } from './index';
 import { BlockType, BlockStyles, BlockContent as BlockContentType } from '@/types/block';
+import { cn } from '@/lib/utils';
 
 export interface BaseBlockContent {
   styles?: Record<string, any>;

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { FileAsset } from '@/types/file';
 import { Input } from './ui/input';
@@ -8,16 +9,18 @@ import { Skeleton } from './ui/skeleton';
 
 interface FileManagerProps {
   brandId: string;
-  onFileSelect: (file: FileAsset) => void;
+  onFileSelect: (file: FileAsset) => void; // Changed from onSelect to onFileSelect
   filterType?: 'image' | 'pdf';
+  fileTypes?: ('image' | 'pdf')[]; // Added to match the prop in FileSelector
 }
 
 type FileType = 'IMAGE' | 'PDF';
 
 export const FileManager: React.FC<FileManagerProps> = ({
   brandId,
-  onFileSelect,
-  filterType
+  onFileSelect, // Updated prop name
+  filterType,
+  fileTypes
 }) => {
   const [files, setFiles] = useState<FileAsset[]>([]);
   const [search, setSearch] = useState('');
@@ -50,7 +53,15 @@ export const FileManager: React.FC<FileManagerProps> = ({
     const matchesType = !filterType || 
       (filterType === 'image' && (file.type as FileType) === 'IMAGE') ||
       (filterType === 'pdf' && (file.type as FileType) === 'PDF');
-    return matchesSearch && matchesType;
+    
+    // Also check against fileTypes if provided
+    const matchesFileTypes = !fileTypes || 
+      fileTypes.some(type => 
+        (type === 'image' && (file.type as FileType) === 'IMAGE') ||
+        (type === 'pdf' && (file.type as FileType) === 'PDF')
+      );
+      
+    return matchesSearch && (matchesType || matchesFileTypes);
   });
 
   if (error) {
@@ -101,7 +112,7 @@ export const FileManager: React.FC<FileManagerProps> = ({
           <Card
             key={file.id}
             className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-            onClick={() => onFileSelect(file)}
+            onClick={() => onFileSelect(file)} // Updated to use onFileSelect
           >
             <div className="flex items-center gap-4">
               {(file.type as FileType) === 'IMAGE' ? (
@@ -127,4 +138,4 @@ export const FileManager: React.FC<FileManagerProps> = ({
       )}
     </div>
   );
-}; 
+};
