@@ -235,26 +235,7 @@ export interface ImageTextContent extends BaseBlockContent {
 }
 
 // Union type for all block content types
-export type BlockContent = 
-  | HeadingTextContent
-  | ImageItem
-  | ImagesContent
-  | ImagesLinksContent
-  | VideoContent
-  | TestimonialsContent
-  | SmartFeedbackContent
-  | SocialLinksContent
-  | LinksContent
-  | ButtonContent
-  | FormContent
-  | TeamContent
-  | ProductsContent
-  | AppointmentCalendarContent
-  | BusinessHoursContent
-  | PDFGalleryContent
-  | OtherDetailsContent
-  | ImageTextContent
-  | Record<string, any>;
+export type BlockContent = BaseBlockContent;
 
 interface BlockEditorMainProps {
   blockType: string;
@@ -262,113 +243,55 @@ interface BlockEditorMainProps {
   styles?: Record<string, any>;
 }
 
-// Helper function to check if content matches a specific interface
-function isHeadingTextContent(content: BlockContent): content is HeadingTextContent {
-  return 'heading' in content && 'text' in content;
-}
-
-function isImagesContent(content: BlockContent): content is ImagesContent {
-  return 'images' in content && 'displayType' in content && 
-    Array.isArray((content as ImagesContent).images);
-}
-
-function isImagesLinksContent(content: BlockContent): content is ImagesLinksContent {
-  return 'images' in content && 'displayType' in content && 
-    Array.isArray((content as ImagesLinksContent).images);
-}
-
-function isVideoContent(content: BlockContent): content is VideoContent {
-  return 'src' in content && 'provider' in content;
-}
-
-function isTestimonialsContent(content: BlockContent): content is TestimonialsContent {
-  return 'testimonials' in content && 'displayType' in content;
-}
-
-function isSmartFeedbackContent(content: BlockContent): content is SmartFeedbackContent {
-  return 'question' in content && 'options' in content && 'allowComments' in content;
-}
-
-function isSocialLinksContent(content: BlockContent): content is SocialLinksContent {
-  return 'links' in content && 'displayType' in content;
-}
-
-function isLinksContent(content: BlockContent): content is LinksContent {
-  return 'links' in content && 'displayType' in content;
-}
-
-function isButtonContent(content: BlockContent): content is ButtonContent {
-  return 'text' in content && 'url' in content && 'style' in content;
-}
-
-function isFormContent(content: BlockContent): content is FormContent {
-  return 'fields' in content && 'submitText' in content;
-}
-
-function isTeamContent(content: BlockContent): content is TeamContent {
-  return 'members' in content && 'displayType' in content;
-}
-
-function isProductsContent(content: BlockContent): content is ProductsContent {
-  return 'products' in content && 'displayType' in content;
-}
-
-function isAppointmentCalendarContent(content: BlockContent): content is AppointmentCalendarContent {
-  return 'availableDays' in content && 'timeSlots' in content;
-}
-
-function isBusinessHoursContent(content: BlockContent): content is BusinessHoursContent {
-  return 'hours' in content;
-}
-
-function isPDFGalleryContent(content: BlockContent): content is PDFGalleryContent {
-  return 'pdfs' in content && 'displayType' in content;
-}
-
-function isOtherDetailsContent(content: BlockContent): content is OtherDetailsContent {
-  return 'sections' in content;
-}
-
-function isImageTextContent(content: BlockContent): content is ImageTextContent {
-  return 'image' in content && 'text' in content && 'layout' in content;
-}
+// Helper function for type checking
+const hasProperty = <T extends object, K extends string>(obj: T, prop: K): boolean => {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+};
 
 export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditorMainProps) {
   // Helper function to apply styles to a container
   const applyContainerStyles = (additionalClasses?: string) => {
+    // Safely access properties with fallbacks
     const containerStyles = {
-      backgroundColor: styles.backgroundColor || content.backgroundColor,
-      color: styles.textColor || content.textColor,
-      padding: styles.padding || content.padding,
-      margin: styles.margin || content.margin,
-      borderRadius: styles.borderRadius || content.borderRadius,
-      borderWidth: styles.borderWidth || content.borderWidth,
-      borderColor: styles.borderColor || content.borderColor,
-      borderStyle: styles.borderStyle || content.borderStyle,
-      boxShadow: styles.boxShadow || content.boxShadow,
-      width: styles.width || content.width,
-      height: styles.height || content.height,
-      minHeight: styles.minHeight || content.minHeight,
-      maxWidth: styles.maxWidth || content.maxWidth,
-      fontSize: styles.fontSize || content.fontSize,
-      fontWeight: styles.fontWeight || content.fontWeight,
-      fontFamily: styles.fontFamily || content.fontFamily,
-      lineHeight: styles.lineHeight || content.lineHeight,
-      letterSpacing: styles.letterSpacing || content.letterSpacing,
-      opacity: styles.opacity || content.opacity,
-      transform: styles.transform || content.transform,
-      transition: styles.transition || content.transition
+      backgroundColor: styles.backgroundColor || content?.backgroundColor,
+      color: styles.textColor || content?.textColor,
+      padding: styles.padding || content?.padding,
+      margin: styles.margin || content?.margin,
+      borderRadius: styles.borderRadius || content?.borderRadius,
+      borderWidth: styles.borderWidth || content?.borderWidth,
+      borderColor: styles.borderColor || content?.borderColor,
+      borderStyle: styles.borderStyle || content?.borderStyle,
+      boxShadow: styles.boxShadow || content?.boxShadow,
+      width: styles.width || content?.width,
+      height: styles.height || content?.height,
+      minHeight: styles.minHeight || content?.minHeight,
+      maxWidth: styles.maxWidth || content?.maxWidth,
+      fontSize: styles.fontSize || content?.fontSize,
+      fontWeight: styles.fontWeight || content?.fontWeight,
+      fontFamily: styles.fontFamily || content?.fontFamily,
+      lineHeight: styles.lineHeight || content?.lineHeight,
+      letterSpacing: styles.letterSpacing || content?.letterSpacing,
+      opacity: styles.opacity || content?.opacity,
+      transform: styles.transform || content?.transform,
+      transition: styles.transition || content?.transition
     };
+
+    const textAlign = styles.textAlign || content?.textAlign;
+    const display = styles.display || content?.display;
+    const flexDirection = styles.flexDirection || content?.flexDirection || 'col';
+    const alignItems = styles.alignItems || content?.alignItems;
+    const justifyContent = styles.justifyContent || content?.justifyContent;
+    const gap = styles.gap || content?.gap;
 
     return {
       className: cn(
         'block-container',
         additionalClasses,
-        (styles.textAlign || content.textAlign) && `text-${styles.textAlign || content.textAlign}`,
-        (styles.display || content.display) && `flex flex-${styles.flexDirection || content.flexDirection || 'col'}`,
-        (styles.alignItems || content.alignItems) && `items-${styles.alignItems || content.alignItems}`,
-        (styles.justifyContent || content.justifyContent) && `justify-${styles.justifyContent || content.justifyContent}`,
-        (styles.gap || content.gap) && `gap-${styles.gap || content.gap}`
+        textAlign && `text-${textAlign}`,
+        display && `flex flex-${flexDirection}`,
+        alignItems && `items-${alignItems}`,
+        justifyContent && `justify-${justifyContent}`,
+        gap && `gap-${gap}`
       ),
       style: containerStyles
     };
@@ -377,13 +300,13 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
   // Helper function to apply text styles
   const applyTextStyles = (additionalClasses?: string) => {
     const textStyles = {
-      color: styles.textColor || content.textColor,
-      fontSize: styles.fontSize || content.fontSize,
-      fontWeight: styles.fontWeight || content.fontWeight,
-      fontFamily: styles.fontFamily || content.fontFamily,
-      lineHeight: styles.lineHeight || content.lineHeight,
-      letterSpacing: styles.letterSpacing || content.letterSpacing,
-      textAlign: styles.textAlign || content.textAlign
+      color: styles.textColor || content?.textColor,
+      fontSize: styles.fontSize || content?.fontSize,
+      fontWeight: styles.fontWeight || content?.fontWeight,
+      fontFamily: styles.fontFamily || content?.fontFamily,
+      lineHeight: styles.lineHeight || content?.lineHeight,
+      letterSpacing: styles.letterSpacing || content?.letterSpacing,
+      textAlign: styles.textAlign || content?.textAlign
     };
 
     return {
@@ -399,9 +322,10 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
         return (
           <div {...applyContainerStyles()}>
             <h2 {...applyTextStyles('text-2xl font-bold')}>
-              {content.title || content.text}
+              {hasProperty(content, 'title') ? content.title : 
+               hasProperty(content, 'text') ? content.text : ''}
             </h2>
-            {content.description && (
+            {hasProperty(content, 'description') && content.description && (
               <p {...applyTextStyles('text-muted-foreground mt-2')}>
                 {content.description}
               </p>
@@ -414,7 +338,7 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
         return (
           <div {...applyContainerStyles()}>
             <div {...applyTextStyles()}>
-              {content.text}
+              {hasProperty(content, 'text') ? content.text : ''}
             </div>
           </div>
         );
@@ -423,21 +347,22 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
       case 'image':
         return (
           <div {...applyContainerStyles('space-y-4')}>
-            {content.title && (
+            {hasProperty(content, 'title') && content.title && (
               <h2 {...applyTextStyles('text-2xl font-bold')}>
                 {content.title}
               </h2>
             )}
-            {content.description && (
+            {hasProperty(content, 'description') && content.description && (
               <p {...applyTextStyles('text-muted-foreground')}>
                 {content.description}
               </p>
             )}
-            {(content.image?.url || content.src) ? (
+            {(hasProperty(content, 'image') && content.image?.url) || 
+             (hasProperty(content, 'src') && content.src) ? (
               <div className="relative rounded-lg overflow-hidden" style={{ aspectRatio: styles.aspectRatio || '16/9' }}>
                 <img
-                  src={content.image?.url || content.src}
-                  alt={content.image?.alt || content.alt || 'Image'}
+                  src={hasProperty(content, 'image') ? content.image?.url : content.src}
+                  alt={hasProperty(content, 'image') ? content.image?.alt || 'Image' : content.alt || 'Image'}
                   className={cn(
                     'w-full h-full',
                     styles.objectFit && `object-${styles.objectFit}`
@@ -454,54 +379,53 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
 
       case BlockType.HEADING_TEXT:
       case 'heading + text':
-        if (isHeadingTextContent(content)) {
-          return <HeadingTextBlock content={content} styles={styles} />;
-        }
         return (
           <div {...applyContainerStyles('space-y-4')}>
             <h2 {...applyTextStyles('text-2xl font-bold')}>
-              {content.heading || content.title}
+              {hasProperty(content, 'heading') ? content.heading : 
+               hasProperty(content, 'title') ? content.title : ''}
             </h2>
             <div {...applyTextStyles()}>
-              {content.text || content.description}
+              {hasProperty(content, 'text') ? content.text : 
+               hasProperty(content, 'description') ? content.description : ''}
             </div>
           </div>
         );
 
       case 'images':
-        if (isImagesContent(content)) {
-          return <ImagesBlock content={content as ImagesContent} styles={styles} />;
+        if (hasProperty(content, 'images') && hasProperty(content, 'displayType')) {
+          return <ImagesBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid images content</div>;
       
       case 'images + links':
-        if (isImagesLinksContent(content)) {
-          return <ImagesLinksBlock content={content as ImagesLinksContent} styles={styles} />;
+        if (hasProperty(content, 'images') && hasProperty(content, 'displayType')) {
+          return <ImagesLinksBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid images+links content</div>;
       
       case 'video':
-        if (isVideoContent(content)) {
-          return <VideoBlock content={content as VideoContent} styles={styles} />;
+        if (hasProperty(content, 'src') && hasProperty(content, 'provider')) {
+          return <VideoBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid video content</div>;
       
       case 'testimonials':
-        if (isTestimonialsContent(content)) {
-          return <TestimonialsBlock content={content as TestimonialsContent} styles={styles} />;
+        if (hasProperty(content, 'testimonials') && hasProperty(content, 'displayType')) {
+          return <TestimonialsBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid testimonials content</div>;
 
       case 'smart feedback':
-        if (isSmartFeedbackContent(content)) {
-          return <SmartFeedbackBlock content={content as SmartFeedbackContent} styles={styles} />;
+        if (hasProperty(content, 'question') && hasProperty(content, 'options')) {
+          return <SmartFeedbackBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid smart feedback content</div>;
 
       case 'map':
         return (
           <div>
-            {content.location && (
+            {hasProperty(content, 'location') && content.location && (
               <iframe
                 src={`https://maps.google.com/maps?q=${encodeURIComponent(content.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
                 style={{
@@ -519,26 +443,26 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
         );
       
       case 'social links':
-        if (isSocialLinksContent(content)) {
-          return <SocialLinksBlock content={content as SocialLinksContent} styles={styles} />;
+        if (hasProperty(content, 'links') && hasProperty(content, 'displayType')) {
+          return <SocialLinksBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid social links content</div>;
 
       case 'links':
-        if (isLinksContent(content)) {
-          return <LinksBlock content={content as LinksContent} styles={styles} />;
+        if (hasProperty(content, 'links') && hasProperty(content, 'displayType')) {
+          return <LinksBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid links content</div>;
 
       case 'button':
-        if (isButtonContent(content)) {
-          return <ButtonBlock content={content as ButtonContent} styles={styles} />;
+        if (hasProperty(content, 'text') && hasProperty(content, 'url')) {
+          return <ButtonBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid button content</div>;
       
       case 'form':
-        if (isFormContent(content)) {
-          return <FormBlock content={content as FormContent} styles={styles} />;
+        if (hasProperty(content, 'fields') && hasProperty(content, 'submitText')) {
+          return <FormBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid form content</div>;
       
@@ -553,50 +477,50 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
               ],
               submitText: 'Send Message',
               submitAction: 'email'
-            } as FormContent}
+            } as any}
             styles={styles}
           />
         );
       
       case 'team':
-        if (isTeamContent(content)) {
-          return <TeamBlock content={content as TeamContent} styles={styles} />;
+        if (hasProperty(content, 'members') && hasProperty(content, 'displayType')) {
+          return <TeamBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid team content</div>;
       
       case 'products':
-        if (isProductsContent(content)) {
-          return <ProductsBlock content={content as ProductsContent} styles={styles} />;
+        if (hasProperty(content, 'products') && hasProperty(content, 'displayType')) {
+          return <ProductsBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid products content</div>;
       
       case 'appointment/calendar':
-        if (isAppointmentCalendarContent(content)) {
-          return <AppointmentCalendarBlock content={content as AppointmentCalendarContent} styles={styles} />;
+        if (hasProperty(content, 'availableDays') && hasProperty(content, 'timeSlots')) {
+          return <AppointmentCalendarBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid appointment/calendar content</div>;
       
       case 'business hours':
-        if (isBusinessHoursContent(content)) {
-          return <BusinessHoursBlock content={content as BusinessHoursContent} styles={styles} />;
+        if (hasProperty(content, 'hours')) {
+          return <BusinessHoursBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid business hours content</div>;
       
       case 'pdf gallery':
-        if (isPDFGalleryContent(content)) {
-          return <PDFGalleryBlock content={content as PDFGalleryContent} styles={styles} />;
+        if (hasProperty(content, 'pdfs') && hasProperty(content, 'displayType')) {
+          return <PDFGalleryBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid pdf gallery content</div>;
       
       case 'other details':
-        if (isOtherDetailsContent(content)) {
-          return <OtherDetailsBlock content={content as OtherDetailsContent} styles={styles} />;
+        if (hasProperty(content, 'sections')) {
+          return <OtherDetailsBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid other details content</div>;
       
       case 'image + text':
-        if (isImageTextContent(content)) {
-          return <ImageTextBlock content={content as ImageTextContent} styles={styles} />;
+        if (hasProperty(content, 'image') && hasProperty(content, 'text')) {
+          return <ImageTextBlock content={content as any} styles={styles} />;
         }
         return <div>Invalid image + text content</div>;
       

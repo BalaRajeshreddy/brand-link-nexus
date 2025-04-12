@@ -14,8 +14,6 @@ interface FileManagerProps {
   allowedTypes?: ('image' | 'pdf')[];
 }
 
-type FileType = 'IMAGE' | 'PDF';
-
 export const FileManager: React.FC<FileManagerProps> = ({
   brandId,
   onFileSelect,
@@ -50,12 +48,8 @@ export const FileManager: React.FC<FileManagerProps> = ({
 
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name?.toLowerCase().includes(search.toLowerCase());
-    const matchesType = !filterType || 
-      (filterType === 'image' && (file.type as FileType) === 'IMAGE') ||
-      (filterType === 'pdf' && (file.type as FileType) === 'PDF');
-    const matchesAllowedTypes = !allowedTypes || 
-      (allowedTypes.includes('image') && (file.type as FileType) === 'IMAGE') ||
-      (allowedTypes.includes('pdf') && (file.type as FileType) === 'PDF');
+    const matchesType = !filterType || file.type === filterType;
+    const matchesAllowedTypes = !allowedTypes || allowedTypes.includes(file.type);
     return matchesSearch && matchesType && matchesAllowedTypes;
   });
 
@@ -110,7 +104,7 @@ export const FileManager: React.FC<FileManagerProps> = ({
             onClick={() => onFileSelect(file)}
           >
             <div className="flex items-center gap-4">
-              {(file.type as FileType) === 'IMAGE' ? (
+              {file.type === 'image' ? (
                 <ImageIcon className="w-8 h-8 text-gray-400" />
               ) : (
                 <FileIcon className="w-8 h-8 text-gray-400" />
@@ -133,4 +127,4 @@ export const FileManager: React.FC<FileManagerProps> = ({
       )}
     </div>
   );
-}; 
+};

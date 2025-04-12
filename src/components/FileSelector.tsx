@@ -46,20 +46,19 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
     const newUrl = e.target.value;
     setUrl(newUrl);
     // Create a minimal FileAsset object with just the needed properties
-    const fileAsset: Partial<FileAsset> = {
+    const fileAsset: FileAsset = {
       url: newUrl,
       name: 'External resource',
       type: type === 'image' ? 'image' : 'pdf',
       size: 0,
-      mimeType: type === 'image' ? 'image/jpeg' : 'application/pdf',
-      id: `external-${Date.now()}`,
       userId: '',
       brandId: '',
+      id: `external-${Date.now()}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       usageCount: 0
     };
-    onSelect(fileAsset as FileAsset);
+    onSelect(fileAsset);
   };
 
   return (

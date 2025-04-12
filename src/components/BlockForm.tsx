@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BlockFormData, BlockType } from '@/types/block';
 import { HeroBlock } from './blocks/HeroBlock';
@@ -130,6 +131,7 @@ export const BlockForm: React.FC<BlockFormProps> = ({
               />
             </div>
 
+            {/* Use formData.type directly for comparison instead of treating it as a union */}
             {formData.type === BlockType.IMAGE && (
               <div className="space-y-2">
                 <Label>Image</Label>
