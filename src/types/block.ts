@@ -89,7 +89,7 @@ export interface BlockStyles {
 }
 
 export interface BlockFormData {
-  type: BlockType;
+  type: BlockType | string;
   content: BlockContent;
   isActive: boolean;
 }
