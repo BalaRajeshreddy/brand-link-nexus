@@ -1,101 +1,86 @@
+import { 
+  Facebook, Twitter, Instagram, Linkedin, Youtube, 
+  Github, Dribbble, Figma, Twitch, Slack, Music 
+} from "lucide-react";
 
-import React from 'react';
-import { cn } from '@/lib/utils';
-import { Facebook, Instagram, Twitter, Linkedin, Youtube, Github, Mail, Link } from 'lucide-react';
-import { SocialLinksContent } from './BlockEditorMain';
-
-interface SocialLinksBlockProps {
-  content: SocialLinksContent;
-  styles?: Record<string, any>;
+interface SocialLink {
+  platform: string;
+  url: string;
 }
 
-export function SocialLinksBlock({ content, styles = {} }: SocialLinksBlockProps) {
-  const getSocialIcon = (platform: string) => {
-    const size = styles.iconSize || 24;
-    const color = styles.iconColor || '#3B82F6';
+interface SocialLinksBlockProps {
+  content: {
+    links: SocialLink[];
+    displayType: string;
+  };
+  styles: Record<string, any>;
+}
 
+export const SocialLinksBlock = ({ content, styles }: SocialLinksBlockProps) => {
+  const getSocialIcon = (platform: string) => {
+    const iconProps = {
+      size: parseInt(styles.iconSize) || 24,
+      color: styles.iconColor || '#3B82F6',
+    };
+    
     switch (platform.toLowerCase()) {
       case 'facebook':
-        return <Facebook size={size} color={color} />;
-      case 'instagram':
-        return <Instagram size={size} color={color} />;
+        return <Facebook {...iconProps} />;
       case 'twitter':
       case 'x':
-        return <Twitter size={size} color={color} />;
+        return <Twitter {...iconProps} />;
+      case 'instagram':
+        return <Instagram {...iconProps} />;
       case 'linkedin':
-        return <Linkedin size={size} color={color} />;
+        return <Linkedin {...iconProps} />;
       case 'youtube':
-        return <Youtube size={size} color={color} />;
+        return <Youtube {...iconProps} />;
       case 'github':
-        return <Github size={size} color={color} />;
-      case 'email':
-        return <Mail size={size} color={color} />;
+        return <Github {...iconProps} />;
+      case 'dribbble':
+        return <Dribbble {...iconProps} />;
+      case 'figma':
+        return <Figma {...iconProps} />;
+      case 'twitch':
+        return <Twitch {...iconProps} />;
+      case 'slack':
+        return <Slack {...iconProps} />;
       case 'tiktok':
-        // Use a custom SVG for TikTok since it's not in lucide-react
-        return (
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width={size} 
-            height={size} 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke={color} 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
-          </svg>
-        );
+        return <Music {...iconProps} />;
       default:
-        return <Link size={size} color={color} />;
+        return <Linkedin {...iconProps} />;
     }
   };
 
   return (
-    <div className={cn(
-      'social-links-block',
-      content.displayType === 'buttons' && 'flex flex-wrap gap-2',
-      content.displayType === 'icons' && 'flex flex-wrap',
-      styles.gap && `gap-${styles.gap}`
-    )}>
-      {content.links.map((link, index) => {
-        if (content.displayType === 'buttons') {
-          return (
-            <a
-              key={index}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                'flex items-center px-4 py-2 rounded transition-colors',
-                'bg-gray-100 hover:bg-gray-200 text-gray-800'
-              )}
-            >
-              <span className="mr-2">{getSocialIcon(link.platform)}</span>
-              <span>{link.platform}</span>
-            </a>
-          );
-        }
-
-        return (
-          <a
-            key={index}
-            href={link.url}
-            target="_blank"
+    <div 
+      className="social-links-block w-full my-4"
+      style={{
+        backgroundColor: styles.backgroundColor || 'transparent',
+        padding: styles.padding || '16px',
+        borderRadius: styles.borderRadius || '8px',
+      }}
+    >
+      <div 
+        className="flex flex-wrap"
+        style={{ 
+          gap: styles.gap || '16px',
+          justifyContent: content.displayType === 'centered' ? 'center' : 'flex-start'
+        }}
+      >
+        {content.links.map((link, index) => (
+          <a 
+            key={index} 
+            href={link.url} 
+            target="_blank" 
             rel="noopener noreferrer"
-            className={cn(
-              'p-2 rounded-full transition-all',
-              'hover:scale-110'
-            )}
-            style={{
-              color: styles.iconColor || '#3B82F6',
-            }}
+            className="hover:opacity-80 transition-opacity"
+            title={link.platform}
           >
             {getSocialIcon(link.platform)}
           </a>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
-}
+};

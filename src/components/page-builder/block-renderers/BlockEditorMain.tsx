@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   AppointmentCalendarBlock,
@@ -19,10 +18,9 @@ import {
   ProductsBlock,
   ImageTextBlock
 } from './index';
-import { BlockType } from '@/types/block';
+import { BlockType, BlockContent, BlockStyles } from '@/types/block';
 import { cn } from '@/lib/utils';
 
-// Define type interfaces for each block content type
 export interface BaseBlockContent {
   styles?: Record<string, any>;
 }
@@ -32,23 +30,25 @@ export interface HeadingTextContent extends BaseBlockContent {
   text: string;
 }
 
-export interface ImageItem {
+export interface ImageContent extends BaseBlockContent {
   src: string;
   alt?: string;
 }
 
-export interface ImageLink extends ImageItem {
-  link?: string;
-  title?: string;
-}
-
 export interface ImagesContent extends BaseBlockContent {
-  images: ImageItem[];
+  images: Array<{
+    src: string;
+    alt?: string;
+  }>;
   displayType: string;
 }
 
 export interface ImagesLinksContent extends BaseBlockContent {
-  images: ImageLink[];
+  images: Array<{
+    src: string;
+    alt?: string;
+    link?: string;
+  }>;
   displayType: string;
 }
 
@@ -58,17 +58,13 @@ export interface VideoContent extends BaseBlockContent {
   provider: string;
 }
 
-export interface Testimonial {
-  name?: string;
-  role?: string;
-  text?: string;
-  image?: string;
-  author?: string;
-  content?: string;
-}
-
 export interface TestimonialsContent extends BaseBlockContent {
-  testimonials: Testimonial[];
+  testimonials: Array<{
+    name: string;
+    role?: string;
+    text: string;
+    image?: string;
+  }>;
   displayType: string;
 }
 
@@ -78,24 +74,19 @@ export interface SmartFeedbackContent extends BaseBlockContent {
   allowComments: boolean;
 }
 
-export interface SocialLink {
-  platform: string;
-  url: string;
-}
-
 export interface SocialLinksContent extends BaseBlockContent {
-  links: SocialLink[];
+  links: Array<{
+    platform: string;
+    url: string;
+  }>;
   displayType: string;
 }
 
-export interface LinkItem {
-  text: string;
-  url: string;
-  icon?: string;
-}
-
 export interface LinksContent extends BaseBlockContent {
-  links: LinkItem[];
+  links: Array<{
+    text: string;
+    url: string;
+  }>;
   displayType: string;
 }
 
@@ -105,42 +96,34 @@ export interface ButtonContent extends BaseBlockContent {
   style: string;
 }
 
-export interface FormField {
-  type: string;
-  label: string;
-  required: boolean;
-  placeholder?: string;
-}
-
 export interface FormContent extends BaseBlockContent {
-  fields: FormField[];
+  fields: Array<{
+    type: string;
+    label: string;
+    required: boolean;
+    placeholder?: string;
+  }>;
   submitText: string;
   submitAction: string;
 }
 
-export interface TeamMember {
-  name: string;
-  role?: string;
-  image?: string;
-  photo?: string;
-  bio?: string;
-}
-
 export interface TeamContent extends BaseBlockContent {
-  members: TeamMember[];
+  members: Array<{
+    name: string;
+    role: string;
+    image?: string;
+    bio?: string;
+  }>;
   displayType: string;
 }
 
-export interface Product {
-  name: string;
-  description?: string;
-  price?: string;
-  image?: string;
-  link?: string;
-}
-
 export interface ProductsContent extends BaseBlockContent {
-  products: Product[];
+  products: Array<{
+    name: string;
+    description?: string;
+    price?: string;
+    image?: string;
+  }>;
   displayType: string;
 }
 
@@ -150,36 +133,29 @@ export interface AppointmentCalendarContent extends BaseBlockContent {
   contactRequired: boolean;
 }
 
-export interface BusinessHour {
-  day: string;
-  open: string;
-  close: string;
-  closed: boolean;
-}
-
 export interface BusinessHoursContent extends BaseBlockContent {
-  hours: BusinessHour[];
-}
-
-export interface PDFItem {
-  title: string;
-  url?: string;
-  file?: string;
-  thumbnail?: string;
+  hours: Array<{
+    day: string;
+    open: string;
+    close: string;
+    closed: boolean;
+  }>;
 }
 
 export interface PDFGalleryContent extends BaseBlockContent {
-  pdfs: PDFItem[];
+  pdfs: Array<{
+    title: string;
+    url: string;
+    thumbnail?: string;
+  }>;
   displayType: string;
 }
 
-export interface DetailSection {
-  title: string;
-  content: string;
-}
-
 export interface OtherDetailsContent extends BaseBlockContent {
-  sections: DetailSection[];
+  sections: Array<{
+    title: string;
+    content: string;
+  }>;
 }
 
 export interface ImageTextContent extends BaseBlockContent {
@@ -191,10 +167,9 @@ export interface ImageTextContent extends BaseBlockContent {
   layout: string;
 }
 
-// Union type for all block content types
 export type BlockContent = 
   | HeadingTextContent
-  | ImageItem
+  | ImageContent
   | ImagesContent
   | ImagesLinksContent
   | VideoContent
@@ -210,84 +185,12 @@ export type BlockContent =
   | BusinessHoursContent
   | PDFGalleryContent
   | OtherDetailsContent
-  | ImageTextContent
-  | Record<string, any>;
+  | ImageTextContent;
 
 interface BlockEditorMainProps {
-  blockType: string;
+  blockType: BlockType;
   content: BlockContent;
-  styles?: Record<string, any>;
-}
-
-// Helper function to check if content matches a specific interface
-function isHeadingTextContent(content: BlockContent): content is HeadingTextContent {
-  return 'heading' in content && 'text' in content;
-}
-
-function isImagesContent(content: BlockContent): content is ImagesContent {
-  return 'images' in content && 'displayType' in content && 
-    Array.isArray((content as ImagesContent).images);
-}
-
-function isImagesLinksContent(content: BlockContent): content is ImagesLinksContent {
-  return 'images' in content && 'displayType' in content && 
-    Array.isArray((content as ImagesLinksContent).images);
-}
-
-function isVideoContent(content: BlockContent): content is VideoContent {
-  return 'src' in content && 'provider' in content;
-}
-
-function isTestimonialsContent(content: BlockContent): content is TestimonialsContent {
-  return 'testimonials' in content && 'displayType' in content;
-}
-
-function isSmartFeedbackContent(content: BlockContent): content is SmartFeedbackContent {
-  return 'question' in content && 'options' in content && 'allowComments' in content;
-}
-
-function isSocialLinksContent(content: BlockContent): content is SocialLinksContent {
-  return 'links' in content && 'displayType' in content;
-}
-
-function isLinksContent(content: BlockContent): content is LinksContent {
-  return 'links' in content && 'displayType' in content;
-}
-
-function isButtonContent(content: BlockContent): content is ButtonContent {
-  return 'text' in content && 'url' in content && 'style' in content;
-}
-
-function isFormContent(content: BlockContent): content is FormContent {
-  return 'fields' in content && 'submitText' in content;
-}
-
-function isTeamContent(content: BlockContent): content is TeamContent {
-  return 'members' in content && 'displayType' in content;
-}
-
-function isProductsContent(content: BlockContent): content is ProductsContent {
-  return 'products' in content && 'displayType' in content;
-}
-
-function isAppointmentCalendarContent(content: BlockContent): content is AppointmentCalendarContent {
-  return 'availableDays' in content && 'timeSlots' in content;
-}
-
-function isBusinessHoursContent(content: BlockContent): content is BusinessHoursContent {
-  return 'hours' in content;
-}
-
-function isPDFGalleryContent(content: BlockContent): content is PDFGalleryContent {
-  return 'pdfs' in content && 'displayType' in content;
-}
-
-function isOtherDetailsContent(content: BlockContent): content is OtherDetailsContent {
-  return 'sections' in content;
-}
-
-function isImageTextContent(content: BlockContent): content is ImageTextContent {
-  return 'image' in content && 'text' in content && 'layout' in content;
+  styles?: BlockStyles;
 }
 
 export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditorMainProps) {
@@ -352,11 +255,10 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
   const renderContent = () => {
     switch (blockType) {
       case BlockType.HEADING:
-      case 'heading':
         return (
           <div {...applyContainerStyles()}>
             <h2 {...applyTextStyles('text-2xl font-bold')}>
-              {content.title || content.text}
+              {content.title}
             </h2>
             {content.description && (
               <p {...applyTextStyles('text-muted-foreground mt-2')}>
@@ -367,7 +269,6 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
         );
 
       case BlockType.TEXT:
-      case 'text':
         return (
           <div {...applyContainerStyles()}>
             <div {...applyTextStyles()}>
@@ -377,7 +278,6 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
         );
 
       case BlockType.IMAGE:
-      case 'image':
         return (
           <div {...applyContainerStyles('space-y-4')}>
             {content.title && (
@@ -390,11 +290,11 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
                 {content.description}
               </p>
             )}
-            {(content.image?.url || content.src) ? (
+            {content.image?.url ? (
               <div className="relative rounded-lg overflow-hidden" style={{ aspectRatio: styles.aspectRatio || '16/9' }}>
                 <img
-                  src={content.image?.url || content.src}
-                  alt={content.image?.alt || content.alt || 'Image'}
+                  src={content.image.url}
+                  alt={content.image.alt || 'Image'}
                   className={cn(
                     'w-full h-full',
                     styles.objectFit && `object-${styles.objectFit}`
@@ -409,95 +309,194 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
           </div>
         );
 
-      case BlockType.HEADING_TEXT:
-      case 'heading + text':
-        if (isHeadingTextContent(content)) {
-          return <HeadingTextBlock content={content} styles={styles} />;
-        }
+      case BlockType.IMAGE_TEXT:
         return (
-          <div {...applyContainerStyles('space-y-4')}>
-            <h2 {...applyTextStyles('text-2xl font-bold')}>
-              {content.heading || content.title}
-            </h2>
-            <div {...applyTextStyles()}>
-              {content.text || content.description}
+          <div {...applyContainerStyles(cn(
+            'gap-8',
+            content.imagePosition === 'left' && 'flex-row',
+            content.imagePosition === 'right' && 'flex-row-reverse',
+            content.imagePosition === 'top' && 'flex-col',
+            content.imagePosition === 'bottom' && 'flex-col-reverse'
+          ))}>
+            <div className="flex-1 space-y-4">
+              {content.title && (
+                <h2 {...applyTextStyles('text-2xl font-bold')}>
+                  {content.title}
+                </h2>
+              )}
+              {content.description && (
+                <p {...applyTextStyles('text-muted-foreground')}>
+                  {content.description}
+                </p>
+              )}
             </div>
-          </div>
-        );
-
-      case 'images':
-        if (isImagesContent(content)) {
-          return <ImagesBlock content={content} styles={styles} />;
-        }
-        return <div>Invalid images content</div>;
-      
-      case 'images + links':
-        if (isImagesLinksContent(content)) {
-          return <ImagesLinksBlock content={content} styles={styles} />;
-        }
-        return <div>Invalid images+links content</div>;
-      
-      case 'video':
-        if (isVideoContent(content)) {
-          return <VideoBlock content={content} styles={styles} />;
-        }
-        return <div>Invalid video content</div>;
-      
-      case 'testimonials':
-        if (isTestimonialsContent(content)) {
-          return <TestimonialsBlock content={content} styles={styles} />;
-        }
-        return <div>Invalid testimonials content</div>;
-
-      case 'smart feedback':
-        if (isSmartFeedbackContent(content)) {
-          return <SmartFeedbackBlock content={content} styles={styles} />;
-        }
-        return <div>Invalid smart feedback content</div>;
-
-      case 'map':
-        return (
-          <div>
-            {content.location && (
-              <iframe
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(content.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                style={{
-                  width: '100%',
-                  height: '400px',
-                  border: 'none',
-                  borderRadius: styles.borderRadius || '4px',
-                }}
-                allowFullScreen
-                loading="lazy"
-                title="Map"
-              />
+            {content.image?.url ? (
+              <div className="flex-1 relative rounded-lg overflow-hidden" style={{ aspectRatio: styles.aspectRatio || '16/9' }}>
+                <img
+                  src={content.image.url}
+                  alt={content.image.alt || 'Image'}
+                  className={cn(
+                    'w-full h-full',
+                    styles.objectFit && `object-${styles.objectFit}`
+                  )}
+                />
+              </div>
+            ) : (
+              <div className="flex-1 aspect-video rounded-lg bg-muted flex items-center justify-center">
+                <p className="text-muted-foreground">No image selected</p>
+              </div>
             )}
           </div>
         );
+
+      case 'heading':
+        if ('text' in content) {
+          return (
+            <h2 
+              style={{
+                fontSize: styles.fontSize || '32px',
+                fontWeight: styles.fontWeight || 'bold',
+                color: styles.textColor || '#000000',
+                textAlign: styles.textAlign || 'left',
+              }}
+            >
+              {content.text}
+            </h2>
+          );
+        }
+        return null;
+      
+      case 'text':
+        if ('text' in content) {
+          return (
+            <div 
+              style={{
+                fontSize: styles.fontSize || '16px',
+                color: styles.textColor || '#000000',
+                textAlign: styles.textAlign || 'left',
+              }}
+            >
+              {content.text}
+            </div>
+          );
+        }
+        return null;
+
+      case 'heading + text':
+        if ('heading' in content && 'text' in content) {
+          return <HeadingTextBlock content={content} styles={styles} />;
+        }
+        return null;
+        
+      case 'image':
+        if ('src' in content) {
+          return (
+            <div>
+              {content.src ? (
+                <img 
+                  src={content.src} 
+                  alt={content.alt || 'Image'} 
+                  style={{
+                    maxWidth: '100%',
+                    borderRadius: styles.borderRadius || '4px',
+                  }}
+                />
+              ) : (
+                <div 
+                  style={{
+                    width: '100%',
+                    height: '200px',
+                    backgroundColor: '#f0f0f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: styles.borderRadius || '4px',
+                  }}
+                >
+                  <span className="text-muted-foreground">No image selected</span>
+                </div>
+              )}
+            </div>
+          );
+        }
+        return null;
+      
+      case 'images':
+        if ('images' in content && 'displayType' in content) {
+          return <ImagesBlock content={content} styles={styles} />;
+        }
+        return null;
+      
+      case 'images + links':
+        if ('images' in content && 'displayType' in content) {
+          return <ImagesLinksBlock content={content} styles={styles} />;
+        }
+        return null;
+      
+      case 'video':
+        if ('src' in content && 'provider' in content) {
+          return <VideoBlock content={content} styles={styles} />;
+        }
+        return null;
+      
+      case 'testimonials':
+        if ('testimonials' in content && 'displayType' in content) {
+          return <TestimonialsBlock content={content} styles={styles} />;
+        }
+        return null;
+
+      case 'smart feedback':
+        if ('question' in content && 'options' in content) {
+          return <SmartFeedbackBlock content={content} styles={styles} />;
+        }
+        return null;
+
+      case 'map':
+        if ('location' in content) {
+          return (
+            <div>
+              {content.location && (
+                <iframe
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(content.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                  style={{
+                    width: '100%',
+                    height: '400px',
+                    border: 'none',
+                    borderRadius: styles.borderRadius || '4px',
+                  }}
+                  allowFullScreen
+                  loading="lazy"
+                  title="Map"
+                />
+              )}
+            </div>
+          );
+        }
+        return null;
       
       case 'social links':
-        if (isSocialLinksContent(content)) {
+        if ('links' in content && 'displayType' in content) {
           return <SocialLinksBlock content={content} styles={styles} />;
         }
-        return <div>Invalid social links content</div>;
+        return null;
 
       case 'links':
-        if (isLinksContent(content)) {
+        if ('links' in content && 'displayType' in content) {
           return <LinksBlock content={content} styles={styles} />;
         }
-        return <div>Invalid links content</div>;
+        return null;
 
       case 'button':
-        if (isButtonContent(content)) {
+        if ('text' in content && 'url' in content) {
           return <ButtonBlock content={content} styles={styles} />;
         }
-        return <div>Invalid button content</div>;
+        return null;
       
       case 'form':
-        if (isFormContent(content)) {
+        if ('fields' in content && 'submitText' in content) {
           return <FormBlock content={content} styles={styles} />;
         }
-        return <div>Invalid form content</div>;
+        return null;
       
       case 'contact form':
         return (
@@ -516,46 +515,46 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
         );
       
       case 'team':
-        if (isTeamContent(content)) {
+        if ('members' in content && 'displayType' in content) {
           return <TeamBlock content={content} styles={styles} />;
         }
-        return <div>Invalid team content</div>;
+        return null;
       
       case 'products':
-        if (isProductsContent(content)) {
+        if ('products' in content && 'displayType' in content) {
           return <ProductsBlock content={content} styles={styles} />;
         }
-        return <div>Invalid products content</div>;
+        return null;
       
       case 'appointment/calendar':
-        if (isAppointmentCalendarContent(content)) {
+        if ('availableDays' in content && 'timeSlots' in content) {
           return <AppointmentCalendarBlock content={content} styles={styles} />;
         }
-        return <div>Invalid appointment/calendar content</div>;
+        return null;
       
       case 'business hours':
-        if (isBusinessHoursContent(content)) {
+        if ('hours' in content) {
           return <BusinessHoursBlock content={content} styles={styles} />;
         }
-        return <div>Invalid business hours content</div>;
+        return null;
       
       case 'pdf gallery':
-        if (isPDFGalleryContent(content)) {
+        if ('pdfs' in content && 'displayType' in content) {
           return <PDFGalleryBlock content={content} styles={styles} />;
         }
-        return <div>Invalid pdf gallery content</div>;
+        return null;
       
       case 'other details':
-        if (isOtherDetailsContent(content)) {
+        if ('sections' in content) {
           return <OtherDetailsBlock content={content} styles={styles} />;
         }
-        return <div>Invalid other details content</div>;
+        return null;
       
       case 'image + text':
-        if (isImageTextContent(content)) {
+        if ('image' in content && 'text' in content) {
           return <ImageTextBlock content={content} styles={styles} />;
         }
-        return <div>Invalid image + text content</div>;
+        return null;
       
       default:
         return <div>Unsupported block type: {blockType}</div>;

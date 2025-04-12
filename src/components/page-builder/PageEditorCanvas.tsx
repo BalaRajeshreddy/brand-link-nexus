@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -7,12 +6,13 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Grip, Trash2, Pencil } from 'lucide-react';
 import { Block } from './PageBuilder';
-import { BlockEditorMain, BlockContent } from './block-renderers/BlockEditorMain';
+import { BlockEditorMain } from './block-renderers/BlockEditorMain';
+import { BlockContent } from './block-renderers/BlockEditorMain';
 
 interface SortableBlockProps {
   block: Block;
   onDeleteBlock: (blockId: string) => void;
-  onUpdateBlock: (blockId: string, content: Record<string, any>, styles: Record<string, any>) => void;
+  onUpdateBlock: (blockId: string, content: BlockContent, styles: Record<string, string>) => void;
   openMediaLibrary: (blockId: string, fieldPath: string, altPath?: string) => void;
 }
 
@@ -25,8 +25,8 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
     transition,
   };
 
-  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; }) => {
-    onUpdateBlock(updatedBlock.id, updatedBlock.content, block.styles || {});
+  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; brandId: string }) => {
+    onUpdateBlock(updatedBlock.id, updatedBlock.content as BlockContent, {});
     setIsEditing(false);
   };
 
@@ -70,8 +70,9 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
             id: block.id,
             type: block.type,
             content: block.content,
+            brandId: block.brandId || ''
           }}
-          onSave={handleUpdateBlock}
+          onUpdateBlock={handleUpdateBlock}
           openMediaLibrary={() => openMediaLibrary(block.id, 'content.image.src', 'content.image.alt')}
         />
       ) : (
@@ -79,7 +80,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
           <BlockEditorMain
             blockType={block.type}
             content={block.content as BlockContent}
-            styles={block.styles || {}}
+            styles={{}}
           />
         </div>
       )}
