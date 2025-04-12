@@ -131,7 +131,7 @@ export const BlockForm: React.FC<BlockFormProps> = ({
               />
             </div>
 
-            {formData.type === BlockType.IMAGE && (
+            {(formData.type === "IMAGE" || formData.type === BlockType.IMAGE) && (
               <div className="space-y-2">
                 <Label>Image</Label>
                 <FileSelector
@@ -143,7 +143,7 @@ export const BlockForm: React.FC<BlockFormProps> = ({
               </div>
             )}
 
-            {formData.type === BlockType.PDF && (
+            {(formData.type === "PDF" || formData.type === BlockType.PDF) && (
               <div className="space-y-2">
                 <Label>PDF Document</Label>
                 <FileSelector

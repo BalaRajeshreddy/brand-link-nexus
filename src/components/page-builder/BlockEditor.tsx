@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Dialog,
@@ -79,10 +80,12 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
       id: block.id,
       type: block.type,
       content: content,
-      styles: block.type === BlockType.FORM || block.type === 'form' ? block.styles : {
-        ...(block.styles || {}),
-        ...content
-      }
+      styles: (block.type === BlockType.FORM || block.type === 'form') 
+        ? (block.styles || {}) 
+        : {
+            ...(block.styles || {}),
+            ...content
+          }
     };
     onUpdateBlock(updatedBlock);
     setIsOpen(false);
@@ -102,7 +105,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
       styles: {
         ...(block.styles || {}),
         [componentType]: {
-          ...(block.styles?.[componentType] || {}),
+          ...((block.styles && block.styles[componentType]) || {}),
           ...style
         }
       }
