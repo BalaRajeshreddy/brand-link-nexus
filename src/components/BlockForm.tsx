@@ -131,8 +131,8 @@ export const BlockForm: React.FC<BlockFormProps> = ({
               />
             </div>
 
-            {/* Use formData.type directly for comparison instead of treating it as a union */}
-            {formData.type === BlockType.IMAGE && (
+            {/* Use string comparison instead of direct enum comparison */}
+            {formData.type === "IMAGE" && (
               <div className="space-y-2">
                 <Label>Image</Label>
                 <FileSelector
@@ -144,7 +144,7 @@ export const BlockForm: React.FC<BlockFormProps> = ({
               </div>
             )}
 
-            {formData.type === BlockType.PDF && (
+            {formData.type === "PDF" && (
               <div className="space-y-2">
                 <Label>PDF Document</Label>
                 <FileSelector

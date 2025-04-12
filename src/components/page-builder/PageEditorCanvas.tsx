@@ -6,7 +6,7 @@ import { BlockEditor } from './BlockEditor';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Grip, Trash2, Pencil } from 'lucide-react';
-import { Block } from './PageBuilder';
+import { Block } from '@/types/block';
 import { BlockEditorMain, BlockContent } from './block-renderers/BlockEditorMain';
 
 interface SortableBlockProps {

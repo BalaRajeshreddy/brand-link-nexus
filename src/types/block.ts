@@ -122,4 +122,4 @@ export interface BlockContent {
   
   // Block-specific properties
   [key: string]: any;
-} 
+}

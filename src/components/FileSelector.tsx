@@ -51,12 +51,7 @@ export const FileSelector: React.FC<FileSelectorProps> = ({
       name: 'External resource',
       type: type === 'image' ? 'image' : 'pdf',
       size: 0,
-      userId: '',
-      brandId: '',
-      id: `external-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      usageCount: 0
+      id: `external-${Date.now()}`
     };
     onSelect(fileAsset);
   };
