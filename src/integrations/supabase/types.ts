@@ -9,6 +9,246 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_profiles: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          id: string
+          is_super_admin: boolean | null
+          permissions: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          is_super_admin?: boolean | null
+          permissions?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          is_super_admin?: boolean | null
+          permissions?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brands: {
+        Row: {
+          address: Json | null
+          awards: Json | null
+          campaigns: Json | null
+          certifications: Json | null
+          created_at: string | null
+          description: string | null
+          email: string
+          featured_products: Json | null
+          founding_year: number | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          logo: string | null
+          mission: string | null
+          name: string
+          new_launch_products: Json | null
+          phone: string | null
+          press_features: Json | null
+          settings: Json | null
+          social_links: Json | null
+          tagline: string | null
+          updated_at: string | null
+          user_id: string | null
+          video_url: string | null
+          vision: string | null
+        }
+        Insert: {
+          address?: Json | null
+          awards?: Json | null
+          campaigns?: Json | null
+          certifications?: Json | null
+          created_at?: string | null
+          description?: string | null
+          email: string
+          featured_products?: Json | null
+          founding_year?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          logo?: string | null
+          mission?: string | null
+          name: string
+          new_launch_products?: Json | null
+          phone?: string | null
+          press_features?: Json | null
+          settings?: Json | null
+          social_links?: Json | null
+          tagline?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          video_url?: string | null
+          vision?: string | null
+        }
+        Update: {
+          address?: Json | null
+          awards?: Json | null
+          campaigns?: Json | null
+          certifications?: Json | null
+          created_at?: string | null
+          description?: string | null
+          email?: string
+          featured_products?: Json | null
+          founding_year?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          logo?: string | null
+          mission?: string | null
+          name?: string
+          new_launch_products?: Json | null
+          phone?: string | null
+          press_features?: Json | null
+          settings?: Json | null
+          social_links?: Json | null
+          tagline?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          video_url?: string | null
+          vision?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brands_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          preferences: Json | null
+          saved_brands: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          preferences?: Json | null
+          saved_brands?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          preferences?: Json | null
+          saved_brands?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      files: {
+        Row: {
+          brand_id: string | null
+          created_at: string | null
+          description: string | null
+          folder: string | null
+          id: string
+          last_used: string | null
+          metadata: Json | null
+          mime_type: string
+          name: string
+          size: number
+          tags: string[] | null
+          thumbnail_url: string | null
+          type: Database["public"]["Enums"]["file_type"]
+          updated_at: string | null
+          url: string
+          usage_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          folder?: string | null
+          id?: string
+          last_used?: string | null
+          metadata?: Json | null
+          mime_type: string
+          name: string
+          size: number
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          type: Database["public"]["Enums"]["file_type"]
+          updated_at?: string | null
+          url: string
+          usage_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          folder?: string | null
+          id?: string
+          last_used?: string | null
+          metadata?: Json | null
+          mime_type?: string
+          name?: string
+          size?: number
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          type?: Database["public"]["Enums"]["file_type"]
+          updated_at?: string | null
+          url?: string
+          usage_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "files_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "files_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       landing_pages: {
         Row: {
           background_color: string
@@ -163,6 +403,99 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          brand_id: string | null
+          comment: string | null
+          created_at: string | null
+          id: string
+          images: string[] | null
+          rating: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          brand_id?: string | null
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          images?: string[] | null
+          rating: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          brand_id?: string | null
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          images?: string[] | null
+          rating?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          age: number | null
+          avatar: string | null
+          created_at: string | null
+          email: string
+          first_name: string | null
+          gender: string | null
+          id: string
+          last_name: string | null
+          password: string
+          phone: string | null
+          role: Database["public"]["Enums"]["role_type"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          age?: number | null
+          avatar?: string | null
+          created_at?: string | null
+          email: string
+          first_name?: string | null
+          gender?: string | null
+          id?: string
+          last_name?: string | null
+          password: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["role_type"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          age?: number | null
+          avatar?: string | null
+          created_at?: string | null
+          email?: string
+          first_name?: string | null
+          gender?: string | null
+          id?: string
+          last_name?: string | null
+          password?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["role_type"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -174,7 +507,8 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      file_type: "IMAGE" | "PDF" | "VIDEO"
+      role_type: "ADMIN" | "BRAND" | "CUSTOMER"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -289,6 +623,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      file_type: ["IMAGE", "PDF", "VIDEO"],
+      role_type: ["ADMIN", "BRAND", "CUSTOMER"],
+    },
   },
 } as const
