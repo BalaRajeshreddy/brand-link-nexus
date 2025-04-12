@@ -933,4 +933,116 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
             <div className="flex items-center justify-between mb-2">
               <Label>Display Type</Label>
               <Select
-                value={content.
+                value={content.displayType || 'grid'}
+                onValueChange={(value) => updateContent('displayType', value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select display type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="grid">Grid</SelectItem>
+                  <SelectItem value="list">List</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {(content.products || [
+              { name: '', description: '', price: '', image: '', link: '' },
+              { name: '', description: '', price: '', image: '', link: '' }
+            ]).map((product: any, index: number) => (
+              <div key={index.toString()} className="space-y-2 border p-3 rounded-md">
+                <Label>Product #{index + 1}</Label>
+                <div>
+                  <Label htmlFor={`product-name-${index.toString()}`} className="text-sm">Name</Label>
+                  <Input
+                    id={`product-name-${index.toString()}`}
+                    value={product.name || ''}
+                    onChange={(e) => updateNestedContent(['products', index.toString(), 'name'], e.target.value)}
+                    placeholder="Product Name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`product-description-${index.toString()}`} className="text-sm">Description</Label>
+                  <Textarea
+                    id={`product-description-${index.toString()}`}
+                    value={product.description || ''}
+                    onChange={(e) => updateNestedContent(['products', index.toString(), 'description'], e.target.value)}
+                    placeholder="Product description"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`product-price-${index.toString()}`} className="text-sm">Price</Label>
+                  <Input
+                    id={`product-price-${index.toString()}`}
+                    value={product.price || ''}
+                    onChange={(e) => updateNestedContent(['products', index.toString(), 'price'], e.target.value)}
+                    placeholder="29.99"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`product-image-${index.toString()}`} className="text-sm">Image URL</Label>
+                  <Input
+                    id={`product-image-${index.toString()}`}
+                    value={product.image || ''}
+                    onChange={(e) => updateNestedContent(['products', index.toString(), 'image'], e.target.value)}
+                    placeholder="https://example.com/product.jpg"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`product-link-${index.toString()}`} className="text-sm">Product Link</Label>
+                  <Input
+                    id={`product-link-${index.toString()}`}
+                    value={product.link || ''}
+                    onChange={(e) => updateNestedContent(['products', index.toString(), 'link'], e.target.value)}
+                    placeholder="https://example.com/buy"
+                  />
+                </div>
+              </div>
+            ))}
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => {
+                const products = [...(content.products || [])];
+                products.push({ name: '', description: '', price: '', image: '', link: '' });
+                updateContent('products', products);
+              }}
+            >
+              Add Product
+            </Button>
+          </div>
+        );
+
+      default:
+        return (
+          <div>
+            <p className="text-muted-foreground">No editor available for this block type: {block.type}</p>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit {block.type} Block</DialogTitle>
+        </DialogHeader>
+
+        <div className="py-4">
+          {renderContentEditor()}
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+          <Button type="button" onClick={handleSave}>
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
