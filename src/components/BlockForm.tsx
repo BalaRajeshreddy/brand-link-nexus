@@ -36,6 +36,11 @@ export const BlockForm: React.FC<BlockFormProps> = ({
     });
   };
 
+  // Helper function to check if a type matches either string or enum version
+  const isOfType = (type: string | BlockType, value: string | BlockType): boolean => {
+    return type === value || type.toString() === value.toString();
+  };
+
   const renderBlockForm = () => {
     switch (formData.type) {
       case BlockType.HERO:
@@ -131,7 +136,7 @@ export const BlockForm: React.FC<BlockFormProps> = ({
               />
             </div>
 
-            {(formData.type === "IMAGE" || formData.type === BlockType.IMAGE) && (
+            {isOfType(formData.type, BlockType.IMAGE) && (
               <div className="space-y-2">
                 <Label>Image</Label>
                 <FileSelector
@@ -143,7 +148,7 @@ export const BlockForm: React.FC<BlockFormProps> = ({
               </div>
             )}
 
-            {(formData.type === "PDF" || formData.type === BlockType.PDF) && (
+            {isOfType(formData.type, BlockType.PDF) && (
               <div className="space-y-2">
                 <Label>PDF Document</Label>
                 <FileSelector

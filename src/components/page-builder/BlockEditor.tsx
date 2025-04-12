@@ -98,6 +98,14 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
   };
   
   const handleStyleChange = (componentType: 'container' | 'input' | 'label' | 'button', style: Partial<BlockStyles>) => {
+    // Create a safe copy of the styles object
+    const currentComponentStyles = block.styles && 
+      typeof block.styles === 'object' && 
+      componentType in block.styles && 
+      typeof block.styles[componentType] === 'object' 
+        ? block.styles[componentType] 
+        : {};
+    
     onUpdateBlock({
       id: block.id,
       type: block.type,
@@ -105,7 +113,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
       styles: {
         ...(block.styles || {}),
         [componentType]: {
-          ...((block.styles && block.styles[componentType]) || {}),
+          ...currentComponentStyles,
           ...style
         }
       }
