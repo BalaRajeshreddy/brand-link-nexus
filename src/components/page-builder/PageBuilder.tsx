@@ -14,13 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageBuilderProps } from "./interfaces";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-
-export interface Block {
-  id: string;
-  type: string;
-  content: Record<string, any>;
-  styles: Record<string, any>;
-}
+import { Block, BlockType } from "@/types/block";
 
 export interface LandingPage {
   id?: string;
@@ -105,9 +99,12 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
           if (components && components.length > 0) {
             const loadedBlocks = components.map(component => ({
               id: `block-${component.id}`,
-              type: component.type,
+              type: component.type as BlockType,
               content: component.content || {},
-              styles: component.styles || getDefaultStylesForBlockType(component.type)
+              styles: component.styles || getDefaultStylesForBlockType(component.type),
+              order: component.position,
+              isActive: true,
+              brandId: userId
             }));
             
             setBlocks(loadedBlocks);
@@ -122,14 +119,17 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
     };
 
     loadPageData();
-  }, [pageId]);
+  }, [pageId, userId]);
 
   const handleAddBlock = (blockType: string) => {
     const newBlock = {
       id: `block-${Date.now()}`,
-      type: blockType,
+      type: blockType as BlockType,
       content: getDefaultContentForBlockType(blockType),
       styles: getDefaultStylesForBlockType(blockType),
+      order: blocks.length,
+      isActive: true,
+      brandId: userId
     };
     
     setBlocks([...blocks, newBlock]);
@@ -147,7 +147,11 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
         const oldIndex = blocks.findIndex((block) => block.id === active.id);
         const newIndex = blocks.findIndex((block) => block.id === over.id);
         
-        return arrayMove(blocks, oldIndex, newIndex);
+        const reorderedBlocks = arrayMove(blocks, oldIndex, newIndex);
+        return reorderedBlocks.map((block, index) => ({
+          ...block,
+          order: index
+        }));
       });
     }
   };
@@ -206,87 +210,6 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
     }
   };
 
-  const savePage = async () => {
-    try {
-      setIsSaving(true);
-      
-      if (!userId) {
-        toast.error("You need to be logged in to save a page");
-        navigate("/auth");
-        return;
-      }
-      
-      let landingPageId = currentPageId;
-      
-      if (!landingPageId) {
-        const tempSlug = `${pageData.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
-        
-        const { data: newPageData, error: pageError } = await supabase
-          .from('landing_pages')
-          .insert({
-            title: pageData.title,
-            background_color: pageData.backgroundColor,
-            font_family: pageData.fontFamily,
-            user_id: userId,
-            slug: tempSlug
-          })
-          .select('id, slug')
-          .single();
-        
-        if (pageError) {
-          throw pageError;
-        }
-        
-        landingPageId = newPageData.id;
-        setCurrentPageId(landingPageId);
-        toast.success(`Page created with slug: ${newPageData.slug}`);
-      } else {
-        const { error: updateError } = await supabase
-          .from('landing_pages')
-          .update({
-            title: pageData.title,
-            background_color: pageData.backgroundColor,
-            font_family: pageData.fontFamily,
-          })
-          .eq('id', landingPageId);
-          
-        if (updateError) {
-          throw updateError;
-        }
-      }
-      
-      if (landingPageId) {
-        await supabase
-          .from('page_components')
-          .delete()
-          .eq('page_id', landingPageId);
-      }
-      
-      const componentsToInsert = blocks.map((block, index) => ({
-        page_id: landingPageId,
-        type: block.type,
-        content: block.content,
-        position: index,
-        styles: block.styles,
-      }));
-      
-      const { error: componentsError } = await supabase
-        .from('page_components')
-        .insert(componentsToInsert);
-          
-      if (componentsError) {
-        throw componentsError;
-      }
-      
-      toast.success("Landing page saved successfully!");
-    } catch (error) {
-      console.error("Error saving landing page:", error);
-      toast.error("Failed to save landing page");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-  
   const getDefaultContentForBlockType = (blockType: string): Record<string, any> => {
     switch (blockType) {
       case 'heading':
@@ -509,6 +432,87 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
         };
       default:
         return baseStyles;
+    }
+  };
+
+  const savePage = async () => {
+    try {
+      setIsSaving(true);
+      
+      if (!userId) {
+        toast.error("You need to be logged in to save a page");
+        navigate("/auth");
+        return;
+      }
+      
+      let landingPageId = currentPageId;
+      
+      if (!landingPageId) {
+        const tempSlug = `${pageData.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+        
+        const { data: newPageData, error: pageError } = await supabase
+          .from('landing_pages')
+          .insert({
+            title: pageData.title,
+            background_color: pageData.backgroundColor,
+            font_family: pageData.fontFamily,
+            user_id: userId,
+            slug: tempSlug
+          })
+          .select('id, slug')
+          .single();
+        
+        if (pageError) {
+          throw pageError;
+        }
+        
+        landingPageId = newPageData.id;
+        setCurrentPageId(landingPageId);
+        toast.success(`Page created with slug: ${newPageData.slug}`);
+      } else {
+        const { error: updateError } = await supabase
+          .from('landing_pages')
+          .update({
+            title: pageData.title,
+            background_color: pageData.backgroundColor,
+            font_family: pageData.fontFamily,
+          })
+          .eq('id', landingPageId);
+          
+        if (updateError) {
+          throw updateError;
+        }
+      }
+      
+      if (landingPageId) {
+        await supabase
+          .from('page_components')
+          .delete()
+          .eq('page_id', landingPageId);
+      }
+      
+      const componentsToInsert = blocks.map((block, index) => ({
+        page_id: landingPageId,
+        type: block.type,
+        content: block.content,
+        position: index,
+        styles: block.styles,
+      }));
+      
+      const { error: componentsError } = await supabase
+        .from('page_components')
+        .insert(componentsToInsert);
+          
+      if (componentsError) {
+        throw componentsError;
+      }
+      
+      toast.success("Landing page saved successfully!");
+    } catch (error) {
+      console.error("Error saving landing page:", error);
+      toast.error("Failed to save landing page");
+    } finally {
+      setIsSaving(false);
     }
   };
 
