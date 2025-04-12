@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { BlockEditorMain } from '@/components/page-builder/block-renderers/BlockEditorMain';
-import type { Block } from '@/components/page-builder/PageBuilder';
+import { Block } from '@/types/block';
 import { LoaderCircle } from 'lucide-react';
 
 interface LandingPageData {
@@ -141,8 +141,8 @@ export default function PublishedLandingPage() {
     <div 
       className="min-h-screen"
       style={{
-        backgroundColor: pageData.backgroundColor,
-        fontFamily: pageData.fontFamily
+        backgroundColor: pageData?.backgroundColor || '#FFFFFF',
+        fontFamily: pageData?.fontFamily || 'Inter, sans-serif'
       }}
     >
       <div className="max-w-4xl mx-auto py-8 px-4">

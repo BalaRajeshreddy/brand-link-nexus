@@ -131,7 +131,6 @@ export const BlockForm: React.FC<BlockFormProps> = ({
               />
             </div>
 
-            {/* Compare with enum values directly rather than strings */}
             {formData.type === BlockType.IMAGE && (
               <div className="space-y-2">
                 <Label>Image</Label>

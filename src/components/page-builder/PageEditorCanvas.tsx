@@ -67,7 +67,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
       {isEditing ? (
         <BlockEditor
           block={block}
-          onChange={handleUpdateBlock}
+          onUpdateBlock={handleUpdateBlock}
           openMediaLibrary={() => openMediaLibrary(block.id, 'content.image.src', 'content.image.alt')}
         />
       ) : (

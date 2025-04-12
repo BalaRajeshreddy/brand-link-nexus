@@ -1,5 +1,5 @@
 
-import { Block, LandingPage } from "./PageBuilder";
+import { Block } from "@/types/block";
 
 export interface PageEditorCanvasProps {
   blocks: Block[];
@@ -34,4 +34,16 @@ export interface PageSettingsDialogProps {
 export interface PageBuilderProps {
   userId: string;
   pageId?: string;
+}
+
+export interface LandingPage {
+  id?: string;
+  title: string;
+  slug?: string;
+  backgroundColor: string;
+  fontFamily: string;
+  published?: boolean;
+  userId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
