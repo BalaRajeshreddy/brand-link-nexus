@@ -38,10 +38,10 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
                 <p className="text-sm text-muted-foreground">No content added yet</p>
               </div>
             ) : (
-              <div className="container mx-auto px-4 py-8 max-w-4xl">
-                <div className="space-y-6 bg-white rounded-lg p-6 shadow-sm">
+              <div className="container mx-auto p-4">
+                <div className="bg-white rounded-lg p-6 shadow-sm">
                   {blocks.map((block) => (
-                    <div key={block.id} className="mb-6">
+                    <div key={block.id} className="mb-6 last:mb-0">
                       <BlockEditorMain
                         blockType={block.type as BlockType | string}
                         content={block.content}
