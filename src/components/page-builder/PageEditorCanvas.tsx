@@ -27,7 +27,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
   };
 
   const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; brandId?: string }) => {
-    onUpdateBlock(updatedBlock.id, updatedBlock.content as BlockContent, {});
+    onUpdateBlock(updatedBlock.id, updatedBlock.content as BlockContent, block.styles || {});
     setIsEditing(false);
   };
 
@@ -81,7 +81,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
           <BlockEditorMain
             blockType={block.type as BlockType}
             content={block.content as BlockContent}
-            styles={{}}
+            styles={block.styles || {}}
           />
         </div>
       )}
