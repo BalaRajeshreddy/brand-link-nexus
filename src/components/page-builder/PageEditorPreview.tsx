@@ -43,6 +43,7 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
                   <div 
                     key={block.id} 
                     className="bg-white rounded-lg shadow p-4"
+                    style={block.styles || {}}
                   >
                     <BlockEditorMain
                       blockType={block.type as BlockType}

@@ -138,11 +138,19 @@ const PublishedLandingPage = () => {
         ) : (
           <div className="space-y-6">
             {blocks.map((block) => (
-              <div key={block.id} className="bg-white rounded-lg shadow p-4">
+              <div 
+                key={block.id} 
+                className="bg-white rounded-lg shadow p-4"
+                style={block.styles ? {
+                  backgroundColor: block.styles.backgroundColor || 'white',
+                  borderRadius: block.styles.borderRadius || '0.5rem',
+                  padding: block.styles.padding || '1rem'
+                } : {}}
+              >
                 <BlockEditorMain
                   blockType={block.type as BlockType | string}
                   content={block.content}
-                  styles={block.styles}
+                  styles={block.styles || {}}
                 />
               </div>
             ))}
@@ -151,6 +159,6 @@ const PublishedLandingPage = () => {
       </div>
     </div>
   );
-};
+}
 
 export default PublishedLandingPage;
