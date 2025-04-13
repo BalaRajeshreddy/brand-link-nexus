@@ -47,7 +47,7 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
                     <BlockEditorMain
                       blockType={block.type as BlockType}
                       content={block.content}
-                      styles={block.styles}
+                      styles={block.styles || {}}
                     />
                   </div>
                 ))}
