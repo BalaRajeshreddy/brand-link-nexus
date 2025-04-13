@@ -27,7 +27,7 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
             <div className="bg-gray-800 w-32 h-6 rounded-full"></div>
           </div>
           <div 
-            className="h-full w-full"
+            className="h-full w-full overflow-y-auto"
             style={{
               backgroundColor: pageStyles.backgroundColor,
               fontFamily: pageStyles.fontFamily
@@ -38,9 +38,12 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
                 <p className="text-sm text-muted-foreground">No content added yet</p>
               </div>
             ) : (
-              <div className="p-6">
+              <div className="p-6 space-y-6">
                 {blocks.map((block) => (
-                  <div key={block.id} className="mb-6">
+                  <div 
+                    key={block.id} 
+                    className="bg-white rounded-lg shadow p-4"
+                  >
                     <BlockEditorMain
                       blockType={block.type as BlockType}
                       content={block.content}

@@ -35,7 +35,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
     <div
       ref={setNodeRef}
       style={style}
-      className="relative group border rounded-lg p-4 mb-4 bg-white"
+      className="relative group border rounded-lg shadow p-4 mb-4 bg-white"
     >
       <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button

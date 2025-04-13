@@ -138,7 +138,7 @@ const PublishedLandingPage = () => {
         ) : (
           <div className="space-y-6">
             {blocks.map((block) => (
-              <div key={block.id}>
+              <div key={block.id} className="bg-white rounded-lg shadow p-4">
                 <BlockEditorMain
                   blockType={block.type as BlockType | string}
                   content={block.content}
