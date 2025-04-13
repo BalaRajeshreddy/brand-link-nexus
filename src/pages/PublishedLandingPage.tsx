@@ -130,7 +130,7 @@ const PublishedLandingPage = () => {
         fontFamily: pageData?.font_family || 'Inter, sans-serif'
       }}
     >
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="container mx-auto px-4 max-w-4xl">
         {blocks.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow-sm">
             <h2 className="text-2xl font-semibold text-gray-700">This page has no content</h2>
@@ -138,7 +138,7 @@ const PublishedLandingPage = () => {
         ) : (
           <div className="bg-white rounded-lg shadow-sm p-6">
             {blocks.map((block) => (
-              <div key={block.id} className="mb-6 last:mb-0">
+              <div key={block.id} className="mb-6">
                 <BlockEditorMain
                   blockType={block.type as BlockType | string}
                   content={block.content}
