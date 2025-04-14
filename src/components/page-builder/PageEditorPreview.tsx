@@ -1,6 +1,7 @@
 
-import { Block, BlockType } from "@/types/block";
+import { Block, BlockType, BlockStyles } from "@/types/block";
 import { BlockEditorMain } from "./block-renderers/BlockEditorMain";
+import { CSSProperties } from "react";
 
 interface PageEditorPreviewProps {
   blocks: Block[];
@@ -39,19 +40,40 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
               </div>
             ) : (
               <div className="p-6 space-y-6">
-                {blocks.map((block) => (
-                  <div 
-                    key={block.id} 
-                    className="bg-white rounded-lg shadow p-4"
-                    style={block.styles || {}}
-                  >
-                    <BlockEditorMain
-                      blockType={block.type as BlockType}
-                      content={block.content}
-                      styles={block.styles || {}}
-                    />
-                  </div>
-                ))}
+                {blocks.map((block) => {
+                  // Convert BlockStyles to valid React CSSProperties
+                  const cssStyles: CSSProperties = {};
+                  
+                  if (block.styles) {
+                    // Copy all properties from block.styles to cssStyles
+                    Object.keys(block.styles).forEach(key => {
+                      // Special handling for flexDirection to ensure it's a valid FlexDirection
+                      if (key === 'flexDirection') {
+                        const value = block.styles[key];
+                        // Only assign valid FlexDirection values
+                        if (['row', 'row-reverse', 'column', 'column-reverse'].includes(value)) {
+                          (cssStyles as any)[key] = value;
+                        }
+                      } else {
+                        (cssStyles as any)[key] = block.styles[key];
+                      }
+                    });
+                  }
+                  
+                  return (
+                    <div 
+                      key={block.id} 
+                      className="bg-white rounded-lg shadow p-4"
+                      style={cssStyles}
+                    >
+                      <BlockEditorMain
+                        blockType={block.type as BlockType}
+                        content={block.content}
+                        styles={block.styles || {}}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
