@@ -26,10 +26,8 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
     transition,
   };
 
-  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; styles?: Record<string, any>; brandId?: string }) => {
-    // Make sure to pass along any styles from the block editor
-    const updatedStyles = updatedBlock.styles || block.styles || {};
-    onUpdateBlock(updatedBlock.id, updatedBlock.content as BlockContent, updatedStyles);
+  const handleUpdateBlock = (updatedBlock: { id: string; type: string; content: Record<string, any>; brandId?: string }) => {
+    onUpdateBlock(updatedBlock.id, updatedBlock.content as BlockContent, {});
     setIsEditing(false);
   };
 
@@ -37,7 +35,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
     <div
       ref={setNodeRef}
       style={style}
-      className="relative group border rounded-lg shadow p-4 mb-4 bg-white"
+      className="relative group border rounded-lg p-4 mb-4 bg-white"
     >
       <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button
@@ -73,8 +71,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
             id: block.id,
             type: block.type,
             content: block.content,
-            styles: block.styles || {},
-            brandId: block.brandId || ''
+            brandId: block.brandId
           }}
           onUpdateBlock={handleUpdateBlock}
           openMediaLibrary={() => openMediaLibrary(block.id, 'content.image.src', 'content.image.alt')}
@@ -82,7 +79,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary }
       ) : (
         <div className="py-2">
           <BlockEditorMain
-            blockType={block.type as BlockType}
+            blockType={block.type as BlockType | string}
             content={block.content as BlockContent}
             styles={block.styles || {}}
           />
@@ -122,12 +119,12 @@ export function PageEditorCanvas({
         >
           <div className="max-w-2xl mx-auto">
             {blocks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64">
+              <div className="flex flex-col items-center justify-center h-64 bg-white rounded-lg p-6 shadow-sm">
                 <p className="text-muted-foreground mb-4">No blocks added yet</p>
                 <p className="text-muted-foreground text-sm mb-4">Use the sidebar to add content blocks</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="bg-white rounded-lg p-6 shadow-sm">
                 {blocks.map((block) => (
                   <SortableBlock
                     key={block.id}

@@ -26,31 +26,20 @@ interface LandingPageOption {
 interface QRGeneratorProps {
   userId: string;
   initialPageId?: string | null;
-  qrCodeId?: string;
-  initialTitle?: string;
-  initialDescription?: string;
-  initialUrl?: string;
 }
 
-export function QRGenerator({ 
-  userId, 
-  initialPageId, 
-  qrCodeId, 
-  initialTitle, 
-  initialDescription,
-  initialUrl
-}: QRGeneratorProps) {
-  const [url, setUrl] = useState(initialUrl || '');
+export function QRGenerator({ userId, initialPageId }: QRGeneratorProps) {
+  const [url, setUrl] = useState('');
   const [qrType, setQrType] = useState(initialPageId ? 'landing-page' : 'direct');
   const [landingPages, setLandingPages] = useState<LandingPageOption[]>([]);
   const [selectedPageId, setSelectedPageId] = useState<string>(initialPageId || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [qrTitle, setQrTitle] = useState(initialTitle || '');
-  const [qrDescription, setQrDescription] = useState(initialDescription || '');
+  const [qrTitle, setQrTitle] = useState('');
+  const [qrDescription, setQrDescription] = useState('');
   
   const [qrCodeData, setQRCodeData] = useState({
-    url: initialUrl || '',
+    url: '',
     color: '#3F51B5',
     backgroundColor: '#FFFFFF',
     logo: '',
@@ -144,28 +133,14 @@ export function QRGenerator({
         landing_page_id: qrType === 'landing-page' ? selectedPageId : null
       };
       
-      if (qrCodeId) {
-        // Update existing QR code
-        const { error } = await supabase
-          .from('qr_codes')
-          .update(qrData)
-          .eq('id', qrCodeId);
-          
-        if (error) throw error;
+      const { data, error } = await supabase
+        .from('qr_codes')
+        .insert(qrData)
+        .select();
         
-        toast.success('QR Code updated successfully');
-      } else {
-        // Create new QR code
-        const { data, error } = await supabase
-          .from('qr_codes')
-          .insert(qrData)
-          .select();
-          
-        if (error) throw error;
-        
-        toast.success('QR Code saved successfully');
-      }
+      if (error) throw error;
       
+      toast.success('QR Code saved successfully');
       navigate('/dashboard/brand/qr-codes');
     } catch (error) {
       console.error('Error saving QR code:', error);
@@ -178,7 +153,7 @@ export function QRGenerator({
   return (
     <div className="w-full max-w-3xl mx-auto card-shadow rounded-xl overflow-hidden bg-white">
       <div className="p-6 border-b">
-        <h2 className="text-2xl font-bold">{qrCodeId ? 'Edit' : 'Create'} QR Code</h2>
+        <h2 className="text-2xl font-bold">Create QR Code</h2>
         <p className="text-muted-foreground">Generate custom QR codes for your brand</p>
       </div>
 

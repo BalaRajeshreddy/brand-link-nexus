@@ -1,7 +1,6 @@
 
-import { Block, BlockType, BlockStyles } from "@/types/block";
+import { Block, BlockType } from "@/types/block";
 import { BlockEditorMain } from "./block-renderers/BlockEditorMain";
-import { CSSProperties } from "react";
 
 interface PageEditorPreviewProps {
   blocks: Block[];
@@ -28,7 +27,7 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
             <div className="bg-gray-800 w-32 h-6 rounded-full"></div>
           </div>
           <div 
-            className="h-full w-full overflow-y-auto"
+            className="h-full w-full overflow-auto"
             style={{
               backgroundColor: pageStyles.backgroundColor,
               fontFamily: pageStyles.fontFamily
@@ -39,22 +38,18 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
                 <p className="text-sm text-muted-foreground">No content added yet</p>
               </div>
             ) : (
-              <div className="p-6 space-y-6">
-                {blocks.map((block) => {
-                  // Apply direct styling to both the container and BlockEditorMain
-                  return (
-                    <div 
-                      key={block.id} 
-                      className="bg-white rounded-lg shadow p-4"
-                    >
+              <div className="container mx-auto px-4 py-8 max-w-4xl">
+                <div className="space-y-6 bg-white rounded-lg p-6 shadow-sm">
+                  {blocks.map((block) => (
+                    <div key={block.id} className="mb-6">
                       <BlockEditorMain
-                        blockType={block.type as BlockType}
+                        blockType={block.type as BlockType | string}
                         content={block.content}
                         styles={block.styles || {}}
                       />
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             )}
           </div>

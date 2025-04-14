@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -19,7 +20,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
 import PublishedLandingPage from "./pages/PublishedLandingPage";
-import QRCodeEdit from "./pages/QRCodeEdit";
 
 const queryClient = new QueryClient();
 
@@ -57,7 +57,6 @@ const App = () => {
             <Route path="/dashboard/brand/edit-page/:pageId" element={<PageCreator />} />
             <Route path="/dashboard/brand/landing-pages" element={<LandingPagesList />} />
             <Route path="/dashboard/brand/qr-codes" element={<QRCodesList />} />
-            <Route path="/dashboard/brand/edit-qr/:id" element={<QRCodeEdit />} />
             
             {/* Admin Routes */}
             <Route path="/dashboard/admin" element={<AdminDashboard />} />

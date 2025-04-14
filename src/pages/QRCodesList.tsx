@@ -102,41 +102,6 @@ const QRCodesList = () => {
     }
   };
 
-  const handleDownload = (url: string, title: string) => {
-    try {
-      // Create the QR code URL
-      const encodedUrl = encodeURIComponent(url);
-      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedUrl}`;
-      
-      // Fetch the image as a blob
-      fetch(qrCodeUrl)
-        .then(response => response.blob())
-        .then(blob => {
-          // Create a download link
-          const blobUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = `${title.replace(/\s+/g, '-').toLowerCase()}-qrcode.png`;
-          document.body.appendChild(link);
-          link.click();
-          window.URL.revokeObjectURL(blobUrl);
-          document.body.removeChild(link);
-          toast.success("QR code downloaded successfully");
-        })
-        .catch(error => {
-          console.error("Download error:", error);
-          toast.error("Failed to download QR code");
-          window.open(qrCodeUrl, '_blank');
-        });
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error("Failed to download QR code");
-      
-      // Fallback: Open in new tab
-      window.open(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`, '_blank');
-    }
-  };
-
   if (isLoading) {
     return (
       <DashboardLayout userType="Brand" userName="...">
@@ -232,7 +197,6 @@ const QRCodesList = () => {
                             variant="ghost"
                             size="icon"
                             title="Download"
-                            onClick={() => handleDownload(qr.url, qr.title)}
                           >
                             <Download size={16} />
                           </Button>

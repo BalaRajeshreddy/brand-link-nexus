@@ -1,12 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Download, ArrowLeft } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import { toast } from "sonner";
 
 interface QRCustomizerProps {
   qrData: {
@@ -27,45 +26,18 @@ export function QRCustomizer({ qrData, onBack, onSave, isSaving = false }: QRCus
   const [backgroundColor, setBackgroundColor] = useState(qrData.backgroundColor);
   const [cornerRadius, setCornerRadius] = useState(0);
   const [size, setSize] = useState(300);
-  const [imageUrl, setImageUrl] = useState<string>('');
   
-  // Generate QR code image URL
-  useEffect(() => {
-    const encodedUrl = encodeURIComponent(qrData.url);
-    const cleanColor = color.replace('#', '');
-    const cleanBg = backgroundColor.replace('#', '');
-    const url = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedUrl}&bgcolor=${cleanBg}&color=${cleanColor}`;
-    setImageUrl(url);
-  }, [qrData.url, color, backgroundColor, size]);
+  // Mock QR code image generation - in real app, this would use a QR code library
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(qrData.url)}&bgcolor=${backgroundColor.replace('#', '')}&color=${color.replace('#', '')}`;
 
   const handleDownload = () => {
-    try {
-      // Create a blob from the image URL and download it
-      fetch(imageUrl)
-        .then(response => response.blob())
-        .then(blob => {
-          const blobUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl;
-          link.download = 'qrcode.png';
-          document.body.appendChild(link);
-          link.click();
-          window.URL.revokeObjectURL(blobUrl);
-          document.body.removeChild(link);
-          toast.success("QR code downloaded successfully");
-        })
-        .catch(error => {
-          console.error("Error downloading QR code:", error);
-          toast.error("Failed to download QR code");
-          window.open(imageUrl, '_blank');
-        });
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error("Failed to download QR code");
-      
-      // Fallback: Open in new tab
-      window.open(imageUrl, '_blank');
-    }
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = qrImageUrl;
+    link.download = 'qrcode.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -86,7 +58,7 @@ export function QRCustomizer({ qrData, onBack, onSave, isSaving = false }: QRCus
           >
             <div className="bg-white p-4 rounded shadow-sm">
               <img 
-                src={imageUrl} 
+                src={qrImageUrl} 
                 alt="QR Code preview" 
                 className="mx-auto"
                 style={{ borderRadius: `${cornerRadius}px` }}
@@ -183,7 +155,7 @@ export function QRCustomizer({ qrData, onBack, onSave, isSaving = false }: QRCus
             <Button 
               variant="default" 
               className="w-full gap-2"
-              onClick={onSave ? () => onSave(imageUrl) : undefined}
+              onClick={onSave ? () => onSave(qrImageUrl) : undefined}
               disabled={isSaving}
             >
               {isSaving ? "Saving..." : "Save QR Code"}
