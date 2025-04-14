@@ -40,39 +40,23 @@ export function QRCustomizer({ qrData, onBack, onSave, isSaving = false }: QRCus
 
   const handleDownload = () => {
     try {
-      // Create a temporary link element
-      const link = document.createElement('a');
-      
-      // Create a descriptive filename
-      const filename = 'qrcode.png';
-      
-      // Fetch the image as a blob and then download it
+      // Create a blob from the image URL and download it
       fetch(imageUrl)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.blob();
-        })
+        .then(response => response.blob())
         .then(blob => {
           const blobUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
           link.href = blobUrl;
-          link.download = filename;
+          link.download = 'qrcode.png';
           document.body.appendChild(link);
           link.click();
-          
-          // Clean up
-          setTimeout(() => {
-            window.URL.revokeObjectURL(blobUrl);
-            document.body.removeChild(link);
-          }, 100);
-          
+          window.URL.revokeObjectURL(blobUrl);
+          document.body.removeChild(link);
           toast.success("QR code downloaded successfully");
         })
         .catch(error => {
           console.error("Error downloading QR code:", error);
           toast.error("Failed to download QR code");
-          // Fallback: Open in new tab
           window.open(imageUrl, '_blank');
         });
     } catch (error) {
