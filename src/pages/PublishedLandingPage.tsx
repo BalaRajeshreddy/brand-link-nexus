@@ -141,11 +141,6 @@ const PublishedLandingPage = () => {
               <div 
                 key={block.id} 
                 className="bg-white rounded-lg shadow p-4"
-                style={block.styles ? {
-                  backgroundColor: block.styles.backgroundColor || 'white',
-                  borderRadius: block.styles.borderRadius || '0.5rem',
-                  padding: block.styles.padding || '1rem'
-                } : {}}
               >
                 <BlockEditorMain
                   blockType={block.type as BlockType | string}

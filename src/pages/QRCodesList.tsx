@@ -104,17 +104,30 @@ const QRCodesList = () => {
 
   const handleDownload = (url: string, title: string) => {
     try {
-      // Create a temporary link element to download the QR code
+      // Create the QR code URL
       const encodedUrl = encodeURIComponent(url);
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedUrl}`;
       
-      const link = document.createElement('a');
-      link.href = qrCodeUrl;
-      link.download = `${title.replace(/\s+/g, '-').toLowerCase()}-qrcode.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("QR code downloaded successfully");
+      // Fetch the image as a blob
+      fetch(qrCodeUrl)
+        .then(response => response.blob())
+        .then(blob => {
+          // Create a download link
+          const blobUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `${title.replace(/\s+/g, '-').toLowerCase()}-qrcode.png`;
+          document.body.appendChild(link);
+          link.click();
+          window.URL.revokeObjectURL(blobUrl);
+          document.body.removeChild(link);
+          toast.success("QR code downloaded successfully");
+        })
+        .catch(error => {
+          console.error("Download error:", error);
+          toast.error("Failed to download QR code");
+          window.open(qrCodeUrl, '_blank');
+        });
     } catch (error) {
       console.error("Download error:", error);
       toast.error("Failed to download QR code");

@@ -46,19 +46,27 @@ const QRCodeEdit = () => {
           setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "Brand User");
           
           // Fetch QR code data
-          const { data: qrCode, error: fetchError } = await supabase
-            .from('qr_codes')
-            .select('*')
-            .eq('id', id)
-            .single();
+          if (id) {
+            const { data: qrCode, error: fetchError } = await supabase
+              .from('qr_codes')
+              .select('*')
+              .eq('id', id)
+              .single();
+              
+            if (fetchError) {
+              console.error("Error fetching QR code:", fetchError);
+              toast.error("QR code not found");
+              navigate("/dashboard/brand/qr-codes");
+              return;
+            }
             
-          if (fetchError) {
-            toast.error("QR code not found");
+            console.log("QR code data loaded:", qrCode);
+            setQRCodeData(qrCode);
+          } else {
+            console.error("No QR code ID provided");
+            toast.error("Missing QR code ID");
             navigate("/dashboard/brand/qr-codes");
-            return;
           }
-          
-          setQRCodeData(qrCode);
         }
       } catch (error) {
         console.error("Authentication error:", error);
