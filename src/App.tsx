@@ -55,6 +55,7 @@ const App = () => {
             <Route path="/dashboard/brand/create-qr" element={<QRCreator />} />
             <Route path="/dashboard/brand/create-page" element={<PageCreator />} />
             <Route path="/dashboard/brand/edit-page/:pageId" element={<PageCreator />} />
+            <Route path="/dashboard/brand/edit-qr/:qrid" element={<QRCreator />} />
             <Route path="/dashboard/brand/landing-pages" element={<LandingPagesList />} />
             <Route path="/dashboard/brand/qr-codes" element={<QRCodesList />} />
             

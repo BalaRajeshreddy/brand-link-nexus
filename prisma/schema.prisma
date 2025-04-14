@@ -14,10 +14,10 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Authentication
-  email     String  @unique
-  password  String
-  role      Role    @default(CUSTOMER)
-  
+  email    String @unique
+  password String
+  role     Role   @default(CUSTOMER)
+
   // Profile fields
   firstName String?
   lastName  String?
@@ -25,13 +25,14 @@ model User {
   gender    String?
   phone     String?
   avatar    String?
-  
+
   // Relations
-  brands    Brand[]
-  files     File[]
-  reviews   Review[]
+  brands          Brand[]
+  files           File[]
+  reviews         Review[]
   customerProfile CustomerProfile?
   adminProfile    AdminProfile?
+  ScanLog         ScanLog[]
 
   @@map("users")
 }
@@ -49,8 +50,8 @@ model CustomerProfile {
   updatedAt DateTime @updatedAt
 
   // Relations
-  userId    String  @unique
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Additional profile fields
   preferences Json? // {notifications, language, timezone}
@@ -66,25 +67,25 @@ model Brand {
   updatedAt DateTime @updatedAt
 
   // Relations
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  files     File[]
-  reviews   Review[]
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files   File[]
+  reviews Review[]
 
   // Basic Info
-  name          String
-  logo          String
-  tagline       String?
-  description   String
-  videoUrl      String?
-  mission       String?
-  vision        String?
-  foundingYear  Int?
+  name         String
+  logo         String
+  tagline      String?
+  description  String
+  videoUrl     String?
+  mission      String?
+  vision       String?
+  foundingYear Int?
 
   // Contact Info
-  email     String
-  phone     String?
-  address   Json? // Stored as JSON {street, city, state, country, postalCode}
+  email   String
+  phone   String?
+  address Json? // Stored as JSON {street, city, state, country, postalCode}
 
   // Social Links - stored as JSON
   socialLinks Json? // {website, facebook, instagram, linkedin}
@@ -95,16 +96,18 @@ model Brand {
   pressFeatures  Json? // [{title, publisher, date, url}]
 
   // Products
-  featuredProducts Json? // [{id, name, image, description, price}]
+  featuredProducts  Json? // [{id, name, image, description, price}]
   newLaunchProducts Json? // [{id, name, image, description, price, launchDate}]
 
   // Campaigns
   campaigns Json? // [{title, description, startDate, endDate, discount, terms}]
 
   // Settings
-  isActive    Boolean @default(true)
-  isVerified  Boolean @default(false)
-  settings    Json?   // {allowPublicProfile, enableNotifications, language, timezone}
+  isActive    Boolean       @default(true)
+  isVerified  Boolean       @default(false)
+  settings    Json? // {allowPublicProfile, enableNotifications, language, timezone}
+  LandingPage LandingPage[]
+  QRCode      QRCode[]
 
   @@index([userId])
   @@map("brands")
@@ -117,13 +120,13 @@ model AdminProfile {
   updatedAt DateTime @updatedAt
 
   // Relations
-  userId    String  @unique
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Admin specific fields
-  permissions String[] // Array of permission strings
-  department  String?
-  isSuperAdmin Boolean @default(false)
+  permissions  String[] // Array of permission strings
+  department   String?
+  isSuperAdmin Boolean  @default(false)
 
   @@map("admin_profiles")
 }
@@ -135,15 +138,15 @@ model Review {
   updatedAt DateTime @updatedAt
 
   // Relations
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brandId   String
-  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
   // Review content
-  rating    Int
-  comment   String?
-  images    String[] // Array of image URLs
+  rating  Int
+  comment String?
+  images  String[] // Array of image URLs
 
   @@index([userId])
   @@index([brandId])
@@ -157,21 +160,21 @@ model File {
   updatedAt DateTime @updatedAt
 
   // Relations
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brandId   String
-  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
 
   // File info
-  name        String
-  type        FileType
-  size        Int      // in bytes
-  mimeType    String
-  url         String
+  name         String
+  type         FileType
+  size         Int // in bytes
+  mimeType     String
+  url          String
   thumbnailUrl String?
 
   // Metadata stored as JSON
-  metadata    Json?   // {width, height, duration, pages}
+  metadata Json? // {width, height, duration, pages}
 
   // Organization
   folder      String?
@@ -179,8 +182,8 @@ model File {
   description String?
 
   // Usage tracking
-  usageCount  Int      @default(0)
-  lastUsed    DateTime?
+  usageCount Int       @default(0)
+  lastUsed   DateTime?
 
   @@index([userId])
   @@index([brandId])
@@ -191,4 +194,97 @@ enum FileType {
   IMAGE
   PDF
   VIDEO
-} 
+}
+
+// Landing Page model
+model LandingPage {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  brandId String
+  brand   Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  blocks  Block[]
+  qrCodes QRCode[]
+
+  // Page details
+  name     String
+  slug     String     @unique // Used for the URL, e.g., /pagename
+  status   PageStatus @default(DRAFT)
+  settings Json? // {backgroundColor, font, customCss, seoTitle, seoDescription}
+
+  @@index([brandId])
+  @@index([slug])
+  @@map("landing_pages")
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// Block model for Landing Page content
+model Block {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  landingPageId String
+  landingPage   LandingPage @relation(fields: [landingPageId], references: [id], onDelete: Cascade)
+
+  // Block details
+  type    String // e.g., 'HeroBlock', 'TextBlock', 'ImageBlock'
+  order   Int // Order of the block on the page
+  content Json // Block-specific data structure
+
+  @@index([landingPageId])
+  @@map("blocks")
+}
+
+// QR Code model
+model QRCode {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  landingPageId String
+  landingPage   LandingPage @relation(fields: [landingPageId], references: [id], onDelete: Cascade)
+  brandId       String
+  brand         Brand       @relation(fields: [brandId], references: [id], onDelete: Cascade) // For ownership/management
+  scanLogs      ScanLog[]
+
+  // QR Code details
+  name      String // User-friendly name for the QR code
+  data      String // The actual data encoded (usually the landing page URL)
+  settings  Json? // {foregroundColor, backgroundColor, logoUrl, eyeShape}
+  scanCount Int    @default(0)
+
+  @@index([landingPageId])
+  @@index([brandId])
+  @@map("qr_codes")
+}
+
+// Scan Log model for tracking QR code scans
+model ScanLog {
+  id        String   @id @default(cuid())
+  scannedAt DateTime @default(now())
+
+  // Relations
+  qrCodeId String
+  qrCode   QRCode  @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  userId   String? // Optional: if scanned by a logged-in user
+  user     User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Scan details
+  ipAddress String?
+  userAgent String?
+  location  Json? // {city, country, region} - derived from IP potentially
+
+  @@index([qrCodeId])
+  @@index([userId])
+  @@map("scan_logs")
+}
