@@ -104,37 +104,53 @@ const QRCodesList = () => {
 
   const handleDownload = (url: string, title: string) => {
     try {
-      // Create the QR code URL
+      // Create the QR code URL with encoded parameters
       const encodedUrl = encodeURIComponent(url);
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedUrl}`;
       
-      // Fetch the image as a blob
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = qrCodeUrl;
+      link.download = `${title.replace(/\s+/g, '-').toLowerCase()}-qrcode.png`;
+      document.body.appendChild(link);
+      
+      // Fetch the image as a blob and then download it
       fetch(qrCodeUrl)
-        .then(response => response.blob())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.blob();
+        })
         .then(blob => {
-          // Create a download link
           const blobUrl = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
           link.href = blobUrl;
-          link.download = `${title.replace(/\s+/g, '-').toLowerCase()}-qrcode.png`;
-          document.body.appendChild(link);
           link.click();
-          window.URL.revokeObjectURL(blobUrl);
-          document.body.removeChild(link);
-          toast.success("QR code downloaded successfully");
+          
+          // Clean up
+          setTimeout(() => {
+            window.URL.revokeObjectURL(blobUrl);
+            document.body.removeChild(link);
+          }, 100);
+          
+          toast.success("QR code downloaded");
         })
         .catch(error => {
           console.error("Download error:", error);
           toast.error("Failed to download QR code");
+          
+          // Fallback: Open in new tab
           window.open(qrCodeUrl, '_blank');
         });
     } catch (error) {
       console.error("Download error:", error);
       toast.error("Failed to download QR code");
-      
-      // Fallback: Open in new tab
       window.open(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`, '_blank');
     }
+  };
+
+  const handleEdit = (id: string) => {
+    navigate(`/dashboard/brand/edit-qr/${id}`);
   };
 
   if (isLoading) {
@@ -239,7 +255,7 @@ const QRCodesList = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => navigate(`/dashboard/brand/edit-qr/${qr.id}`)}
+                            onClick={() => handleEdit(qr.id)}
                             title="Edit"
                           >
                             <Edit size={16} />

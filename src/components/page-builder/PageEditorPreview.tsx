@@ -12,6 +12,26 @@ interface PageEditorPreviewProps {
 }
 
 export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps) {
+  // Helper function to convert BlockStyles to valid CSSProperties
+  const convertStyles = (styles: BlockStyles): CSSProperties => {
+    const cssProperties: CSSProperties = {};
+    
+    // Copy all properties from styles to cssProperties
+    Object.entries(styles).forEach(([key, value]) => {
+      if (key === 'flexDirection') {
+        // Ensure flexDirection is a valid FlexDirection type
+        if (['row', 'column', 'row-reverse', 'column-reverse'].includes(value as string)) {
+          cssProperties[key] = value as CSSProperties['flexDirection'];
+        }
+      } else {
+        // Copy other properties as is
+        cssProperties[key as keyof CSSProperties] = value;
+      }
+    });
+    
+    return cssProperties;
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b">
@@ -41,11 +61,10 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
             ) : (
               <div className="p-6 space-y-6">
                 {blocks.map((block) => {
-                  // Apply direct styling to both the container and BlockEditorMain
                   return (
                     <div 
                       key={block.id} 
-                      className="bg-white rounded-lg shadow p-4"
+                      className="rounded-lg"
                     >
                       <BlockEditorMain
                         blockType={block.type as BlockType}
