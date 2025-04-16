@@ -8,6 +8,26 @@ import { ProductEditorCanvas } from "@/components/product-builder/ProductEditorC
 import { ProductEditorPreview } from "@/components/product-builder/ProductEditorPreview";
 import { Save, Share2, Smartphone, Settings } from "lucide-react";
 import { toast } from "sonner";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface ProductComponent {
   id: string;
@@ -15,6 +35,27 @@ export interface ProductComponent {
   content: Record<string, any>;
   styles: Record<string, any>;
 }
+
+const backgroundColors = [
+  { value: "#FFFFFF", label: "White" },
+  { value: "#F1F0FB", label: "Soft Gray" },
+  { value: "#E5DEFF", label: "Soft Purple" },
+  { value: "#D3E4FD", label: "Soft Blue" },
+  { value: "#F2FCE2", label: "Soft Green" },
+  { value: "#FEF7CD", label: "Soft Yellow" },
+  { value: "#FDE1D3", label: "Soft Peach" },
+  { value: "#FFDEE2", label: "Soft Pink" },
+];
+
+const fontFamilies = [
+  { value: "Inter, sans-serif", label: "Inter" },
+  { value: "Arial, sans-serif", label: "Arial" },
+  { value: "Helvetica, sans-serif", label: "Helvetica" },
+  { value: "Georgia, serif", label: "Georgia" },
+  { value: "'Playfair Display', serif", label: "Playfair Display" },
+  { value: "'Roboto', sans-serif", label: "Roboto" },
+  { value: "'Open Sans', sans-serif", label: "Open Sans" },
+];
 
 export default function ProductPageCreator() {
   const [pageTitle, setPageTitle] = useState("Untitled Product Page");
@@ -24,6 +65,7 @@ export default function ProductPageCreator() {
     backgroundColor: "#FFFFFF",
     fontFamily: "Inter, sans-serif",
   });
+  const [showPageSettings, setShowPageSettings] = useState(false);
   const navigate = useNavigate();
 
   const handleAddComponent = (componentType: string) => {
@@ -50,9 +92,31 @@ export default function ProductPageCreator() {
   };
 
   const handleSave = () => {
-    toast.success("Product page saved!");
-    // In a real implementation, we would save the product page to a database
-    setTimeout(() => navigate("/dashboard/brand/product-design"), 1500);
+    // In a real implementation, we would save the product page data to a database
+    // For now, simulating save with localStorage
+    try {
+      const productPageData = {
+        title: pageTitle,
+        components,
+        pageSettings,
+        lastModified: new Date().toISOString()
+      };
+      
+      localStorage.setItem(`product-page-${Date.now()}`, JSON.stringify(productPageData));
+      toast.success("Product page saved successfully!");
+      
+      setTimeout(() => navigate("/dashboard/brand/product-design"), 1500);
+    } catch (error) {
+      toast.error("Failed to save product page. Please try again.");
+      console.error("Save error:", error);
+    }
+  };
+
+  const updatePageSettings = (key: string, value: string) => {
+    setPageSettings({
+      ...pageSettings,
+      [key]: value
+    });
   };
 
   const getDefaultContentForComponentType = (componentType: string): Record<string, any> => {
@@ -180,14 +244,64 @@ export default function ProductPageCreator() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => {}}
-            title="Page Settings"
-          >
-            <Settings size={18} />
-          </Button>
+          <Dialog open={showPageSettings} onOpenChange={setShowPageSettings}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                title="Page Settings"
+              >
+                <Settings size={18} />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Page Settings</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Background Color</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {backgroundColors.map((color) => (
+                      <div 
+                        key={color.value} 
+                        className={`h-10 rounded-md cursor-pointer flex items-center justify-center border-2 ${
+                          pageSettings.backgroundColor === color.value 
+                            ? 'border-primary' 
+                            : 'border-transparent'
+                        }`}
+                        style={{ backgroundColor: color.value }}
+                        onClick={() => updatePageSettings('backgroundColor', color.value)}
+                      >
+                        {pageSettings.backgroundColor === color.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Font Family</Label>
+                  <Select 
+                    value={pageSettings.fontFamily}
+                    onValueChange={(value) => updatePageSettings('fontFamily', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select font family" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {fontFamilies.map((font) => (
+                        <SelectItem key={font.value} value={font.value}>
+                          {font.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
           <Button 
             variant="ghost" 
             size="icon" 

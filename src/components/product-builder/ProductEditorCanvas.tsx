@@ -5,8 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Grip, Trash2, Pencil } from 'lucide-react';
 import { ProductComponent } from '@/pages/ProductPageCreator';
 import { ProductComponentRenderer } from './ProductComponentRenderer';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 
 interface ProductEditorComponentProps {
   component: ProductComponent;
@@ -16,9 +20,38 @@ interface ProductEditorComponentProps {
 
 const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponent }: ProductEditorComponentProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [imageUrl, setImageUrl] = useState(component.type === 'image' ? component.content.src || '' : '');
+  const [imageError, setImageError] = useState('');
 
   const handleUpdateComponent = (updatedContent: Record<string, any>) => {
     onUpdateComponent(component.id, updatedContent, component.styles);
+  };
+
+  const handleImageUrlSubmit = () => {
+    if (!imageUrl) {
+      setImageError('Please enter an image URL');
+      return;
+    }
+    
+    // Test if image loads correctly
+    const img = new Image();
+    img.onload = () => {
+      handleUpdateComponent({
+        ...component.content,
+        src: imageUrl,
+        alt: component.content.alt || 'Product image'
+      });
+      setShowImageDialog(false);
+      setImageError('');
+      toast.success('Image updated successfully');
+    };
+    
+    img.onerror = () => {
+      setImageError('Invalid image URL or image could not be loaded');
+    };
+    
+    img.src = imageUrl;
   };
 
   const renderEditor = () => {
@@ -56,13 +89,13 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
       case 'image':
         return (
           <div className="space-y-2">
-            <Input
-              type="text"
-              className="w-full p-2"
-              value={component.content.src || ""}
-              onChange={(e) => handleUpdateComponent({ ...component.content, src: e.target.value })}
-              placeholder="Image URL"
-            />
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => setShowImageDialog(true)}
+            >
+              Edit Image
+            </Button>
             <Input
               type="text"
               className="w-full p-2"
@@ -70,6 +103,61 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
               onChange={(e) => handleUpdateComponent({ ...component.content, alt: e.target.value })}
               placeholder="Alt Text"
             />
+            
+            <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Edit Image</DialogTitle>
+                </DialogHeader>
+                <Tabs defaultValue="url">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="url">Image URL</TabsTrigger>
+                    <TabsTrigger value="upload">Upload Image</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="url" className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="imageUrl">Image URL</Label>
+                      <Input 
+                        id="imageUrl"
+                        placeholder="https://example.com/image.jpg" 
+                        value={imageUrl}
+                        onChange={(e) => {
+                          setImageUrl(e.target.value);
+                          setImageError('');
+                        }}
+                      />
+                      {imageError && <p className="text-sm text-red-500">{imageError}</p>}
+                    </div>
+                    <div className="flex justify-end">
+                      <Button onClick={handleImageUrlSubmit}>Apply</Button>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="upload" className="space-y-4">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary">
+                      <div className="space-y-1">
+                        <div className="flex justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+                            <path d="m18 2 4 4-10 10L8 16l4-10z"></path>
+                          </svg>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Drag and drop image here or click to browse
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Supported formats: JPG, PNG, GIF
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-amber-500">
+                      Note: Image upload functionality requires backend integration
+                    </p>
+                  </TabsContent>
+                </Tabs>
+              </DialogContent>
+            </Dialog>
           </div>
         );
       
@@ -90,6 +178,49 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
               onChange={(e) => handleUpdateComponent({ ...component.content, title: e.target.value })}
               placeholder="Video Title"
             />
+          </div>
+        );
+        
+      case 'action':
+        return (
+          <div className="space-y-2">
+            <div className="space-y-1">
+              <Label>Action Type</Label>
+              <select
+                className="w-full p-2 border rounded"
+                value={component.content.actionType || "link"}
+                onChange={(e) => handleUpdateComponent({ 
+                  ...component.content, 
+                  actionType: e.target.value 
+                })}
+              >
+                <option value="link">External Link</option>
+                <option value="scroll">Scroll to Section</option>
+                <option value="popup">Show Popup</option>
+              </select>
+            </div>
+            
+            <div className="space-y-1">
+              <Label>Label</Label>
+              <Input
+                type="text"
+                className="w-full p-2"
+                value={component.content.label || ""}
+                onChange={(e) => handleUpdateComponent({ ...component.content, label: e.target.value })}
+                placeholder="Action Label"
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <Label>URL/Target</Label>
+              <Input
+                type="text"
+                className="w-full p-2"
+                value={component.content.url || ""}
+                onChange={(e) => handleUpdateComponent({ ...component.content, url: e.target.value })}
+                placeholder={component.content.actionType === 'link' ? "https://example.com" : "#section-id"}
+              />
+            </div>
           </div>
         );
         
@@ -116,10 +247,10 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
                 value={component.content.rating || 4}
                 onChange={(e) => handleUpdateComponent({ 
                   ...component.content, 
-                  rating: parseInt(e.target.value) 
+                  rating: parseFloat(e.target.value) 
                 })}
               >
-                {[1, 2, 3, 4, 5].map(num => (
+                {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map(num => (
                   <option key={num} value={num}>{num}</option>
                 ))}
               </select>
@@ -150,12 +281,12 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
                         const updatedReviews = [...(component.content.reviews || [])];
                         updatedReviews[index] = {
                           ...review,
-                          rating: parseInt(e.target.value)
+                          rating: parseFloat(e.target.value)
                         };
                         handleUpdateComponent({ ...component.content, reviews: updatedReviews });
                       }}
                     >
-                      {[1, 2, 3, 4, 5].map(num => (
+                      {[1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map(num => (
                         <option key={num} value={num}>{num}</option>
                       ))}
                     </select>

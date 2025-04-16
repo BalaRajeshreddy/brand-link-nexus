@@ -27,6 +27,11 @@ export function ProductComponentRenderer({ type, content, styles }: ProductCompo
               src={content.src} 
               alt={content.alt || 'Product image'} 
               className="w-full h-auto rounded"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                target.src = "https://via.placeholder.com/400x300?text=Image+Error";
+              }}
             />
           ) : (
             <div className="w-full h-48 bg-gray-200 rounded flex items-center justify-center text-gray-400">
@@ -53,6 +58,7 @@ export function ProductComponentRenderer({ type, content, styles }: ProductCompo
               padding: styles.padding,
               borderRadius: styles.borderRadius,
             }}
+            onClick={(e) => e.preventDefault()}
           >
             {content.text || 'Button'}
           </Button>
@@ -65,6 +71,12 @@ export function ProductComponentRenderer({ type, content, styles }: ProductCompo
           <a 
             href={content.url || '#'} 
             className="flex items-center text-blue-600 hover:underline"
+            onClick={(e) => {
+              e.preventDefault();
+              if (content.actionType === 'link' && content.url) {
+                window.open(content.url, '_blank');
+              }
+            }}
           >
             {content.label || 'Action Link'} →
           </a>
