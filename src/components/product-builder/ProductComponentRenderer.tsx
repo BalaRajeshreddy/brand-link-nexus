@@ -1,8 +1,5 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface ProductComponentRendererProps {
   type: string;
@@ -10,254 +7,285 @@ interface ProductComponentRendererProps {
   styles: Record<string, any>;
 }
 
-export function ProductComponentRenderer({ type, content, styles }: ProductComponentRendererProps) {
-  switch (type.toLowerCase()) {
-    case 'section':
-      return (
-        <div style={styles}>
-          <h3 className="text-lg font-semibold">{content.title || 'Section'}</h3>
-        </div>
-      );
-      
-    case 'image':
-      return (
-        <div style={styles}>
-          {content.src ? (
-            <img 
-              src={content.src} 
-              alt={content.alt || 'Product image'} 
-              className="w-full h-auto rounded"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.onerror = null;
-                target.src = "https://via.placeholder.com/400x300?text=Image+Error";
-              }}
-            />
-          ) : (
-            <div className="w-full h-48 bg-gray-200 rounded flex items-center justify-center text-gray-400">
-              No image uploaded
-            </div>
-          )}
-        </div>
-      );
-      
-    case 'text':
-      return (
-        <div style={styles}>
-          <p>{content.text || 'Add your text here'}</p>
-        </div>
-      );
-      
-    case 'button':
-      return (
-        <div>
-          <Button 
+export function ProductComponentRenderer({
+  type,
+  content,
+  styles,
+}: ProductComponentRendererProps) {
+  const renderComponent = () => {
+    switch (type) {
+      case 'text':
+        return (
+          <div style={styles}>
+            {content.text || "Text content goes here"}
+          </div>
+        );
+        
+      case 'button':
+        return (
+          <button
             style={{
-              backgroundColor: styles.backgroundColor,
-              color: styles.color,
-              padding: styles.padding,
-              borderRadius: styles.borderRadius,
+              backgroundColor: styles.backgroundColor || "#3B82F6",
+              color: styles.color || "#FFFFFF",
+              padding: styles.padding || "8px 16px",
+              borderRadius: styles.borderRadius || "4px",
+              fontSize: styles.fontSize || "14px",
+              border: "none",
+              cursor: "pointer",
             }}
-            onClick={(e) => e.preventDefault()}
-          >
-            {content.text || 'Button'}
-          </Button>
-        </div>
-      );
-      
-    case 'action':
-      return (
-        <div style={styles}>
-          <a 
-            href={content.url || '#'} 
-            className="flex items-center text-blue-600 hover:underline"
-            onClick={(e) => {
-              e.preventDefault();
-              if (content.actionType === 'link' && content.url) {
+            onClick={() => {
+              if (content.url) {
                 window.open(content.url, '_blank');
               }
             }}
           >
-            {content.label || 'Action Link'} →
-          </a>
-        </div>
-      );
-      
-    case 'youtube':
-      return (
-        <div style={styles} className="aspect-video">
-          {content.videoId ? (
-            <iframe
-              width="100%"
-              height="100%"
-              src={`https://www.youtube.com/embed/${content.videoId}`}
-              title={content.title || "YouTube video player"}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="rounded"
-            ></iframe>
-          ) : (
-            <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center text-gray-400">
-              YouTube Video (add video ID)
-            </div>
-          )}
-        </div>
-      );
-      
-    case 'instagram':
-      return (
-        <div style={styles}>
-          {content.postUrl ? (
-            <div className="instagram-embed border rounded p-4">
-              <div className="flex items-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-500 to-purple-500"></div>
-                <span className="ml-2 font-medium">Instagram Post Preview</span>
-              </div>
-              <p className="text-sm">{content.title || 'Instagram post embed'}</p>
-              <div className="text-xs text-blue-500 mt-2">View on Instagram</div>
-            </div>
-          ) : (
-            <div className="w-full h-48 bg-gray-200 rounded flex items-center justify-center text-gray-400">
-              Instagram Post (add URL)
-            </div>
-          )}
-        </div>
-      );
-      
-    case 'ratings':
-      return (
-        <div style={styles} className="w-full">
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="ratings">
-              <AccordionTrigger className="font-medium">
-                Ratings & Reviews
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-1">
-                    {Array(5).fill(0).map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={i < (content.rating || 4) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
-                        size={16}
-                      />
-                    ))}
-                    <span className="ml-2 text-sm">{content.rating || 4}/5 ({content.reviewCount || 42} reviews)</span>
-                  </div>
-                  
-                  {(content.reviews || []).length > 0 ? (
-                    <div className="space-y-2">
-                      {content.reviews.map((review: any, i: number) => (
-                        <div key={i} className="border-t pt-2">
-                          <div className="flex items-center gap-1">
-                            {Array(5).fill(0).map((_, j) => (
-                              <Star 
-                                key={j} 
-                                className={j < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
-                                size={12}
-                              />
-                            ))}
-                          </div>
-                          <p className="text-sm mt-1">{review.text}</p>
-                          <p className="text-xs text-muted-foreground mt-1">- {review.author}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No reviews yet</p>
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      );
-
-    case 'story':
-      return (
-        <div style={styles} className="w-full">
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="story">
-              <AccordionTrigger className="font-medium">
-                Our Story
-              </AccordionTrigger>
-              <AccordionContent>
-                <p className="text-sm">{content.story || "Tell the story of your product or brand here."}</p>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      );
-
-    case 'howmade':
-      return (
-        <div style={styles} className="w-full">
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="howmade">
-              <AccordionTrigger className="font-medium">
-                How It's Made
-              </AccordionTrigger>
-              <AccordionContent>
-                <p className="text-sm">{content.description || "Describe the process of creating your product here."}</p>
-                {content.steps && content.steps.length > 0 && (
-                  <ol className="list-decimal list-inside mt-2 space-y-1">
-                    {content.steps.map((step: string, i: number) => (
-                      <li key={i} className="text-sm">{step}</li>
-                    ))}
-                  </ol>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      );
-
-    case 'nutrition':
-      return (
-        <div style={styles} className="w-full">
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="nutrition">
-              <AccordionTrigger className="font-medium">
-                Nutrition Facts
-              </AccordionTrigger>
-              <AccordionContent>
-                {content.facts && Object.keys(content.facts).length > 0 ? (
-                  <div className="border rounded p-3 text-sm">
-                    <div className="text-lg font-bold border-b pb-1 mb-2">Nutrition Facts</div>
-                    <div className="space-y-1">
-                      {Object.entries(content.facts).map(([key, value]: [string, any]) => (
-                        <div key={key} className="flex justify-between border-b py-1">
-                          <span>{key}</span>
-                          <span>{value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground">No nutrition facts available</div>
-                )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      );
-
-    case 'ingredients':
-      return (
-        <div style={styles} className="w-full">
-          <div className="p-3 border rounded-lg">
-            <h4 className="font-medium mb-2">Ingredients</h4>
-            <p className="text-sm">{content.list || "Add your ingredients list here"}</p>
+            {content.text || "Button"}
+          </button>
+        );
+        
+      case 'image':
+        return content.src ? (
+          <img
+            src={content.src}
+            alt={content.alt || "Product image"}
+            style={{
+              width: "100%",
+              height: "auto",
+              objectFit: "cover",
+              ...styles
+            }}
+            onError={(e) => {
+              // Fallback if image fails to load
+              e.currentTarget.src = 'https://placehold.co/600x400?text=Image+Not+Found';
+            }}
+          />
+        ) : (
+          <div 
+            style={{
+              width: "100%",
+              height: "200px",
+              backgroundColor: "#f0f0f0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#666",
+              ...styles
+            }}
+          >
+            No image selected
           </div>
-        </div>
-      );
-      
-    default:
-      return (
-        <div className="p-4 border rounded">
-          <p className="text-muted-foreground">Unknown component type: {type}</p>
-        </div>
-      );
-  }
+        );
+        
+      case 'action':
+        const handleActionClick = () => {
+          const actionType = content.actionType || 'link';
+          const target = content.url || '';
+          
+          if (actionType === 'link' && target) {
+            window.open(target, '_blank');
+          } else if (actionType === 'scroll' && target) {
+            const element = document.querySelector(target);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth' });
+            }
+          } else if (actionType === 'popup') {
+            alert('Action: Show popup (Demo functionality)');
+          }
+        };
+        
+        return (
+          <button
+            style={{
+              backgroundColor: "#F9FAFB",
+              border: "1px solid #E5E7EB",
+              padding: "8px 16px",
+              borderRadius: "4px",
+              color: "#374151",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              ...styles
+            }}
+            onClick={handleActionClick}
+          >
+            {content.label || "Action"}
+          </button>
+        );
+        
+      case 'youtube':
+        const videoId = content.videoId || "";
+        
+        return videoId ? (
+          <div style={{ width: '100%', ...styles }}>
+            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden' }}>
+              <iframe
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                src={`https://www.youtube.com/embed/${videoId}`}
+                title={content.title || "YouTube video"}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+            {content.title && (
+              <p style={{ marginTop: '8px', fontWeight: 500 }}>{content.title}</p>
+            )}
+          </div>
+        ) : (
+          <div 
+            style={{ 
+              width: '100%',
+              padding: '16px',
+              backgroundColor: '#f0f0f0',
+              textAlign: 'center',
+              ...styles
+            }}
+          >
+            Enter a YouTube video ID
+          </div>
+        );
+        
+      case 'instagram':
+        return (
+          <div style={{ width: '100%', ...styles }}>
+            <div style={{ 
+              border: '1px solid #dbdbdb', 
+              borderRadius: '4px',
+              padding: '16px',
+              textAlign: 'center' 
+            }}>
+              {content.postUrl ? (
+                <p>Instagram embed: {content.postUrl}</p>
+              ) : (
+                <p>Enter Instagram post URL</p>
+              )}
+              <p style={{ fontSize: '12px', marginTop: '8px' }}>
+                (Instagram embed preview - requires Instagram API integration)
+              </p>
+            </div>
+          </div>
+        );
+        
+      case 'ingredients':
+        const ingredients = content.list ? content.list.split(',').map((item: string) => item.trim()) : [];
+        
+        return (
+          <div style={{ width: '100%', ...styles }}>
+            <h3 style={{ fontWeight: 600, marginBottom: '8px' }}>Ingredients</h3>
+            {ingredients.length > 0 ? (
+              <ul style={{ paddingLeft: '20px' }}>
+                {ingredients.map((ingredient: string, index: number) => (
+                  <li key={index}>{ingredient}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>No ingredients specified</p>
+            )}
+          </div>
+        );
+        
+      case 'ratings':
+        const renderStars = (rating: number) => {
+          const stars = [];
+          const fullStars = Math.floor(rating);
+          const hasHalfStar = rating % 1 >= 0.5;
+          
+          for (let i = 0; i < fullStars; i++) {
+            stars.push('★');
+          }
+          
+          if (hasHalfStar) {
+            stars.push('★');
+          }
+          
+          while (stars.length < 5) {
+            stars.push('☆');
+          }
+          
+          return (
+            <div style={{ color: '#FFC107', letterSpacing: '2px' }}>
+              {stars.join('')}
+            </div>
+          );
+        };
+        
+        return (
+          <div style={{ width: '100%', ...styles }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+              <div style={{ marginRight: '10px' }}>
+                {renderStars(content.rating || 0)}
+              </div>
+              <div>
+                <span style={{ fontWeight: 700 }}>{content.rating || 0}</span>
+                <span style={{ color: '#6B7280' }}> ({content.reviewCount || 0} reviews)</span>
+              </div>
+            </div>
+            
+            {content.reviews && content.reviews.length > 0 && (
+              <div>
+                <h4 style={{ fontWeight: 500, marginBottom: '8px' }}>Customer Reviews</h4>
+                {content.reviews.map((review: any, index: number) => (
+                  <div key={index} style={{ marginBottom: '12px', borderBottom: index < content.reviews.length - 1 ? '1px solid #E5E7EB' : 'none', paddingBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                      <span style={{ color: '#FFC107', marginRight: '6px' }}>{'★'.repeat(review.rating)}</span>
+                      <span style={{ fontWeight: 500 }}>{review.author}</span>
+                    </div>
+                    <p style={{ margin: 0 }}>{review.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+        
+      case 'story':
+        return (
+          <div style={{ width: '100%', ...styles }}>
+            <h3 style={{ fontWeight: 600, marginBottom: '8px' }}>Our Story</h3>
+            <p style={{ lineHeight: '1.6' }}>{content.story || "No story content provided"}</p>
+          </div>
+        );
+        
+      case 'howmade':
+        return (
+          <div style={{ width: '100%', ...styles }}>
+            <h3 style={{ fontWeight: 600, marginBottom: '8px' }}>How It's Made</h3>
+            <p style={{ marginBottom: '16px' }}>{content.description || "No description provided"}</p>
+            
+            {content.steps && content.steps.length > 0 && (
+              <ol style={{ paddingLeft: '20px' }}>
+                {content.steps.map((step: string, index: number) => (
+                  <li key={index} style={{ marginBottom: '8px' }}>{step}</li>
+                ))}
+              </ol>
+            )}
+          </div>
+        );
+        
+      case 'nutrition':
+        return (
+          <div style={{ width: '100%', ...styles }}>
+            <h3 style={{ fontWeight: 600, marginBottom: '12px' }}>Nutrition Facts</h3>
+            <div style={{ borderTop: '8px solid #000', borderBottom: '4px solid #000' }}>
+              {content.facts && Object.entries(content.facts).map(([key, value], index) => (
+                <div key={index} style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  padding: '4px 0',
+                  borderBottom: '1px solid #E5E7EB' 
+                }}>
+                  <span style={{ fontWeight: key === 'Calories' ? 700 : 400 }}>{key}</span>
+                  <span>{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      default:
+        return <div>Unknown component type: {type}</div>;
+    }
+  };
+
+  return renderComponent();
 }

@@ -359,6 +359,33 @@ export type Database = {
           },
         ]
       }
+      product_designs: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       qr_codes: {
         Row: {
           created_at: string | null

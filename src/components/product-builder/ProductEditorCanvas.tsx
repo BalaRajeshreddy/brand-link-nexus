@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProductEditorComponentProps {
   component: ProductComponent;
@@ -34,7 +34,6 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
       return;
     }
     
-    // Test if image loads correctly
     const img = new Image();
     img.onload = () => {
       handleUpdateComponent({

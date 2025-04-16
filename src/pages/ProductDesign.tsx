@@ -28,44 +28,90 @@ export default function ProductDesign() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true);
-        
-        // Get current session
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          console.error("No authenticated session found");
-          setLoading(false);
-          return;
-        }
-
-        // Fetch user's product designs
-        const { data, error } = await supabase
-          .from('product_designs')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error("Error fetching products:", error);
-          toast.error("Failed to load product designs");
-          setLoading(false);
-          return;
-        }
-
-        setProducts(data || []);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error in fetchProducts:", error);
-        toast.error("An unexpected error occurred");
-        setLoading(false);
-      }
-    }
-
     fetchProducts();
   }, []);
+
+  async function fetchProducts() {
+    try {
+      setLoading(true);
+      
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.error("No authenticated session found");
+        toast.error("You need to be logged in to view your product designs");
+        setLoading(false);
+        return;
+      }
+
+      // Fetch user's product designs
+      const { data, error } = await supabase
+        .from('product_designs')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching products:", error);
+        toast.error("Failed to load product designs");
+        setLoading(false);
+        return;
+      }
+
+      // Validate the data structure
+      const validProducts = data?.map(product => {
+        // Ensure content has the expected structure
+        if (!product.content) {
+          product.content = { 
+            title: product.title,
+            components: [],
+            pageSettings: { backgroundColor: "#FFFFFF", fontFamily: "Inter, sans-serif" }
+          };
+        }
+        
+        // Ensure pageSettings exists
+        if (!product.content.pageSettings) {
+          product.content.pageSettings = { 
+            backgroundColor: "#FFFFFF", 
+            fontFamily: "Inter, sans-serif" 
+          };
+        }
+
+        return product;
+      }) || [];
+
+      console.log("Fetched products:", validProducts);
+      setProducts(validProducts);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error in fetchProducts:", error);
+      toast.error("An unexpected error occurred");
+      setLoading(false);
+    }
+  }
+
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from('product_designs')
+        .delete()
+        .eq('id', productId);
+
+      if (error) {
+        console.error("Delete error:", error);
+        toast.error("Failed to delete product design");
+        return;
+      }
+
+      toast.success("Product design deleted successfully");
+      // Refresh the list
+      fetchProducts();
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("Failed to delete product design");
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -125,16 +171,16 @@ export default function ProductDesign() {
           {products.map((product) => (
             <Card key={product.id}>
               <CardHeader className="pb-2">
-                <CardTitle>{product.content.title || product.title}</CardTitle>
+                <CardTitle>{product.content?.title || product.title}</CardTitle>
               </CardHeader>
               <CardContent 
-                className="h-36 bg-muted/30 flex items-center justify-center overflow-hidden"
+                className="h-36 flex items-center justify-center overflow-hidden"
                 style={{
-                  backgroundColor: product.content.pageSettings?.backgroundColor || "#FFFFFF",
-                  fontFamily: product.content.pageSettings?.fontFamily || "Inter, sans-serif"
+                  backgroundColor: product.content?.pageSettings?.backgroundColor || "#FFFFFF",
+                  fontFamily: product.content?.pageSettings?.fontFamily || "Inter, sans-serif"
                 }}
               >
-                {product.content.components && product.content.components.length > 0 ? (
+                {product.content?.components && product.content.components.length > 0 ? (
                   <div className="text-center p-4 w-full">
                     <div className="text-sm font-medium">
                       {product.content.components.length} components
@@ -144,7 +190,7 @@ export default function ProductDesign() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-muted-foreground">Product Preview</div>
+                  <div className="text-muted-foreground">Empty Product Design</div>
                 )}
               </CardContent>
               <CardFooter className="flex justify-between pt-4">
@@ -155,7 +201,17 @@ export default function ProductDesign() {
                   <Link to={`/dashboard/brand/product-design/edit/${product.id}`}>
                     <Button variant="outline" size="sm">Edit</Button>
                   </Link>
-                  <Button variant="ghost" size="sm">Preview</Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      if (confirm("Are you sure you want to delete this product design?")) {
+                        handleDeleteProduct(product.id);
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
                 </div>
               </CardFooter>
             </Card>

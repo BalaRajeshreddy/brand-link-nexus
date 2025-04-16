@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProductEditorSidebar } from "@/components/product-builder/ProductEditorSidebar";
@@ -28,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 
 export interface ProductComponent {
   id: string;
@@ -67,7 +69,48 @@ export default function ProductPageCreator() {
   });
   const [showPageSettings, setShowPageSettings] = useState(false);
   const [isSaving, setSaving] = useState(false);
+  const { id } = useParams();
   const navigate = useNavigate();
+  const isEditMode = !!id;
+
+  useEffect(() => {
+    // If we're in edit mode, fetch the existing product design
+    if (isEditMode) {
+      const fetchProductDesign = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('product_designs')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+          if (error) {
+            toast.error("Failed to load product design");
+            console.error("Error fetching product:", error);
+            return;
+          }
+
+          if (data) {
+            setPageTitle(data.title || data.content.title);
+            
+            // Set components from the stored data
+            setComponents(data.content.components || []);
+            
+            // Set page settings
+            setPageSettings({
+              backgroundColor: data.content.pageSettings?.backgroundColor || "#FFFFFF",
+              fontFamily: data.content.pageSettings?.fontFamily || "Inter, sans-serif",
+            });
+          }
+        } catch (err) {
+          console.error("Error loading product design:", err);
+          toast.error("Failed to load product design");
+        }
+      };
+
+      fetchProductDesign();
+    }
+  }, [id, isEditMode]);
 
   const handleAddComponent = (componentType: string) => {
     const newComponent = {
@@ -107,25 +150,46 @@ export default function ProductPageCreator() {
         title: pageTitle,
         components,
         pageSettings,
-        user_id: session.user.id
       };
       
-      const { error } = await supabase
-        .from('product_designs')
-        .insert({
-          title: pageTitle,
-          content: productPageData,
-          user_id: session.user.id
-        });
-      
-      if (error) {
-        console.error("Save error:", error);
-        toast.error("Failed to save product page. Please try again.");
-        setSaving(false);
-        return;
+      if (isEditMode) {
+        // Update existing product design
+        const { error } = await supabase
+          .from('product_designs')
+          .update({
+            title: pageTitle,
+            content: productPageData,
+          })
+          .eq('id', id);
+        
+        if (error) {
+          console.error("Update error:", error);
+          toast.error("Failed to update product page. Please try again.");
+          setSaving(false);
+          return;
+        }
+        
+        toast.success("Product page updated successfully!");
+      } else {
+        // Create new product design
+        const { error } = await supabase
+          .from('product_designs')
+          .insert({
+            title: pageTitle,
+            content: productPageData,
+            user_id: session.user.id
+          });
+        
+        if (error) {
+          console.error("Save error:", error);
+          toast.error("Failed to save product page. Please try again.");
+          setSaving(false);
+          return;
+        }
+        
+        toast.success("Product page saved successfully!");
       }
       
-      toast.success("Product page saved successfully!");
       setSaving(false);
       
       setTimeout(() => navigate("/dashboard/brand/product-design"), 1500);
@@ -258,116 +322,118 @@ export default function ProductPageCreator() {
   };
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="border-b py-3 px-6 flex items-center justify-between bg-white">
-        <div className="flex items-center">
-          <Input
-            value={pageTitle}
-            onChange={(e) => setPageTitle(e.target.value)}
-            className="border-none text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0 w-auto"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Dialog open={showPageSettings} onOpenChange={setShowPageSettings}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                title="Page Settings"
-              >
-                <Settings size={18} />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Page Settings</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Background Color</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {backgroundColors.map((color) => (
-                      <div 
-                        key={color.value} 
-                        className={`h-10 rounded-md cursor-pointer flex items-center justify-center border-2 ${
-                          pageSettings.backgroundColor === color.value 
-                            ? 'border-primary' 
-                            : 'border-transparent'
-                        }`}
-                        style={{ backgroundColor: color.value }}
-                        onClick={() => updatePageSettings('backgroundColor', color.value)}
-                      >
-                        {pageSettings.backgroundColor === color.value && (
-                          <div className="w-2 h-2 rounded-full bg-primary" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Font Family</Label>
-                  <Select 
-                    value={pageSettings.fontFamily}
-                    onValueChange={(value) => updatePageSettings('fontFamily', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select font family" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fontFamilies.map((font) => (
-                        <SelectItem key={font.value} value={font.value}>
-                          {font.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setShowMobilePreview(!showMobilePreview)}
-            title="Toggle Mobile Preview"
-          >
-            <Smartphone size={18} />
-          </Button>
-          <Button variant="outline">
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            <Save className="h-4 w-4 mr-2" />
-            {isSaving ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-1 overflow-hidden">
-        <ProductEditorSidebar onAddComponent={handleAddComponent} />
-        
-        <div className="flex-1 overflow-hidden flex">
-          <div className={`flex-1 ${showMobilePreview ? 'w-1/2' : 'w-full'} h-full overflow-hidden`}>
-            <ProductEditorCanvas 
-              components={components} 
-              onDeleteComponent={handleDeleteComponent}
-              onUpdateComponent={handleUpdateComponent}
-              pageSettings={pageSettings}
+    <DashboardLayout userType="Brand" userName="Brand User">
+      <div className="h-[calc(100vh-64px)] flex flex-col">
+        <div className="border-b py-3 px-6 flex items-center justify-between bg-white">
+          <div className="flex items-center">
+            <Input
+              value={pageTitle}
+              onChange={(e) => setPageTitle(e.target.value)}
+              className="border-none text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0 w-auto"
             />
           </div>
+          <div className="flex items-center gap-2">
+            <Dialog open={showPageSettings} onOpenChange={setShowPageSettings}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  title="Page Settings"
+                >
+                  <Settings size={18} />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Page Settings</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Background Color</Label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {backgroundColors.map((color) => (
+                        <div 
+                          key={color.value} 
+                          className={`h-10 rounded-md cursor-pointer flex items-center justify-center border-2 ${
+                            pageSettings.backgroundColor === color.value 
+                              ? 'border-primary' 
+                              : 'border-transparent'
+                          }`}
+                          style={{ backgroundColor: color.value }}
+                          onClick={() => updatePageSettings('backgroundColor', color.value)}
+                        >
+                          {pageSettings.backgroundColor === color.value && (
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Font Family</Label>
+                    <Select 
+                      value={pageSettings.fontFamily}
+                      onValueChange={(value) => updatePageSettings('fontFamily', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select font family" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fontFamilies.map((font) => (
+                          <SelectItem key={font.value} value={font.value}>
+                            {font.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setShowMobilePreview(!showMobilePreview)}
+              title="Toggle Mobile Preview"
+            >
+              <Smartphone size={18} />
+            </Button>
+            <Button variant="outline">
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? 'Saving...' : isEditMode ? 'Update' : 'Save'}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-1 overflow-hidden">
+          <ProductEditorSidebar onAddComponent={handleAddComponent} />
           
-          {showMobilePreview && (
-            <div className="w-1/2 border-l bg-gray-50">
-              <ProductEditorPreview 
+          <div className="flex-1 overflow-hidden flex">
+            <div className={`flex-1 ${showMobilePreview ? 'w-1/2' : 'w-full'} h-full overflow-hidden`}>
+              <ProductEditorCanvas 
                 components={components} 
+                onDeleteComponent={handleDeleteComponent}
+                onUpdateComponent={handleUpdateComponent}
                 pageSettings={pageSettings}
               />
             </div>
-          )}
+            
+            {showMobilePreview && (
+              <div className="w-1/2 border-l bg-gray-50">
+                <ProductEditorPreview 
+                  components={components} 
+                  pageSettings={pageSettings}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
