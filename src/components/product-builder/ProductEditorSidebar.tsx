@@ -11,7 +11,13 @@ import {
   Instagram,
   MousePointerClick,
   ChevronRight,
-  Plus
+  Plus,
+  Star,
+  PanelRight,
+  Sparkles,
+  ListChecks,
+  Utensils,
+  Layers
 } from "lucide-react";
 
 interface ProductEditorSidebarProps {
@@ -34,6 +40,16 @@ export function ProductEditorSidebar({ onAddComponent }: ProductEditorSidebarPro
         { name: "Button", icon: <Square size={16} />, description: "Add interactive buttons" }
       ]
     },
+    {
+      category: "Product Details",
+      items: [
+        { name: "Ingredients", icon: <Utensils size={16} />, description: "List product ingredients" },
+        { name: "Ratings", icon: <Star size={16} />, description: "Display ratings and reviews" },
+        { name: "Story", icon: <Sparkles size={16} />, description: "Share your product's story" },
+        { name: "HowMade", icon: <Layers size={16} />, description: "Explain how it's made" },
+        { name: "Nutrition", icon: <ListChecks size={16} />, description: "Show nutrition facts" }
+      ]
+    },
     { 
       category: "Actions",
       items: [
@@ -54,7 +70,7 @@ export function ProductEditorSidebar({ onAddComponent }: ProductEditorSidebarPro
       id: "product-basic", 
       name: "Basic Product", 
       description: "Simple layout for showcasing a product",
-      components: ["section", "image", "text", "button"]
+      components: ["image", "text", "button"]
     },
     { 
       id: "product-gallery", 
@@ -63,10 +79,22 @@ export function ProductEditorSidebar({ onAddComponent }: ProductEditorSidebarPro
       components: ["section", "image", "image", "image", "text"]
     },
     { 
+      id: "product-details", 
+      name: "Detailed Product", 
+      description: "Complete product with all details",
+      components: ["section", "image", "text", "ingredients", "ratings", "nutrition", "story", "howmade"]
+    },
+    { 
       id: "product-video", 
       name: "Video Showcase", 
       description: "Feature product with video content",
       components: ["section", "youtube", "text", "button"]
+    },
+    {
+      id: "food-beverage",
+      name: "Food & Beverage",
+      description: "Perfect for food or drink products",
+      components: ["image", "text", "ingredients", "nutrition", "story"]
     }
   ];
 

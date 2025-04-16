@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ProductEditorSidebar } from "@/components/product-builder/ProductEditorSidebar";
 import { ProductEditorCanvas } from "@/components/product-builder/ProductEditorCanvas";
 import { ProductEditorPreview } from "@/components/product-builder/ProductEditorPreview";
@@ -63,7 +62,7 @@ export default function ProductPageCreator() {
       case 'image':
         return { src: "", alt: "Product Image" };
       case 'button':
-        return { text: "Click Here", url: "" };
+        return { text: "Buy Now", url: "" };
       case 'text':
         return { text: "Add your product description here." };
       case 'action':
@@ -72,6 +71,42 @@ export default function ProductPageCreator() {
         return { videoId: "", title: "YouTube Video" };
       case 'instagram':
         return { postUrl: "", title: "Instagram Post" };
+      case 'ingredients':
+        return { list: "Ingredient 1, Ingredient 2, Ingredient 3" };
+      case 'ratings':
+        return { 
+          rating: 4.5,
+          reviewCount: 42,
+          reviews: [
+            { rating: 5, text: "Great product! Would buy again.", author: "John D." },
+            { rating: 4, text: "Very good quality.", author: "Sarah M." }
+          ]
+        };
+      case 'story':
+        return { 
+          story: "Our story begins with a passion for quality and innovation. We believe in creating products that not only deliver exceptional value but also contribute to a better world."
+        };
+      case 'howmade':
+        return { 
+          description: "Our product is crafted with care using traditional methods and modern technology.", 
+          steps: [
+            "Select the finest ingredients",
+            "Combine using our proprietary process",
+            "Quality check at every stage",
+            "Package with sustainable materials"
+          ] 
+        };
+      case 'nutrition':
+        return { 
+          facts: {
+            "Calories": "120",
+            "Total Fat": "0g",
+            "Sodium": "5mg",
+            "Total Carbohydrate": "30g",
+            "Sugars": "25g",
+            "Protein": "0g"
+          }
+        };
       default:
         return {};
     }
@@ -115,6 +150,19 @@ export default function ProductPageCreator() {
           fontSize: "16px",
           lineHeight: "1.5",
           color: "#1F2937"
+        };
+      case 'ingredients':
+      case 'ratings':
+      case 'story':
+      case 'howmade':
+      case 'nutrition':
+        return {
+          ...baseStyles,
+          backgroundColor: "#FFFFFF",
+          borderWidth: "1px",
+          borderStyle: "solid",
+          borderColor: "#e2e8f0",
+          borderRadius: "8px",
         };
       default:
         return baseStyles;

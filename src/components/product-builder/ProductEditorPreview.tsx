@@ -42,7 +42,7 @@ export function ProductEditorPreview({ components, pageSettings }: ProductEditor
                 {components.map((component) => (
                   <div 
                     key={component.id} 
-                    className="bg-white rounded-lg shadow p-4"
+                    className="bg-white rounded-lg shadow-sm p-4"
                   >
                     <ProductComponentRenderer
                       type={component.type}

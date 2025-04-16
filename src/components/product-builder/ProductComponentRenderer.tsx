@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface ProductComponentRendererProps {
   type: string;
@@ -108,6 +110,134 @@ export function ProductComponentRenderer({ type, content, styles }: ProductCompo
               Instagram Post (add URL)
             </div>
           )}
+        </div>
+      );
+      
+    case 'ratings':
+      return (
+        <div style={styles} className="w-full">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="ratings">
+              <AccordionTrigger className="font-medium">
+                Ratings & Reviews
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-1">
+                    {Array(5).fill(0).map((_, i) => (
+                      <Star 
+                        key={i} 
+                        className={i < (content.rating || 4) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                        size={16}
+                      />
+                    ))}
+                    <span className="ml-2 text-sm">{content.rating || 4}/5 ({content.reviewCount || 42} reviews)</span>
+                  </div>
+                  
+                  {(content.reviews || []).length > 0 ? (
+                    <div className="space-y-2">
+                      {content.reviews.map((review: any, i: number) => (
+                        <div key={i} className="border-t pt-2">
+                          <div className="flex items-center gap-1">
+                            {Array(5).fill(0).map((_, j) => (
+                              <Star 
+                                key={j} 
+                                className={j < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                                size={12}
+                              />
+                            ))}
+                          </div>
+                          <p className="text-sm mt-1">{review.text}</p>
+                          <p className="text-xs text-muted-foreground mt-1">- {review.author}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No reviews yet</p>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+
+    case 'story':
+      return (
+        <div style={styles} className="w-full">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="story">
+              <AccordionTrigger className="font-medium">
+                Our Story
+              </AccordionTrigger>
+              <AccordionContent>
+                <p className="text-sm">{content.story || "Tell the story of your product or brand here."}</p>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+
+    case 'howmade':
+      return (
+        <div style={styles} className="w-full">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="howmade">
+              <AccordionTrigger className="font-medium">
+                How It's Made
+              </AccordionTrigger>
+              <AccordionContent>
+                <p className="text-sm">{content.description || "Describe the process of creating your product here."}</p>
+                {content.steps && content.steps.length > 0 && (
+                  <ol className="list-decimal list-inside mt-2 space-y-1">
+                    {content.steps.map((step: string, i: number) => (
+                      <li key={i} className="text-sm">{step}</li>
+                    ))}
+                  </ol>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+
+    case 'nutrition':
+      return (
+        <div style={styles} className="w-full">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="nutrition">
+              <AccordionTrigger className="font-medium">
+                Nutrition Facts
+              </AccordionTrigger>
+              <AccordionContent>
+                {content.facts && Object.keys(content.facts).length > 0 ? (
+                  <div className="border rounded p-3 text-sm">
+                    <div className="text-lg font-bold border-b pb-1 mb-2">Nutrition Facts</div>
+                    <div className="space-y-1">
+                      {Object.entries(content.facts).map(([key, value]: [string, any]) => (
+                        <div key={key} className="flex justify-between border-b py-1">
+                          <span>{key}</span>
+                          <span>{value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">No nutrition facts available</div>
+                )}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      );
+
+    case 'ingredients':
+      return (
+        <div style={styles} className="w-full">
+          <div className="p-3 border rounded-lg">
+            <h4 className="font-medium mb-2">Ingredients</h4>
+            <p className="text-sm">{content.list || "Add your ingredients list here"}</p>
+          </div>
         </div>
       );
       
