@@ -20,6 +20,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
 import PublishedLandingPage from "./pages/PublishedLandingPage";
+import ProductDesign from "./pages/ProductDesign";
+import ProductPageCreator from "./pages/ProductPageCreator";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +59,9 @@ const App = () => {
             <Route path="/dashboard/brand/edit-page/:pageId" element={<PageCreator />} />
             <Route path="/dashboard/brand/landing-pages" element={<LandingPagesList />} />
             <Route path="/dashboard/brand/qr-codes" element={<QRCodesList />} />
+            <Route path="/dashboard/brand/product-design" element={<ProductDesign />} />
+            <Route path="/dashboard/brand/product-design/create" element={<ProductPageCreator />} />
+            <Route path="/dashboard/brand/product-design/edit/:productId" element={<ProductPageCreator />} />
             
             {/* Admin Routes */}
             <Route path="/dashboard/admin" element={<AdminDashboard />} />

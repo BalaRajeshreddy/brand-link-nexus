@@ -10,7 +10,8 @@ import {
   BarChart2,
   Settings,
   Users,
-  LogOut
+  LogOut,
+  Package
 } from "lucide-react";
 
 interface SidebarProps {
@@ -25,6 +26,7 @@ export function Sidebar({ userType }: SidebarProps) {
     { name: "Dashboard", path: "/dashboard/brand", icon: <LayoutDashboard size={18} /> },
     { name: "QR Codes", path: "/dashboard/brand/qr-codes", icon: <QrCode size={18} /> },
     { name: "Landing Pages", path: "/dashboard/brand/landing-pages", icon: <LayoutPanelLeft size={18} /> },
+    { name: "Product Design", path: "/dashboard/brand/product-design", icon: <Package size={18} /> },
     { name: "File Manager", path: "/dashboard/brand/files", icon: <Folder size={18} /> },
     { name: "Analytics", path: "/dashboard/brand/analytics", icon: <BarChart2 size={18} /> },
     { name: "Settings", path: "/dashboard/brand/settings", icon: <Settings size={18} /> },
