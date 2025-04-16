@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Grip, Trash2, Pencil } from 'lucide-react';
 import { ProductComponent } from '@/pages/ProductPageCreator';
 import { ProductComponentRenderer } from './ProductComponentRenderer';
-import { Textarea } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 
 interface ProductEditorComponentProps {
   component: ProductComponent;
@@ -24,7 +25,7 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
     switch (component.type) {
       case 'text':
         return (
-          <textarea
+          <Textarea
             className="w-full p-2 border rounded"
             value={component.content.text || ""}
             onChange={(e) => handleUpdateComponent({ ...component.content, text: e.target.value })}
@@ -35,16 +36,16 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
       case 'button':
         return (
           <div className="space-y-2">
-            <input
+            <Input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2"
               value={component.content.text || ""}
               onChange={(e) => handleUpdateComponent({ ...component.content, text: e.target.value })}
               placeholder="Button Text"
             />
-            <input
+            <Input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2"
               value={component.content.url || ""}
               onChange={(e) => handleUpdateComponent({ ...component.content, url: e.target.value })}
               placeholder="URL"
@@ -55,16 +56,16 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
       case 'image':
         return (
           <div className="space-y-2">
-            <input
+            <Input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2"
               value={component.content.src || ""}
               onChange={(e) => handleUpdateComponent({ ...component.content, src: e.target.value })}
               placeholder="Image URL"
             />
-            <input
+            <Input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2"
               value={component.content.alt || ""}
               onChange={(e) => handleUpdateComponent({ ...component.content, alt: e.target.value })}
               placeholder="Alt Text"
@@ -75,16 +76,16 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
       case 'youtube':
         return (
           <div className="space-y-2">
-            <input
+            <Input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2"
               value={component.content.videoId || ""}
               onChange={(e) => handleUpdateComponent({ ...component.content, videoId: e.target.value })}
               placeholder="YouTube Video ID"
             />
-            <input
+            <Input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2"
               value={component.content.title || ""}
               onChange={(e) => handleUpdateComponent({ ...component.content, title: e.target.value })}
               placeholder="Video Title"
@@ -95,7 +96,7 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
       case 'ingredients':
         return (
           <div className="space-y-2">
-            <textarea
+            <Textarea
               className="w-full p-2 border rounded"
               value={component.content.list || ""}
               onChange={(e) => handleUpdateComponent({ ...component.content, list: e.target.value })}
@@ -126,9 +127,9 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
             
             <div className="flex items-center">
               <label className="mr-2 text-sm">Review Count:</label>
-              <input 
+              <Input 
                 type="number"
-                className="w-24 p-2 border rounded"
+                className="w-24 p-2"
                 value={component.content.reviewCount || 0}
                 onChange={(e) => handleUpdateComponent({ 
                   ...component.content, 
@@ -171,9 +172,9 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
                       <Trash2 size={14} />
                     </Button>
                   </div>
-                  <input
+                  <Input
                     type="text"
-                    className="w-full p-1 border rounded text-sm mb-1"
+                    className="w-full p-1 mb-1 text-sm"
                     value={review.text || ""}
                     onChange={(e) => {
                       const updatedReviews = [...(component.content.reviews || [])];
@@ -185,9 +186,9 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
                     }}
                     placeholder="Review text"
                   />
-                  <input
+                  <Input
                     type="text"
-                    className="w-full p-1 border rounded text-sm"
+                    className="w-full p-1 text-sm"
                     value={review.author || ""}
                     onChange={(e) => {
                       const updatedReviews = [...(component.content.reviews || [])];
@@ -206,7 +207,7 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
                 variant="outline" 
                 size="sm"
                 onClick={() => {
-                  const updatedReviews = [...(component.content.reviews || [])];
+                  const updatedReviews = component.content.reviews ? [...component.content.reviews] : [];
                   updatedReviews.push({
                     rating: 5,
                     text: "Great product!",
@@ -224,7 +225,7 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
       case 'story':
         return (
           <div className="space-y-2">
-            <textarea
+            <Textarea
               className="w-full p-2 border rounded"
               value={component.content.story || ""}
               onChange={(e) => handleUpdateComponent({ ...component.content, story: e.target.value })}
@@ -237,7 +238,7 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
       case 'howmade':
         return (
           <div className="space-y-3">
-            <textarea
+            <Textarea
               className="w-full p-2 border rounded"
               value={component.content.description || ""}
               onChange={(e) => handleUpdateComponent({ 
@@ -253,9 +254,9 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
               {(component.content.steps || []).map((step: string, index: number) => (
                 <div key={index} className="flex items-center gap-2">
                   <span className="bg-muted rounded-full w-6 h-6 flex items-center justify-center text-xs">{index + 1}</span>
-                  <input
+                  <Input
                     type="text"
-                    className="flex-1 p-2 border rounded"
+                    className="flex-1 p-2"
                     value={step}
                     onChange={(e) => {
                       const updatedSteps = [...(component.content.steps || [])];
@@ -282,7 +283,7 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
                 variant="outline" 
                 size="sm"
                 onClick={() => {
-                  const updatedSteps = [...(component.content.steps || [])];
+                  const updatedSteps = component.content.steps ? [...component.content.steps] : [];
                   updatedSteps.push("New step");
                   handleUpdateComponent({ ...component.content, steps: updatedSteps });
                 }}
@@ -300,9 +301,9 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
             <div className="border p-3 rounded space-y-2">
               {Object.entries(component.content.facts || {}).map(([key, value], index) => (
                 <div key={index} className="flex items-center gap-2">
-                  <input
+                  <Input
                     type="text"
-                    className="flex-grow p-2 border rounded"
+                    className="flex-grow p-2"
                     value={key}
                     onChange={(e) => {
                       const updatedFacts = { ...component.content.facts };
@@ -313,9 +314,9 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
                     }}
                     placeholder="Nutrition Name"
                   />
-                  <input
+                  <Input
                     type="text"
-                    className="w-24 p-2 border rounded"
+                    className="w-24 p-2"
                     value={value as string}
                     onChange={(e) => {
                       const updatedFacts = { ...component.content.facts };
@@ -343,7 +344,7 @@ const ProductEditorComponent = ({ component, onDeleteComponent, onUpdateComponen
                 variant="outline" 
                 size="sm"
                 onClick={() => {
-                  const updatedFacts = { ...component.content.facts } || {};
+                  const updatedFacts = component.content.facts ? { ...component.content.facts } : {};
                   updatedFacts[`Item ${Object.keys(updatedFacts).length + 1}`] = "0g";
                   handleUpdateComponent({ ...component.content, facts: updatedFacts });
                 }}
