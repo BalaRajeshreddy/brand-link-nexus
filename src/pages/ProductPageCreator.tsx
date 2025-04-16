@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { ProductEditorCanvas } from "@/components/product-builder/ProductEditorC
 import { ProductEditorPreview } from "@/components/product-builder/ProductEditorPreview";
 import { Save, Share2, Smartphone, Settings } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Dialog, 
   DialogContent, 
@@ -66,6 +66,7 @@ export default function ProductPageCreator() {
     fontFamily: "Inter, sans-serif",
   });
   const [showPageSettings, setShowPageSettings] = useState(false);
+  const [isSaving, setSaving] = useState(false);
   const navigate = useNavigate();
 
   const handleAddComponent = (componentType: string) => {
@@ -91,24 +92,47 @@ export default function ProductPageCreator() {
     ));
   };
 
-  const handleSave = () => {
-    // In a real implementation, we would save the product page data to a database
-    // For now, simulating save with localStorage
+  const handleSave = async () => {
     try {
+      setSaving(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You need to be logged in to save products");
+        setSaving(false);
+        return;
+      }
+
       const productPageData = {
         title: pageTitle,
         components,
         pageSettings,
-        lastModified: new Date().toISOString()
+        user_id: session.user.id
       };
       
-      localStorage.setItem(`product-page-${Date.now()}`, JSON.stringify(productPageData));
+      const { error } = await supabase
+        .from('product_designs')
+        .insert({
+          title: pageTitle,
+          content: productPageData,
+          user_id: session.user.id
+        });
+      
+      if (error) {
+        console.error("Save error:", error);
+        toast.error("Failed to save product page. Please try again.");
+        setSaving(false);
+        return;
+      }
+      
       toast.success("Product page saved successfully!");
+      setSaving(false);
       
       setTimeout(() => navigate("/dashboard/brand/product-design"), 1500);
     } catch (error) {
-      toast.error("Failed to save product page. Please try again.");
       console.error("Save error:", error);
+      toast.error("Failed to save product page. Please try again.");
+      setSaving(false);
     }
   };
 
@@ -314,9 +338,9 @@ export default function ProductPageCreator() {
             <Share2 className="h-4 w-4 mr-2" />
             Share
           </Button>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} disabled={isSaving}>
             <Save className="h-4 w-4 mr-2" />
-            Save
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
         </div>
       </div>
