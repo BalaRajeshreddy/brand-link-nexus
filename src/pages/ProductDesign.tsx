@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, ExternalLink, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { 
   Dialog,
@@ -123,6 +123,8 @@ export default function ProductDesign() {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return "Unknown date";
+    
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
@@ -217,7 +219,7 @@ export default function ProductDesign() {
                   <div className="text-muted-foreground">Empty Product Design</div>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-between pt-4">
+              <CardFooter className="flex justify-between pt-4 border-t">
                 <div className="text-sm text-muted-foreground">
                   Updated {formatDate(product.updated_at || product.created_at)}
                 </div>
@@ -228,7 +230,8 @@ export default function ProductDesign() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (confirm("Are you sure you want to delete this product design?")) {
                         handleDeleteProduct(product.id);
                       }
@@ -245,23 +248,23 @@ export default function ProductDesign() {
 
       {/* Product Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{previewProduct?.title || "Product Preview"}</DialogTitle>
           </DialogHeader>
           
-          <div className="mt-4">
+          <div className="mt-4 overflow-auto">
             {previewProduct && previewProduct.content?.components && (
               <div 
-                className="w-full overflow-y-auto"
+                className="w-full overflow-y-auto p-4 rounded-lg"
                 style={{
                   backgroundColor: previewProduct.content.pageSettings?.backgroundColor || "#FFFFFF",
                   fontFamily: previewProduct.content.pageSettings?.fontFamily || "Inter, sans-serif"
                 }}
               >
-                <div className="space-y-3">
+                <div className="space-y-4 max-w-3xl mx-auto">
                   {previewProduct.content.components.map((component) => (
-                    <div key={component.id}>
+                    <div key={component.id} className="bg-white shadow rounded-lg overflow-hidden">
                       <ProductComponentRenderer
                         type={component.type}
                         content={component.content}

@@ -1,7 +1,7 @@
 
 import { ProductComponent } from "@/pages/ProductPageCreator";
 import { ProductComponentRenderer } from "./ProductComponentRenderer";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Smartphone, Tablet, Monitor } from "lucide-react";
 
@@ -61,14 +61,15 @@ export function ProductEditorPreview({ components, pageSettings }: ProductEditor
         </div>
       </div>
       
-      <div className="flex-1 p-4 overflow-hidden">
+      <div className="flex-1 p-4 overflow-hidden bg-gray-100">
         <div 
-          className={`mx-auto border border-gray-300 rounded-3xl overflow-hidden transition-all duration-300 ${
+          className={`mx-auto border border-gray-300 rounded-3xl overflow-hidden shadow-md transition-all duration-300 ${
             previewDevice === 'desktop' ? 'w-full' : ''
           }`}
           style={{ 
             width: getDeviceWidth(),
-            height: previewDevice === 'desktop' ? '100%' : '844px'
+            height: previewDevice === 'desktop' ? '100%' : '844px',
+            maxHeight: '100%'
           }}
         >
           {previewDevice !== 'desktop' && (
@@ -88,11 +89,11 @@ export function ProductEditorPreview({ components, pageSettings }: ProductEditor
                 <p className="text-sm text-muted-foreground">No content added yet</p>
               </div>
             ) : (
-              <div className="p-6 space-y-3">
+              <div className="p-6 space-y-4">
                 {components.map((component) => (
                   <div 
                     key={component.id} 
-                    className="bg-white rounded-lg"
+                    className="bg-white rounded-lg shadow-sm"
                   >
                     <ProductComponentRenderer
                       type={component.type}

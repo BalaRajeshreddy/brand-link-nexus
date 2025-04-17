@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -73,8 +74,8 @@ export default function ProductPageCreator() {
   const navigate = useNavigate();
   const isEditMode = !!id;
 
+  // This useEffect loads existing product design data when editing
   useEffect(() => {
-    // If we're in edit mode, fetch the existing product design
     if (isEditMode) {
       const fetchProductDesign = async () => {
         try {
@@ -95,27 +96,25 @@ export default function ProductPageCreator() {
 
           if (data) {
             console.log("Loaded product design:", data);
+            
+            // Set page title
             setPageTitle(data.title || "Untitled Product Page");
             
             // Set components from the stored data
-            if (data.content && Array.isArray(data.content.components)) {
-              setComponents(data.content.components);
-            } else if (data.content) {
-              // Ensure we have the correct structure
-              console.log("Content structure:", data.content);
-              if (typeof data.content === 'object' && data.content !== null) {
-                // Try to access components via different property paths
-                const componentsData = data.content.components || data.content.productPageData?.components || [];
-                setComponents(componentsData);
+            if (data.content) {
+              if (Array.isArray(data.content.components)) {
+                setComponents(data.content.components);
+              } else if (data.content.components) {
+                console.warn("Components data is not an array:", data.content.components);
               }
-            }
-            
-            // Set page settings
-            if (data.content && data.content.pageSettings) {
-              setPageSettings({
-                backgroundColor: data.content.pageSettings.backgroundColor || "#FFFFFF",
-                fontFamily: data.content.pageSettings.fontFamily || "Inter, sans-serif",
-              });
+              
+              // Set page settings if available
+              if (data.content.pageSettings) {
+                setPageSettings({
+                  backgroundColor: data.content.pageSettings.backgroundColor || "#FFFFFF",
+                  fontFamily: data.content.pageSettings.fontFamily || "Inter, sans-serif",
+                });
+              }
             }
           }
           
