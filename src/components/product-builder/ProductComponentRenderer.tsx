@@ -267,7 +267,7 @@ export function ProductComponentRenderer({
           <div style={{ width: '100%', ...styles }}>
             <h3 style={{ fontWeight: 600, marginBottom: '12px' }}>Nutrition Facts</h3>
             <div style={{ borderTop: '8px solid #000', borderBottom: '4px solid #000' }}>
-              {content.facts && Object.entries(content.facts).map(([key, value], index) => (
+              {content.facts && typeof content.facts === 'object' && Object.entries(content.facts).map(([key, value], index) => (
                 <div key={index} style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between',
@@ -275,7 +275,7 @@ export function ProductComponentRenderer({
                   borderBottom: '1px solid #E5E7EB' 
                 }}>
                   <span style={{ fontWeight: key === 'Calories' ? 700 : 400 }}>{key}</span>
-                  <span>{value}</span>
+                  <span>{String(value)}</span>
                 </div>
               ))}
             </div>
