@@ -7,7 +7,7 @@ import { ProductEditorCanvas } from "@/components/product-builder/ProductEditorC
 import { ProductEditorPreview } from "@/components/product-builder/ProductEditorPreview";
 import { Save, Share2, Smartphone, Settings } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { 
   Dialog, 
   DialogContent, 
@@ -98,8 +98,16 @@ export default function ProductPageCreator() {
             setPageTitle(data.title || "Untitled Product Page");
             
             // Set components from the stored data
-            if (data.content && data.content.components) {
+            if (data.content && Array.isArray(data.content.components)) {
               setComponents(data.content.components);
+            } else if (data.content) {
+              // Ensure we have the correct structure
+              console.log("Content structure:", data.content);
+              if (typeof data.content === 'object' && data.content !== null) {
+                // Try to access components via different property paths
+                const componentsData = data.content.components || data.content.productPageData?.components || [];
+                setComponents(componentsData);
+              }
             }
             
             // Set page settings
