@@ -1,7 +1,10 @@
+
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Use direct values from .env since we're in a Vite app
+// Vite exposes environment variables on import.meta.env instead of process.env
+const supabaseUrl = 'https://cbjbnfcmzkkubkklqqlc.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiamJuZmNtemtrdWJra2xxcWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyNTgzMDIsImV4cCI6MjA1OTgzNDMwMn0.pOfIG_TkxLsajAGAPSYTD6395akldm_enPrvGIg1NKQ';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -68,4 +71,4 @@ export const getUserRoleProfile = async () => {
     default:
       return null;
   }
-}; 
+};
