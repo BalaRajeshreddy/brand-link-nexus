@@ -2,11 +2,18 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, ExternalLink, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ProductComponentRenderer } from "@/components/product-builder/ProductComponentRenderer";
 
 interface ProductDesign {
   id: string;
@@ -26,6 +33,8 @@ interface ProductDesign {
 export default function ProductDesign() {
   const [products, setProducts] = useState<ProductDesign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewProduct, setPreviewProduct] = useState<ProductDesign | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -50,7 +59,7 @@ export default function ProductDesign() {
         .from('product_designs')
         .select('*')
         .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (error) {
         console.error("Error fetching products:", error);
@@ -133,6 +142,11 @@ export default function ProductDesign() {
     }
   };
 
+  const openPreview = (product: ProductDesign) => {
+    setPreviewProduct(product);
+    setShowPreview(true);
+  };
+
   return (
     <DashboardLayout userType="Brand" userName="Brand User">
       <div className="flex items-center justify-between mb-6">
@@ -169,26 +183,36 @@ export default function ProductDesign() {
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => (
-            <Card key={product.id}>
+            <Card key={product.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <CardTitle>{product.content?.title || product.title}</CardTitle>
               </CardHeader>
               <CardContent 
-                className="h-36 flex items-center justify-center overflow-hidden"
+                className="h-36 flex items-center justify-center overflow-hidden cursor-pointer relative group"
                 style={{
                   backgroundColor: product.content?.pageSettings?.backgroundColor || "#FFFFFF",
                   fontFamily: product.content?.pageSettings?.fontFamily || "Inter, sans-serif"
                 }}
+                onClick={() => openPreview(product)}
               >
                 {product.content?.components && product.content.components.length > 0 ? (
-                  <div className="text-center p-4 w-full">
-                    <div className="text-sm font-medium">
-                      {product.content.components.length} components
+                  <>
+                    <div className="text-center p-4 w-full">
+                      <div className="text-sm font-medium">
+                        {product.content.components.length} components
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {product.content.components.slice(0, 3).map(c => c.type).join(", ")}
+                        {product.content.components.length > 3 ? "..." : ""}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Click Edit to view full design
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button variant="secondary" size="sm" className="flex items-center gap-2">
+                        <Eye size={16} />
+                        Preview
+                      </Button>
                     </div>
-                  </div>
+                  </>
                 ) : (
                   <div className="text-muted-foreground">Empty Product Design</div>
                 )}
@@ -218,6 +242,48 @@ export default function ProductDesign() {
           ))}
         </div>
       )}
+
+      {/* Product Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{previewProduct?.title || "Product Preview"}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="mt-4">
+            {previewProduct && previewProduct.content?.components && (
+              <div 
+                className="w-full overflow-y-auto"
+                style={{
+                  backgroundColor: previewProduct.content.pageSettings?.backgroundColor || "#FFFFFF",
+                  fontFamily: previewProduct.content.pageSettings?.fontFamily || "Inter, sans-serif"
+                }}
+              >
+                <div className="space-y-3">
+                  {previewProduct.content.components.map((component) => (
+                    <div key={component.id}>
+                      <ProductComponentRenderer
+                        type={component.type}
+                        content={component.content}
+                        styles={component.styles}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-6 flex justify-end">
+            <Link to={`/dashboard/brand/product-design/edit/${previewProduct?.id}`}>
+              <Button className="mr-2">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Edit This Product
+              </Button>
+            </Link>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

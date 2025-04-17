@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -69,6 +68,7 @@ export default function ProductPageCreator() {
   });
   const [showPageSettings, setShowPageSettings] = useState(false);
   const [isSaving, setSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!id;
@@ -78,6 +78,8 @@ export default function ProductPageCreator() {
     if (isEditMode) {
       const fetchProductDesign = async () => {
         try {
+          setIsLoading(true);
+          
           const { data, error } = await supabase
             .from('product_designs')
             .select('*')
@@ -87,28 +89,39 @@ export default function ProductPageCreator() {
           if (error) {
             toast.error("Failed to load product design");
             console.error("Error fetching product:", error);
+            setIsLoading(false);
             return;
           }
 
           if (data) {
-            setPageTitle(data.title || data.content.title);
+            console.log("Loaded product design:", data);
+            setPageTitle(data.title || "Untitled Product Page");
             
             // Set components from the stored data
-            setComponents(data.content.components || []);
+            if (data.content && data.content.components) {
+              setComponents(data.content.components);
+            }
             
             // Set page settings
-            setPageSettings({
-              backgroundColor: data.content.pageSettings?.backgroundColor || "#FFFFFF",
-              fontFamily: data.content.pageSettings?.fontFamily || "Inter, sans-serif",
-            });
+            if (data.content && data.content.pageSettings) {
+              setPageSettings({
+                backgroundColor: data.content.pageSettings.backgroundColor || "#FFFFFF",
+                fontFamily: data.content.pageSettings.fontFamily || "Inter, sans-serif",
+              });
+            }
           }
+          
+          setIsLoading(false);
         } catch (err) {
           console.error("Error loading product design:", err);
           toast.error("Failed to load product design");
+          setIsLoading(false);
         }
       };
 
       fetchProductDesign();
+    } else {
+      setIsLoading(false);
     }
   }, [id, isEditMode]);
 
@@ -192,7 +205,8 @@ export default function ProductPageCreator() {
       
       setSaving(false);
       
-      setTimeout(() => navigate("/dashboard/brand/product-design"), 1500);
+      // Navigate after a slight delay to allow the toast to be seen
+      setTimeout(() => navigate("/dashboard/brand/product-design"), 1000);
     } catch (error) {
       console.error("Save error:", error);
       toast.error("Failed to save product page. Please try again.");
@@ -320,6 +334,19 @@ export default function ProductPageCreator() {
         return baseStyles;
     }
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout userType="Brand" userName="Brand User">
+        <div className="h-[calc(100vh-64px)] flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-lg">Loading product design...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout userType="Brand" userName="Brand User">

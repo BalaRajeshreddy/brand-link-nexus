@@ -170,10 +170,13 @@ export function ProductComponentRenderer({
         const ingredients = content.list ? content.list.split(',').map((item: string) => item.trim()) : [];
         
         return (
-          <div style={{ width: '100%', ...styles }}>
-            <h3 style={{ fontWeight: 600, marginBottom: '8px' }}>Ingredients</h3>
+          <div style={{ width: '100%', ...styles }} className="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <h3 style={{ fontWeight: 600, marginBottom: '12px', display: 'flex', justifyContent: 'space-between' }}>
+              Ingredients
+              <span style={{ fontSize: '20px', cursor: 'pointer' }}>+</span>
+            </h3>
             {ingredients.length > 0 ? (
-              <ul style={{ paddingLeft: '20px' }}>
+              <ul style={{ paddingLeft: '20px', marginBottom: 0 }}>
                 {ingredients.map((ingredient: string, index: number) => (
                   <li key={index}>{ingredient}</li>
                 ))}
@@ -210,7 +213,11 @@ export function ProductComponentRenderer({
         };
         
         return (
-          <div style={{ width: '100%', ...styles }}>
+          <div style={{ width: '100%', ...styles }} className="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ fontWeight: 600, margin: 0 }}>Ratings & Reviews</h3>
+              <span style={{ fontSize: '20px', cursor: 'pointer' }}>+</span>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
               <div style={{ marginRight: '10px' }}>
                 {renderStars(content.rating || 0)}
@@ -240,20 +247,26 @@ export function ProductComponentRenderer({
         
       case 'story':
         return (
-          <div style={{ width: '100%', ...styles }}>
-            <h3 style={{ fontWeight: 600, marginBottom: '8px' }}>Our Story</h3>
-            <p style={{ lineHeight: '1.6' }}>{content.story || "No story content provided"}</p>
+          <div style={{ width: '100%', ...styles }} className="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ fontWeight: 600, margin: 0 }}>Our Story</h3>
+              <span style={{ fontSize: '20px', cursor: 'pointer' }}>+</span>
+            </div>
+            <p style={{ lineHeight: '1.6', marginBottom: 0 }}>{content.story || "No story content provided"}</p>
           </div>
         );
         
       case 'howmade':
         return (
-          <div style={{ width: '100%', ...styles }}>
-            <h3 style={{ fontWeight: 600, marginBottom: '8px' }}>How It's Made</h3>
+          <div style={{ width: '100%', ...styles }} className="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ fontWeight: 600, margin: 0 }}>How It's Made</h3>
+              <span style={{ fontSize: '20px', cursor: 'pointer' }}>+</span>
+            </div>
             <p style={{ marginBottom: '16px' }}>{content.description || "No description provided"}</p>
             
             {content.steps && content.steps.length > 0 && (
-              <ol style={{ paddingLeft: '20px' }}>
+              <ol style={{ paddingLeft: '20px', marginBottom: 0 }}>
                 {content.steps.map((step: string, index: number) => (
                   <li key={index} style={{ marginBottom: '8px' }}>{step}</li>
                 ))}
@@ -264,8 +277,11 @@ export function ProductComponentRenderer({
         
       case 'nutrition':
         return (
-          <div style={{ width: '100%', ...styles }}>
-            <h3 style={{ fontWeight: 600, marginBottom: '12px' }}>Nutrition Facts</h3>
+          <div style={{ width: '100%', ...styles }} className="bg-white rounded-lg p-4 shadow-sm mb-4">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ fontWeight: 600, margin: 0 }}>Nutrition Facts</h3>
+              <span style={{ fontSize: '20px', cursor: 'pointer' }}>+</span>
+            </div>
             <div style={{ borderTop: '8px solid #000', borderBottom: '4px solid #000' }}>
               {content.facts && typeof content.facts === 'object' && Object.entries(content.facts).map(([key, value], index) => (
                 <div key={index} style={{ 
