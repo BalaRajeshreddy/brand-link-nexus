@@ -155,7 +155,11 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
   const handleUpdateBlock = (blockId: string, updatedContent: Record<string, any>, updatedStyles: Record<string, any>) => {
     setBlocks(blocks.map(block => 
       block.id === blockId 
-        ? { ...block, content: updatedContent, styles: updatedStyles } 
+        ? { 
+            ...block, 
+            content: updatedContent,
+            styles: updatedStyles || block.styles || {}
+          } 
         : block
     ));
   };
@@ -189,7 +193,7 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
       setNestedValue(updatedContent, altPath.split('.'), alt);
     }
     
-    handleUpdateBlock(blockId, updatedContent, block.styles);
+    handleUpdateBlock(blockId, updatedContent, block.styles || {});
   };
   
   const setNestedValue = (obj: any, path: string[], value: any) => {

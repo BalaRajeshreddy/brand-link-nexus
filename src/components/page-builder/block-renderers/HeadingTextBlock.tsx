@@ -10,35 +10,50 @@ interface HeadingTextBlockProps {
 }
 
 export const HeadingTextBlock = ({ content, styles }: HeadingTextBlockProps) => {
+  const {
+    backgroundColor = 'transparent',
+    padding = '16px',
+    borderRadius = '8px',
+    textAlign = 'left',
+    textColor = '#000000',
+    headingSize = '24px',
+    textSize = '16px',
+  } = styles || {};
+
   return (
     <div 
       className="heading-text-block w-full my-4"
       style={{
-        backgroundColor: styles.backgroundColor || 'transparent',
-        padding: styles.padding || '16px',
-        borderRadius: styles.borderRadius || '8px',
+        backgroundColor,
+        padding,
+        borderRadius,
+        textAlign,
       }}
     >
-      <h2 
-        className="mb-2"
-        style={{
-          fontSize: styles.headingSize || '24px',
-          fontWeight: 'bold',
-          color: styles.textColor || '#000000',
-          textAlign: styles.textAlign || 'left'
-        }}
-      >
-        {content.heading}
-      </h2>
-      <p
-        style={{
-          fontSize: styles.textSize || '16px',
-          color: styles.textColor || '#000000',
-          textAlign: styles.textAlign || 'left'
-        }}
-      >
-        {content.text}
-      </p>
+      {content.heading && (
+        <h2 
+          className="mb-2"
+          style={{
+            fontSize: headingSize,
+            fontWeight: 'bold',
+            color: textColor,
+            textAlign,
+          }}
+        >
+          {content.heading}
+        </h2>
+      )}
+      {content.text && (
+        <p
+          style={{
+            fontSize: textSize,
+            color: textColor,
+            textAlign,
+          }}
+        >
+          {content.text}
+        </p>
+      )}
     </div>
   );
 };

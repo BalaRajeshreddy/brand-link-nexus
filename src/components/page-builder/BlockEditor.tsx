@@ -49,6 +49,7 @@ interface BlockEditorProps {
 
 export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEditorProps) {
   const [content, setContent] = useState<Record<string, any>>(block.content);
+  const [styles, setStyles] = useState<Record<string, any>>(block.styles || {});
   const [isOpen, setIsOpen] = useState(true);
 
   const updateContent = (field: string, value: any) => {
@@ -78,11 +79,8 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
   const handleSave = () => {
     const updatedBlock = {
       ...block,
-      content: content,
-      styles: block.type === 'form' ? block.styles : {
-        ...block.styles,
-        ...content
-      }
+      content,
+      styles
     };
     onUpdateBlock(updatedBlock);
     setIsOpen(false);
@@ -94,17 +92,11 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
     }
   };
   
-  const handleStyleChange = (componentType: 'container' | 'input' | 'label' | 'button', style: Partial<BlockStyles>) => {
-    onUpdateBlock({
-      ...block,
-      styles: {
-        ...block.styles,
-        [componentType]: {
-          ...(block.styles?.[componentType] || {}),
-          ...style
-        }
-      }
-    });
+  const handleStyleChange = (field: string, value: any) => {
+    setStyles(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const renderContentEditor = () => {
@@ -261,6 +253,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
                 <SelectContent>
                   <SelectItem value="grid">Grid</SelectItem>
                   <SelectItem value="carousel">Carousel</SelectItem>
+                  <SelectItem value="list">List</SelectItem>
                   <SelectItem value="slider">Slider</SelectItem>
                 </SelectContent>
               </Select>
@@ -944,6 +937,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
                   <SelectItem value="grid">Grid</SelectItem>
                   <SelectItem value="carousel">Carousel</SelectItem>
                   <SelectItem value="list">List</SelectItem>
+                  <SelectItem value="slider">Slider</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1022,7 +1016,6 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
                 {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
                   <div key={day} className="flex items-center space-x-2">
                     <Switch
-                      id={`day-${day}`}
                       checked={(content.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']).includes(day)}
                       onCheckedChange={(checked) => {
                         const days = [...(content.availableDays || [])];
@@ -1035,7 +1028,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
                         updateContent('availableDays', days);
                       }}
                     />
-                    <Label htmlFor={`day-${day}`} className="text-sm">{day}</Label>
+                    <Label className="text-sm">{day}</Label>
                   </div>
                 ))}
               </div>
@@ -1351,14 +1344,14 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
               <div>
                 <Label>Background Color</Label>
                 <ColorPicker
-                  value={block.styles?.container?.backgroundColor || ''}
+                  value={styles.container?.backgroundColor || ''}
                   onChange={(color) => handleStyleChange('container', { backgroundColor: color })}
                 />
               </div>
               <div>
                 <Label>Padding</Label>
                 <Select
-                  value={block.styles?.container?.padding || '16px'}
+                  value={styles.container?.padding || '16px'}
                   onValueChange={(value) => handleStyleChange('container', { padding: value })}
                 >
                   <SelectTrigger>
@@ -1380,14 +1373,14 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
               <div>
                 <Label>Text Color</Label>
                 <ColorPicker
-                  value={block.styles?.label?.textColor || ''}
+                  value={styles.label?.textColor || ''}
                   onChange={(color) => handleStyleChange('label', { textColor: color })}
                 />
               </div>
               <div>
                 <Label>Font Size</Label>
                 <Select
-                  value={block.styles?.label?.fontSize || 'inherit'}
+                  value={styles.label?.fontSize || 'inherit'}
                   onValueChange={(value) => handleStyleChange('label', { fontSize: value })}
                 >
                   <SelectTrigger>
@@ -1409,14 +1402,14 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
               <div>
                 <Label>Background Color</Label>
                 <ColorPicker
-                  value={block.styles?.input?.backgroundColor || ''}
+                  value={styles.input?.backgroundColor || ''}
                   onChange={(color) => handleStyleChange('input', { backgroundColor: color })}
                 />
               </div>
               <div>
                 <Label>Border Color</Label>
                 <ColorPicker
-                  value={block.styles?.input?.borderColor || ''}
+                  value={styles.input?.borderColor || ''}
                   onChange={(color) => handleStyleChange('input', { borderColor: color })}
                 />
               </div>
@@ -1429,14 +1422,14 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
               <div>
                 <Label>Background Color</Label>
                 <ColorPicker
-                  value={block.styles?.button?.backgroundColor || ''}
+                  value={styles.button?.backgroundColor || ''}
                   onChange={(color) => handleStyleChange('button', { backgroundColor: color })}
                 />
               </div>
               <div>
                 <Label>Text Color</Label>
                 <ColorPicker
-                  value={block.styles?.button?.textColor || ''}
+                  value={styles.button?.textColor || ''}
                   onChange={(color) => handleStyleChange('button', { textColor: color })}
                 />
               </div>
@@ -1586,7 +1579,7 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary }: BlockEdi
               >
                 <SelectTrigger id="gap">
                   <SelectValue placeholder="Select gap" />
-                </SelectTrigger>
+                </SelectTrigger>¯
                 <SelectContent>
                   <SelectItem value="0px">None</SelectItem>
                   <SelectItem value="8px">Small (8px)</SelectItem>
