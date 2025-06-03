@@ -1,22 +1,15 @@
-import { useEffect, useState } from "react";
+import { CategoryManager } from "@/components/settings/CategoryManager";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { QRGenerator } from "@/components/qr/QRGenerator";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-const QRCreator = () => {
+export default function Settings() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { qrid } = useParams();
   const [userName, setUserName] = useState("...");
-  const [userId, setUserId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [editQRData, setEditQRData] = useState(null);
-  
-  // Get pageId from query params if provided
-  const queryParams = new URLSearchParams(location.search);
-  const pageId = queryParams.get('pageId');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -37,19 +30,7 @@ const QRCreator = () => {
         // Session exists, get user data
         const { user } = data.session;
         if (user) {
-          setUserId(user.id);
           setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "Brand User");
-        }
-        // If editing, fetch QR code data
-        if (qrid) {
-          const { data: qr, error: qrError } = await supabase
-            .from('qr_codes')
-            .select('*')
-            .eq('id', qrid)
-            .single();
-          if (!qrError && qr) {
-            setEditQRData(qr);
-          }
         }
       } catch (error) {
         console.error("Authentication error:", error);
@@ -61,7 +42,7 @@ const QRCreator = () => {
     };
 
     checkAuth();
-  }, [navigate, qrid]);
+  }, [navigate]);
 
   if (isLoading) {
     return (
@@ -75,15 +56,19 @@ const QRCreator = () => {
 
   return (
     <DashboardLayout userType="Brand" userName={userName}>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">{qrid ? 'Edit QR Code' : 'Create QR Code'}</h1>
-        </div>
-        
-        <QRGenerator userId={userId} initialPageId={null} editQRData={editQRData} />
+      <div className="container mx-auto py-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Product Categories</CardTitle>
+            <CardDescription>
+              Manage your product categories and subcategories
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CategoryManager />
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
-};
-
-export default QRCreator;
+} 

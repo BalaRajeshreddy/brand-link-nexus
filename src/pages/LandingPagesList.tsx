@@ -1,4 +1,3 @@
-
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,19 +69,27 @@ const LandingPagesList = () => {
   };
 
   const handleDeletePage = async (id: string) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this landing page? All associated data (QR codes, page views, etc.) will be deleted and cannot be recovered."
+    );
+    if (!confirmDelete) return;
     try {
+      // Delete associated page views
+      await supabase.from('page_views').delete().eq('landing_page_id', id);
+      // Delete associated QR codes
+      await supabase.from('qr_codes').delete().eq('landing_page_id', id);
+      // You can add more deletes for other related tables if needed
+      // Finally, delete the landing page
       const { error } = await supabase
         .from('landing_pages')
         .delete()
         .eq('id', id);
-      
       if (error) throw error;
-      
       setPages(pages.filter(page => page.id !== id));
-      toast.success("Landing page deleted successfully");
+      toast.success("Landing page and all associated data deleted successfully");
     } catch (error) {
       console.error("Error deleting landing page:", error);
-      toast.error("Failed to delete landing page");
+      toast.error("Failed to delete landing page. Please remove all references or try again.");
     }
   };
 

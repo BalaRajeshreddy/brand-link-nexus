@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -20,6 +19,12 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
 import PublishedLandingPage from "./pages/PublishedLandingPage";
+import BrandProducts from "./pages/BrandProducts";
+import BrandProductDetail from "./pages/BrandProductDetail";
+import BrandSubmissions from './pages/BrandSubmissions';
+import BrandAnalytics from "./pages/BrandAnalytics";
+import BrandFiles from "./pages/BrandFiles";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +63,13 @@ const App = () => {
             <Route path="/dashboard/brand/edit-qr/:qrid" element={<QRCreator />} />
             <Route path="/dashboard/brand/landing-pages" element={<LandingPagesList />} />
             <Route path="/dashboard/brand/qr-codes" element={<QRCodesList />} />
+            <Route path="/dashboard/brand/products" element={<BrandProducts />} />
+            <Route path="/dashboard/brand/products/:id" element={<BrandProductDetail />} />
+            <Route path="/dashboard/brand/submissions" element={<BrandSubmissions />} />
+            <Route path="/dashboard/brand/analytics" element={<BrandAnalytics />} />
+            <Route path="/dashboard/brand/files" element={<BrandFiles />} />
+            <Route path="/dashboard/brand/settings" element={<Settings />} />
+            <Route path="/dashboard/brand/settings/categories" element={<Settings />} />
             
             {/* Admin Routes */}
             <Route path="/dashboard/admin" element={<AdminDashboard />} />

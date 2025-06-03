@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,20 +25,21 @@ interface LandingPageOption {
 interface QRGeneratorProps {
   userId: string;
   initialPageId?: string | null;
+  editQRData?: any;
 }
 
-export function QRGenerator({ userId, initialPageId }: QRGeneratorProps) {
-  const [url, setUrl] = useState('');
-  const [qrType, setQrType] = useState(initialPageId ? 'landing-page' : 'direct');
+export function QRGenerator({ userId, initialPageId, editQRData }: QRGeneratorProps) {
+  const [url, setUrl] = useState(editQRData?.url || '');
+  const [qrType, setQrType] = useState(editQRData?.landing_page_id ? 'landing-page' : (initialPageId ? 'landing-page' : 'direct'));
   const [landingPages, setLandingPages] = useState<LandingPageOption[]>([]);
-  const [selectedPageId, setSelectedPageId] = useState<string>(initialPageId || '');
+  const [selectedPageId, setSelectedPageId] = useState(editQRData?.landing_page_id || initialPageId || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [qrTitle, setQrTitle] = useState('');
-  const [qrDescription, setQrDescription] = useState('');
+  const [qrTitle, setQrTitle] = useState(editQRData?.title || '');
+  const [qrDescription, setQrDescription] = useState(editQRData?.description || '');
   
   const [qrCodeData, setQRCodeData] = useState({
-    url: '',
+    url: editQRData?.url || '',
     color: '#3F51B5',
     backgroundColor: '#FFFFFF',
     logo: '',
@@ -123,23 +123,46 @@ export function QRGenerator({ userId, initialPageId }: QRGeneratorProps) {
 
   const saveQRCode = async (qrImageUrl: string) => {
     setIsSaving(true);
-    
     try {
+      let brandId = null;
+      // Fetch brand_id for the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: brand } = await supabase
+          .from('brands')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (brand && brand.id) brandId = brand.id;
+      }
+      // Step 1: Insert QR code with a temporary URL
+      let tempUrl = qrCodeData.url;
       const qrData = {
         user_id: userId,
+        brand_id: brandId,
         title: qrTitle || 'My QR Code',
         description: qrDescription,
-        url: qrCodeData.url,
+        url: tempUrl,
         landing_page_id: qrType === 'landing-page' ? selectedPageId : null
       };
-      
-      const { data, error } = await supabase
+      const { data: inserted, error: insertError } = await supabase
         .from('qr_codes')
         .insert(qrData)
         .select();
-        
-      if (error) throw error;
-      
+      if (insertError) throw insertError;
+      const qrCodeId = inserted?.[0]?.id;
+      let finalUrl = tempUrl;
+      // Step 2: For landing page QR, update URL to include ?qr_id=THE_QR_CODE_ID
+      if (qrType === 'landing-page' && qrCodeId) {
+        const urlObj = new URL(tempUrl, window.location.origin);
+        urlObj.searchParams.set('qr_id', qrCodeId);
+        finalUrl = urlObj.origin + urlObj.pathname + urlObj.search;
+        // Update the QR code record with the new URL
+        await supabase
+          .from('qr_codes')
+          .update({ url: finalUrl })
+          .eq('id', qrCodeId);
+      }
       toast.success('QR Code saved successfully');
       navigate('/dashboard/brand/qr-codes');
     } catch (error) {
