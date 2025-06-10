@@ -87,6 +87,58 @@ export function RegisterForm({ userType }: RegisterFormProps) {
     }
   };
 
+  // Add this new function to update progress
+  const updateProgress = () => {
+    const newCompletedSections = sections.filter(section => checkSectionCompletion(section));
+    setCompletedSections(newCompletedSections);
+  };
+
+  // Update all the onChange handlers to call updateProgress
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    updateProgress();
+  };
+
+  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFirstName(e.target.value);
+    updateProgress();
+  };
+
+  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLastName(e.target.value);
+    updateProgress();
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    updateProgress();
+  };
+
+  const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMobile(e.target.value);
+    updateProgress();
+  };
+
+  const handleDesignationChange = (value: string) => {
+    setDesignation(value);
+    updateProgress();
+  };
+
+  const handleIndustryCategoryChange = (value: string) => {
+    setIndustryCategory(value);
+    updateProgress();
+  };
+
+  const handleNumEmployeesChange = (value: string) => {
+    setNumEmployees(value);
+    updateProgress();
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    updateProgress();
+  };
+
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
     if (checkSectionCompletion(section) && !completedSections.includes(section)) {
@@ -99,68 +151,109 @@ export function RegisterForm({ userType }: RegisterFormProps) {
     setIsLoading(true);
 
     try {
-      // Register user with Supabase
-      const { data, error } = await supabase.auth.signUp({
+      // First, create the user account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin + '/auth', // ensure redirect after verification
+          emailRedirectTo: window.location.origin + '/auth',
           data: {
             name,
             userType,
-            category,
-            firstName,
-            lastName,
-            designation: designation === 'Other' ? otherDesignation : designation,
-            mobile,
-            industryCategory: industryCategory === 'Other' ? otherIndustry : industryCategory,
-            numEmployees
+            ...(userType === 'Brand' && {
+              category,
+              firstName,
+              lastName,
+              designation: designation === 'Other' ? otherDesignation : designation,
+              mobile,
+              industryCategory: industryCategory === 'Other' ? otherIndustry : industryCategory,
+              numEmployees
+            })
           }
         }
       });
 
-      if (error) {
-        toast.error("Registration failed: " + error.message);
+      if (authError) {
+        toast.error("Registration failed: " + authError.message);
         setIsLoading(false);
         return;
       }
 
-      // Try to get user id (may be null if email verification is required)
-      const userId = data?.user?.id || data?.session?.user?.id || null;
+      if (!authData?.user?.id) {
+        toast.error("Registration failed: No user ID received");
+        setIsLoading(false);
+        return;
+      }
 
-      // Insert brand row with all fields
-      const { error: brandInsertError } = await supabase.from('brands').insert({
-        user_id: userId, // may be null, will be updated after verification
-        name,
-        email,
-        contact_first_name: firstName,
-        contact_last_name: lastName,
-        contact_email: email,
-        contact_mobile: mobile,
-        designation: designation === 'Other' ? otherDesignation : designation,
-        industry_category: industryCategory === 'Other' ? otherIndustry : industryCategory,
-        num_employees: numEmployees,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        // Profile fields (empty/default for now)
-        logo: '',
-        description: '',
-        website: '',
-        gst_number: '',
-        founded_year: '',
-        hq_location: '',
-        whatsapp_support: '',
-        social_handles: {},
-        support_email: '',
-        support_phone: '',
-        team_members: [],
-        product_categories: [],
-      });
-      if (brandInsertError) {
-        alert('Brand registration succeeded, but failed to save brand info: ' + brandInsertError.message);
+      // Wait a moment to ensure the user is created
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      if (userType === 'Brand') {
+        // Create brand profile only for brand users
+        const { error: brandInsertError } = await supabase.from('brands').insert({
+          user_id: authData.user.id,
+          name,
+          email,
+          contact_first_name: firstName,
+          contact_last_name: lastName,
+          contact_email: email,
+          contact_mobile: mobile,
+          designation: designation === 'Other' ? otherDesignation : designation,
+          industry_category: industryCategory === 'Other' ? otherIndustry : industryCategory,
+          num_employees: numEmployees,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          // Profile fields (empty/default for now)
+          logo: '',
+          description: '',
+          website: '',
+          gst_number: '',
+          founded_year: '',
+          hq_location: '',
+          whatsapp_support: '',
+          social_handles: {},
+          support_email: '',
+          support_phone: '',
+          team_members: [],
+          product_categories: [],
+        });
+
+        if (brandInsertError) {
+          console.error('Brand insert error:', brandInsertError);
+          toast.error("Failed to create brand profile. Please try again.");
+          // Attempt to delete the user account since brand creation failed
+          await supabase.auth.admin.deleteUser(authData.user.id);
+          setIsLoading(false);
+          return;
+        }
       } else {
-        alert('Brand registration and data saved successfully! Please check your email for verification.');
+        // Create user profile for regular users
+        const { error: userInsertError } = await supabase.from('users').insert({
+          id: authData.user.id,
+          email,
+          password, // Note: This should be hashed in production
+          role: 'CUSTOMER',
+          first_name: name.split(' ')[0] || '', // Split full name into first name
+          last_name: name.split(' ').slice(1).join(' ') || '', // Rest of the name as last name
+          phone: '', // Optional field
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+        if (userInsertError) {
+          console.error('User insert error:', userInsertError);
+          // Check for specific error messages
+          if (userInsertError.code === '23505' && userInsertError.message.includes('users_email_key')) {
+            toast.error("This email is already registered. Please try logging in instead.");
+          } else {
+            toast.error("Failed to create user profile. Please try again.");
+          }
+          // Attempt to delete the user account since user creation failed
+          await supabase.auth.admin.deleteUser(authData.user.id);
+          setIsLoading(false);
+          return;
+        }
       }
 
       toast.success(`Successfully registered as ${userType}. Please check your email for verification.`);
@@ -229,11 +322,11 @@ export function RegisterForm({ userType }: RegisterFormProps) {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Brand Name</Label>
-                        <Input 
-                          id="name" 
+        <Input
+          id="name"
                           placeholder="Your brand name" 
-                          value={name} 
-                          onChange={(e) => setName(e.target.value)} 
+          value={name}
+                          onChange={handleNameChange}
                           required 
                           className="transition-all focus:ring-2 focus:ring-primary"
                         />
@@ -245,7 +338,7 @@ export function RegisterForm({ userType }: RegisterFormProps) {
                             id="firstName" 
                             placeholder="First Name" 
                             value={firstName} 
-                            onChange={(e) => setFirstName(e.target.value)} 
+                            onChange={handleFirstNameChange}
                             required 
                             className="transition-all focus:ring-2 focus:ring-primary"
                           />
@@ -256,11 +349,11 @@ export function RegisterForm({ userType }: RegisterFormProps) {
                             id="lastName" 
                             placeholder="Last Name" 
                             value={lastName} 
-                            onChange={(e) => setLastName(e.target.value)} 
-                            required 
+                            onChange={handleLastNameChange}
+          required
                             className="transition-all focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
+        />
+      </div>
                       </div>
                     </div>
                   </Card>
@@ -281,14 +374,14 @@ export function RegisterForm({ userType }: RegisterFormProps) {
                 <AccordionContent>
                   <Card className="p-6">
                     <div className="space-y-4">
-                      <div className="space-y-2">
+      <div className="space-y-2">
                         <Label htmlFor="email">Official Email</Label>
-                        <Input 
-                          id="email" 
-                          placeholder="name@example.com" 
-                          type="email" 
-                          value={email} 
-                          onChange={(e) => setEmail(e.target.value)} 
+        <Input
+          id="email"
+          placeholder="name@example.com"
+          type="email"
+          value={email}
+                          onChange={handleEmailChange}
                           required 
                           className="transition-all focus:ring-2 focus:ring-primary"
                         />
@@ -300,11 +393,11 @@ export function RegisterForm({ userType }: RegisterFormProps) {
                           placeholder="Mobile Number" 
                           type="tel" 
                           value={mobile} 
-                          onChange={(e) => setMobile(e.target.value)} 
-                          required 
+                          onChange={handleMobileChange}
+          required
                           className="transition-all focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
+        />
+      </div>
                     </div>
                   </Card>
                 </AccordionContent>
@@ -326,7 +419,7 @@ export function RegisterForm({ userType }: RegisterFormProps) {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="designation">Designation</Label>
-                        <Select value={designation} onValueChange={setDesignation} required>
+                        <Select value={designation} onValueChange={handleDesignationChange} required>
                           <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary">
                             <SelectValue placeholder="Select designation" />
                           </SelectTrigger>
@@ -346,18 +439,18 @@ export function RegisterForm({ userType }: RegisterFormProps) {
                           />
                         )}
                       </div>
-                      <div className="space-y-2">
+        <div className="space-y-2">
                         <Label htmlFor="industryCategory">Industry Category</Label>
-                        <Select value={industryCategory} onValueChange={setIndustryCategory} required>
+                        <Select value={industryCategory} onValueChange={handleIndustryCategoryChange} required>
                           <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary">
                             <SelectValue placeholder="Select industry" />
-                          </SelectTrigger>
-                          <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
                             {industryCategories.map((cat) => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
                         {industryCategory === 'Other' && (
                           <Input 
                             placeholder="Please specify" 
@@ -370,7 +463,7 @@ export function RegisterForm({ userType }: RegisterFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="numEmployees">Number of Employees</Label>
-                        <Select value={numEmployees} onValueChange={setNumEmployees} required>
+                        <Select value={numEmployees} onValueChange={handleNumEmployeesChange} required>
                           <SelectTrigger className="transition-all focus:ring-2 focus:ring-primary">
                             <SelectValue placeholder="Select number of employees" />
                           </SelectTrigger>
@@ -406,7 +499,7 @@ export function RegisterForm({ userType }: RegisterFormProps) {
                         id="name" 
                         placeholder="John Doe" 
                         value={name} 
-                        onChange={(e) => setName(e.target.value)} 
+                        onChange={handleNameChange}
                         required 
                         className="transition-all focus:ring-2 focus:ring-primary"
                       />
@@ -418,12 +511,12 @@ export function RegisterForm({ userType }: RegisterFormProps) {
                         placeholder="name@example.com" 
                         type="email" 
                         value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
+                        onChange={handleEmailChange}
                         required 
                         className="transition-all focus:ring-2 focus:ring-primary"
                       />
                     </div>
-                  </div>
+        </div>
                 </Card>
               </AccordionContent>
             </AccordionItem>
@@ -443,21 +536,21 @@ export function RegisterForm({ userType }: RegisterFormProps) {
             <AccordionContent>
               <Card className="p-6">
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input 
-                      id="password" 
-                      type="password" 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      required 
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+                      onChange={handlePasswordChange}
+          required
                       className="transition-all focus:ring-2 focus:ring-primary"
-                    />
+        />
                     <p className="text-sm text-muted-foreground">
                       Password must be at least 8 characters long
                     </p>
                   </div>
-                </div>
+      </div>
               </Card>
             </AccordionContent>
           </AccordionItem>
@@ -477,8 +570,8 @@ export function RegisterForm({ userType }: RegisterFormProps) {
           ) : (
             `Register as ${userType}`
           )}
-        </Button>
-      </form>
+      </Button>
+    </form>
     </div>
   );
 }

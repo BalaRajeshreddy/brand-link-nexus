@@ -228,4 +228,34 @@ CREATE TRIGGER update_reviews_updated_at
 CREATE TRIGGER update_files_updated_at
     BEFORE UPDATE ON files
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column(); 
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Enable RLS on qr_codes and landing_pages tables
+ALTER TABLE qr_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE landing_pages ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for qr_codes
+CREATE POLICY "Enable read access for all users" ON qr_codes
+    FOR SELECT USING (true);
+
+CREATE POLICY "Enable insert for authenticated users" ON qr_codes
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable update for authenticated users" ON qr_codes
+    FOR UPDATE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable delete for authenticated users" ON qr_codes
+    FOR DELETE USING (auth.role() = 'authenticated');
+
+-- Create policies for landing_pages
+CREATE POLICY "Enable read access for all users" ON landing_pages
+    FOR SELECT USING (true);
+
+CREATE POLICY "Enable insert for authenticated users" ON landing_pages
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable update for authenticated users" ON landing_pages
+    FOR UPDATE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Enable delete for authenticated users" ON landing_pages
+    FOR DELETE USING (auth.role() = 'authenticated'); 

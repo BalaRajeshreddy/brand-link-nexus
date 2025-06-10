@@ -20,8 +20,7 @@ const BrandProducts = () => {
     category: '',
     subcategory: '',
     price: '',
-    ecommerce_links: [],
-    ingredients: '',
+    ingredients: [],
     materials: '',
     usage_instructions: '',
     usage_video: '',
@@ -38,6 +37,9 @@ const BrandProducts = () => {
   const [brandId, setBrandId] = useState(null);
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
+  const [nutritionalInfo, setNutritionalInfo] = useState([]);
+  const [ecommerceLinks, setEcommerceLinks] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     async function fetchProducts() {
@@ -95,7 +97,6 @@ const BrandProducts = () => {
     e.preventDefault();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    // Get the brand for this user (should only be one row, use .single())
     const { data: brand, error: brandError } = await supabase
       .from('brands')
       .select('id')
@@ -109,14 +110,22 @@ const BrandProducts = () => {
       ...form,
       price: form.price ? parseFloat(form.price) : null,
       brand_id: brand.id,
+      category: form.category,
+      subcategory: form.subcategory,
+      nutritional_info: JSON.stringify(nutritionalInfo),
+      ecommerce_links: JSON.stringify(ecommerceLinks),
+      reviews: JSON.stringify(reviews),
     });
     if (!error) {
       setShowForm(false);
       setForm({
         name: '', description: '', image: '', images: [], category: '', subcategory: '', price: '',
-        ecommerce_links: [], ingredients: '', materials: '', usage_instructions: '', usage_video: '',
+        ingredients: [], materials: '', usage_instructions: '', usage_video: '',
         shelf_life: '', manufacturing_details: '', sustainability: '', recycling: '', certifications: [], faqs: [],
       });
+      setNutritionalInfo([]);
+      setEcommerceLinks([]);
+      setReviews([]);
     } else {
       alert('Error saving product');
     }
@@ -306,10 +315,6 @@ const BrandProducts = () => {
               <ProductImageInput value={form.image} onChange={img => setForm(prev => ({ ...prev, image: img }))} brandId={brandId} />
             </div>
             <div className="md:col-span-2">
-              <label className="block font-medium">E-commerce Purchase Links (comma separated)</label>
-              <input name="ecommerce_links" value={form.ecommerce_links} onChange={e => setForm(prev => ({ ...prev, ecommerce_links: e.target.value.split(',').map(s => s.trim()) }))} className="w-full border rounded p-2" />
-            </div>
-            <div className="md:col-span-2">
               <label className="block font-medium">Ingredients</label>
               <IngredientsInput value={form.ingredients} onChange={ings => setForm(prev => ({ ...prev, ingredients: ings }))} />
             </div>
@@ -342,14 +347,70 @@ const BrandProducts = () => {
               <input name="recycling" value={form.recycling} onChange={handleInput} className="w-full border rounded p-2" />
             </div>
             <div className="md:col-span-2">
-              <label className="block font-medium">Certifications (JSON or comma separated)</label>
-              <textarea name="certifications" value={Array.isArray(form.certifications) ? form.certifications.join(', ') : form.certifications} onChange={e => setForm(prev => ({ ...prev, certifications: e.target.value.split(',').map(s => s.trim()) }))} className="w-full border rounded p-2" rows={2} />
+              <hr className="my-4" />
+              <h2 className="text-lg font-semibold mb-2">Nutritional Info (for food brands)</h2>
+              <table className="w-full mb-2">
+                <thead>
+                  <tr>
+                    <th className="text-left">Nutrient</th>
+                    <th className="text-left">Value</th>
+                    <th className="text-left">Unit</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nutritionalInfo.map((row, idx) => (
+                    <tr key={idx}>
+                      <td><input value={row.nutrient || ''} onChange={e => { const updated = [...nutritionalInfo]; updated[idx].nutrient = e.target.value; setNutritionalInfo(updated); }} className="border rounded p-1" /></td>
+                      <td><input value={row.value || ''} onChange={e => { const updated = [...nutritionalInfo]; updated[idx].value = e.target.value; setNutritionalInfo(updated); }} className="border rounded p-1" /></td>
+                      <td><input value={row.unit || ''} onChange={e => { const updated = [...nutritionalInfo]; updated[idx].unit = e.target.value; setNutritionalInfo(updated); }} className="border rounded p-1" /></td>
+                      <td><button type="button" onClick={() => setNutritionalInfo(nutritionalInfo.filter((_, i) => i !== idx))} className="text-red-600">Remove</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <button type="button" onClick={() => setNutritionalInfo([...nutritionalInfo, { nutrient: '', value: '', unit: '' }])} className="text-blue-600">Add</button>
             </div>
             <div className="md:col-span-2">
-              <label className="block font-medium">FAQ Section (JSON or comma separated Q&A)</label>
-              <textarea name="faqs" value={Array.isArray(form.faqs) ? form.faqs.join(', ') : form.faqs} onChange={e => setForm(prev => ({ ...prev, faqs: e.target.value.split(',').map(s => s.trim()) }))} className="w-full border rounded p-2" rows={2} />
+              <hr className="my-4" />
+              <h2 className="text-lg font-semibold mb-2">E-commerce Links</h2>
+              {ecommerceLinks.map((link, idx) => (
+                <div key={idx} className="flex gap-2 mb-2">
+                  <input placeholder="Platform (Amazon, Website, etc.)" value={link.platform || ''} onChange={e => { const updated = [...ecommerceLinks]; updated[idx].platform = e.target.value; setEcommerceLinks(updated); }} className="border rounded p-1 flex-1" />
+                  <input placeholder="Link" value={link.url || ''} onChange={e => { const updated = [...ecommerceLinks]; updated[idx].url = e.target.value; setEcommerceLinks(updated); }} className="border rounded p-1 flex-1" />
+                  <button type="button" onClick={() => setEcommerceLinks(ecommerceLinks.filter((_, i) => i !== idx))} className="text-red-600">Remove</button>
+                </div>
+              ))}
+              <button type="button" onClick={() => setEcommerceLinks([...ecommerceLinks, { platform: '', url: '' }])} className="text-blue-600">Add</button>
             </div>
-            <div className="md:col-span-2 flex gap-2">
+            <div className="md:col-span-2">
+              <hr className="my-4" />
+              <h2 className="text-lg font-semibold mb-2">Reviews & Ratings</h2>
+              {reviews.map((review, idx) => (
+                <div key={idx} className="flex gap-2 mb-2 items-center">
+                  <input placeholder="Reviewer Name" value={review.name || ''} onChange={e => { const updated = [...reviews]; updated[idx].name = e.target.value; setReviews(updated); }} className="border rounded p-1" />
+                  <input placeholder="Review" value={review.text || ''} onChange={e => { const updated = [...reviews]; updated[idx].text = e.target.value; setReviews(updated); }} className="border rounded p-1 flex-1" />
+                  <input type="number" min={1} max={5} placeholder="Rating" value={review.rating || ''} onChange={e => { const updated = [...reviews]; updated[idx].rating = e.target.value; setReviews(updated); }} className="border rounded p-1 w-16" />
+                  <button type="button" onClick={() => setReviews(reviews.filter((_, i) => i !== idx))} className="text-red-600">Remove</button>
+                </div>
+              ))}
+              <button type="button" onClick={() => setReviews([...reviews, { name: '', text: '', rating: 5 }])} className="text-blue-600">Add</button>
+            </div>
+            <div className="md:col-span-2">
+              <hr className="my-4" />
+              <h2 className="text-lg font-semibold mb-2">Additional Information</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block font-medium">Certifications (JSON or comma separated)</label>
+                  <textarea name="certifications" value={Array.isArray(form.certifications) ? form.certifications.join(', ') : form.certifications} onChange={e => setForm(prev => ({ ...prev, certifications: e.target.value.split(',').map(s => s.trim()) }))} className="w-full border rounded p-2" rows={2} />
+                </div>
+                <div>
+                  <label className="block font-medium">FAQ Section (JSON or comma separated Q&A)</label>
+                  <textarea name="faqs" value={Array.isArray(form.faqs) ? form.faqs.join(', ') : form.faqs} onChange={e => setForm(prev => ({ ...prev, faqs: e.target.value.split(',').map(s => s.trim()) }))} className="w-full border rounded p-2" rows={2} />
+                </div>
+              </div>
+            </div>
+            <div className="md:col-span-2 flex gap-2 mt-4">
               <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
               <button type="button" className="bg-gray-300 px-4 py-2 rounded" onClick={() => setShowForm(false)}>Cancel</button>
             </div>

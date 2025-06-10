@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Block, BlockType } from '@/types/block';
 import { BlockEditorMain } from '@/components/page-builder/block-renderers/BlockEditorMain';
 import { toast } from "sonner";
+import { LandingPageWrapper } from '@/components/landing/LandingPageWrapper';
 
 declare global {
   interface Window {
@@ -30,16 +31,20 @@ const PublishedLandingPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const analyticsRecorded = useRef(false);
-  const [searchParams] = typeof window !== 'undefined' ? [new URLSearchParams(window.location.search)] : [null];
-  const qrId = searchParams?.get('qr_id');
+  const [searchParams] = useSearchParams();
+  const qrId = searchParams.get('qr_id');
+
+  console.log('[PublishedLandingPage] Component mounted with:', { slug, qrId });
 
   useEffect(() => {
+    console.log('[PublishedLandingPage] Starting page load');
     const fetchPageContent = async () => {
       console.log('Fetching page with slug:', slug);
       setIsLoading(true);
       setError(null);
 
       try {
+        console.log('[PublishedLandingPage] Fetching page data for slug:', slug);
         // First, get the landing page by slug
         const { data: pageData, error: pageError } = await supabase
           .from('landing_pages')
@@ -48,7 +53,7 @@ const PublishedLandingPage = () => {
           .single();
 
         if (pageError) {
-          console.error('Error fetching landing page:', pageError);
+          console.error('[PublishedLandingPage] Page fetch error:', pageError);
           setError(`Page not found: ${slug}`);
           setIsLoading(false);
           return;
@@ -61,29 +66,12 @@ const PublishedLandingPage = () => {
           return;
         }
 
-        console.log('Found landing page:', pageData);
+        console.log('[PublishedLandingPage] Page data loaded:', pageData);
         setPageData(pageData);
 
         // Expose brand_id and landing_page_id on window for analytics tracking
         window.BRAND_ID = pageData.brand_id || pageData.brandId;
         window.LANDING_PAGE_ID = pageData.id;
-
-        // --- Analytics: Record page view and QR scan only once per load ---
-        if (!analyticsRecorded.current && pageData.id && (pageData.brand_id || pageData.brandId)) {
-          analyticsRecorded.current = true;
-          await supabase.from('page_views').insert({
-            brand_id: pageData.brand_id || pageData.brandId,
-            landing_page_id: pageData.id
-          });
-          // Check for qr_id param
-          if (qrId) {
-            await supabase.from('qr_scans').insert({
-              brand_id: pageData.brand_id || pageData.brandId,
-              landing_page_id: pageData.id,
-              qr_code_id: qrId
-            });
-          }
-        }
 
         // Then get all components for this page
         const { data: components, error: componentsError } = await supabase
@@ -117,7 +105,7 @@ const PublishedLandingPage = () => {
         }
 
       } catch (err) {
-        console.error('Unexpected error:', err);
+        console.error('[PublishedLandingPage] Unexpected error:', err);
         setError("An unexpected error occurred");
       } finally {
         setIsLoading(false);
@@ -128,11 +116,13 @@ const PublishedLandingPage = () => {
       console.log('Starting fetch for slug:', slug);
       fetchPageContent();
     } else {
-      console.error('No slug provided in URL');
+      console.error('[PublishedLandingPage] No slug provided');
       setError("Invalid page URL");
       setIsLoading(false);
     }
   }, [slug, qrId]);
+
+  console.log('[PublishedLandingPage] Current state:', { isLoading, error, hasPageData: !!pageData });
 
   if (isLoading) {
     return (
@@ -154,38 +144,41 @@ const PublishedLandingPage = () => {
     );
   }
 
+  console.log('[PublishedLandingPage] Rendering page content');
   return (
-    <div 
-      className="min-h-screen"
-      style={{
-        backgroundColor: pageData?.background_color || '#FFFFFF',
-        fontFamily: pageData?.font_family || 'Inter, sans-serif'
-      }}
-    >
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {blocks.length === 0 ? (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-semibold text-gray-700">This page has no content</h2>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {blocks.map((block) => (
-              <div key={block.id} className="bg-white rounded-lg shadow p-4">
-                <BlockEditorMain
-                  blockType={block.type as BlockType | string}
-                  content={
-                    block.type === 'contact form'
-                      ? { ...block.content, brandId: pageData?.brand_id || pageData?.brandId }
-                      : block.content
-                  }
-                  styles={block.styles}
-                />
-              </div>
-            ))}
-          </div>
-        )}
+    <LandingPageWrapper>
+      <div 
+        className="min-h-screen"
+        style={{
+          backgroundColor: pageData?.background_color || '#FFFFFF',
+          fontFamily: pageData?.font_family || 'Inter, sans-serif'
+        }}
+      >
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          {blocks.length === 0 ? (
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-semibold text-gray-700">This page has no content</h2>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {blocks.map((block) => (
+                <div key={block.id} className="bg-white rounded-lg shadow p-4">
+                  <BlockEditorMain
+                    blockType={block.type as BlockType | string}
+                    content={
+                      block.type === 'contact form'
+                        ? { ...block.content, brandId: pageData?.brand_id || pageData?.brandId }
+                        : block.content
+                    }
+                    styles={block.styles}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </LandingPageWrapper>
   );
 };
 

@@ -376,7 +376,7 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
     );
   }
 
-  return (
+        return (
     <div className="max-w-4xl mx-auto">
       {loading ? (
         <div className="flex items-center justify-center h-96">
@@ -437,18 +437,18 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
                 </AccordionTrigger>
                 <AccordionContent>
                   <Card className="p-6">
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label>Brand Name</Label>
                           <Input
-                            name="basicInfo.brandName"
-                            value={profile.basicInfo.brandName}
-                            onChange={handleChange}
+                  name="basicInfo.brandName"
+                  value={profile.basicInfo.brandName}
+                  onChange={handleChange}
                             placeholder="Enter brand name"
                             className="transition-all focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
+                />
+              </div>
                         <div className="space-y-2">
                           <Label>Logo</Label>
                           <FileSelector
@@ -460,19 +460,19 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
                           {profile.logo && (
                             <img src={profile.logo} alt="Logo" className="mt-2 h-16 rounded shadow" />
                           )}
-                        </div>
-                      </div>
+              </div>
+              </div>
                       <div className="space-y-2">
                         <Label>Description</Label>
                         <Textarea
-                          name="basicInfo.description"
-                          value={profile.basicInfo.description}
-                          onChange={handleChange}
+                  name="basicInfo.description"
+                  value={profile.basicInfo.description}
+                  onChange={handleChange}
                           placeholder="Describe your brand..."
-                          rows={4}
+                  rows={4}
                           className="transition-all focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
+                />
+              </div>
                       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label>Website</Label>
@@ -483,8 +483,8 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
                             onChange={e => setProfile(prev => ({ ...prev, website: e.target.value }))}
                             placeholder="https://yourbrand.com"
                             className="transition-all focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
+                />
+              </div>
                         <div className="space-y-2">
                           <Label>GST Number</Label>
                           <Input
@@ -494,10 +494,10 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
                             onChange={e => setProfile(prev => ({ ...prev, gstNumber: e.target.value }))}
                             placeholder="Enter GST number"
                             className="transition-all focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
-                      </div>
-                    </div>
+                />
+              </div>
+            </div>
+          </div>
                   </Card>
                 </AccordionContent>
               </AccordionItem>
@@ -515,15 +515,15 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
                 </AccordionTrigger>
                 <AccordionContent>
                   <Card className="p-6">
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label>Official Email</Label>
                           <Input
-                            type="email"
-                            name="contactInfo.email"
-                            value={profile.contactInfo.email}
-                            onChange={handleChange}
+                  type="email"
+                  name="contactInfo.email"
+                  value={profile.contactInfo.email}
+                  onChange={handleChange}
                             placeholder="Enter official email"
                             className="transition-all focus:ring-2 focus:ring-primary"
                           />
@@ -537,15 +537,15 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
                             onChange={e => setProfile(prev => ({ ...prev, supportEmail: e.target.value }))}
                             placeholder="Enter support email"
                             className="transition-all focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
+                />
+              </div>
                         <div className="space-y-2">
                           <Label>Phone Number</Label>
                           <Input
-                            type="tel"
-                            name="contactInfo.phone"
-                            value={profile.contactInfo.phone}
-                            onChange={handleChange}
+                  type="tel"
+                  name="contactInfo.phone"
+                  value={profile.contactInfo.phone}
+                  onChange={handleChange}
                             placeholder="Enter phone number"
                             className="transition-all focus:ring-2 focus:ring-primary"
                           />
@@ -559,21 +559,21 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
                             onChange={e => setProfile(prev => ({ ...prev, supportPhone: e.target.value }))}
                             placeholder="Enter support phone number"
                             className="transition-all focus:ring-2 focus:ring-primary"
-                          />
-                        </div>
+                />
+              </div>
                       </div>
                       <div className="space-y-2">
                         <Label>Physical Address</Label>
                         <Textarea
-                          name="contactInfo.address"
-                          value={profile.contactInfo.address}
-                          onChange={handleChange}
+                  name="contactInfo.address"
+                  value={profile.contactInfo.address}
+                  onChange={handleChange}
                           placeholder="Enter address"
-                          rows={3}
+                  rows={3}
                           className="transition-all focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
+                />
+              </div>
+            </div>
                   </Card>
                 </AccordionContent>
               </AccordionItem>
@@ -587,56 +587,56 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
                     {completedSections.includes('social-links') && (
                       <CheckCircle2 className="h-5 w-5 text-green-500" />
                     )}
-                  </div>
+          </div>
                 </AccordionTrigger>
                 <AccordionContent>
                   <Card className="p-6">
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label>Website</Label>
                         <Input
-                          type="url"
-                          name="socialLinks.website"
-                          value={profile.socialLinks.website}
-                          onChange={handleChange}
+                  type="url"
+                  name="socialLinks.website"
+                  value={profile.socialLinks.website}
+                  onChange={handleChange}
                           placeholder="https://yourbrand.com"
                           className="transition-all focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
+                />
+              </div>
                       <div className="space-y-2">
                         <Label>Facebook</Label>
                         <Input
-                          type="url"
-                          name="socialLinks.facebook"
-                          value={profile.socialLinks.facebook}
-                          onChange={handleChange}
+                  type="url"
+                  name="socialLinks.facebook"
+                  value={profile.socialLinks.facebook}
+                  onChange={handleChange}
                           placeholder="Facebook URL"
                           className="transition-all focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
+                />
+              </div>
                       <div className="space-y-2">
                         <Label>Instagram</Label>
                         <Input
-                          type="url"
-                          name="socialLinks.instagram"
-                          value={profile.socialLinks.instagram}
-                          onChange={handleChange}
+                  type="url"
+                  name="socialLinks.instagram"
+                  value={profile.socialLinks.instagram}
+                  onChange={handleChange}
                           placeholder="Instagram URL"
                           className="transition-all focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
+                />
+              </div>
                       <div className="space-y-2">
                         <Label>LinkedIn</Label>
                         <Input
-                          type="url"
-                          name="socialLinks.linkedin"
-                          value={profile.socialLinks.linkedin}
-                          onChange={handleChange}
+                  type="url"
+                  name="socialLinks.linkedin"
+                  value={profile.socialLinks.linkedin}
+                  onChange={handleChange}
                           placeholder="LinkedIn URL"
                           className="transition-all focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
+                />
+              </div>
+            </div>
                   </Card>
                 </AccordionContent>
               </AccordionItem>
@@ -658,25 +658,25 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
                       <div className="space-y-2">
                         <Label>Founded Year</Label>
                         <Input
-                          type="number"
+                      type="number"
                           name="foundedYear"
                           value={profile.foundedYear || ''}
                           onChange={e => setProfile(prev => ({ ...prev, foundedYear: e.target.value }))}
                           placeholder="e.g. 2010"
                           className="transition-all focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
+                    />
+                  </div>
                       <div className="space-y-2">
                         <Label>HQ Location</Label>
                         <Input
-                          type="text"
+                      type="text"
                           name="hqLocation"
                           value={profile.hqLocation || ''}
                           onChange={e => setProfile(prev => ({ ...prev, hqLocation: e.target.value }))}
                           placeholder="Enter headquarters location"
                           className="transition-all focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
+                          />
+                        </div>
                     </div>
                   </Card>
                 </AccordionContent>
@@ -688,12 +688,12 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
                 type="submit" 
                 size="lg"
                 disabled={completedSections.length !== sections.length}
-              >
-                Save Changes
+            >
+              Save Changes
               </Button>
-            </div>
-          </form>
-        </div>
+          </div>
+        </form>
+      </div>
       )}
     </div>
   );
