@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,16 +21,46 @@ export function LoginForm({ userType }: LoginFormProps) {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // First authenticate with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) {
-        throw error;
+      if (authError) {
+        throw authError;
       }
 
-      toast.success(`Successfully logged in`);
+      if (!authData.user) {
+        throw new Error('Authentication failed');
+      }
+
+      // Validate user exists in the appropriate table based on userType
+      if (userType.toLowerCase() === 'brand') {
+        const { data: brandData, error: brandError } = await supabase
+          .from('brands')
+          .select('id')
+          .eq('email', email)
+          .single();
+
+        if (brandError || !brandData) {
+          await supabase.auth.signOut();
+          throw new Error('No brand account found with this email');
+        }
+      } else if (userType.toLowerCase() === 'customer') {
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', email)
+          .single();
+
+        if (userError || !userData) {
+          await supabase.auth.signOut();
+          throw new Error('No user account found with this email');
+        }
+      }
+
+      toast.success(`Successfully logged in as ${userType}`);
       
       // Redirect based on user type
       const redirectPath = userType === 'Brand' 
@@ -43,7 +72,7 @@ export function LoginForm({ userType }: LoginFormProps) {
       navigate(redirectPath);
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Login failed. Please check your credentials.");
+      toast.error(error instanceof Error ? error.message : "Login failed. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }

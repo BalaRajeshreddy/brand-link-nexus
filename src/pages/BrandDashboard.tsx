@@ -88,26 +88,48 @@ const BrandDashboard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "Brand User");
+      
       // Get brand id
-      const { data: brand } = await supabase
+      const { data: brand, error: brandError } = await supabase
         .from('brands')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
-      if (brand && brand.id) {
-        setBrandId(brand.id);
+
+      if (brandError) {
+        console.error('Error fetching brand:', brandError);
+        toast.error('Failed to load brand data');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!brand) {
+        toast.error('No brand found for this user');
+        setIsLoading(false);
+        return;
+      }
+
+      setBrandId(brand.id);
+
+      try {
         // Fetch landing pages for this brand
-        const { data: landingPages } = await supabase
+        const { data: landingPages, error: landingError } = await supabase
           .from('landing_pages')
           .select('id, title, slug, created_at')
           .eq('brand_id', brand.id)
           .order('created_at', { ascending: false });
+
+        if (landingError) throw landingError;
+
         // Fetch recent QR codes for this brand
-        const { data: recentQRCodes } = await supabase
+        const { data: recentQRCodes, error: qrError } = await supabase
           .from('qr_codes')
           .select('id, title, url, created_at')
           .eq('brand_id', brand.id)
           .order('created_at', { ascending: false });
+
+        if (qrError) throw qrError;
+
         // Fetch total analytics counts
         const [{ count: totalViews }, { count: totalQRScans }, { count: totalClicks }, { count: totalSubmissions }] = await Promise.all([
           supabase.from('page_views').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
@@ -115,6 +137,7 @@ const BrandDashboard = () => {
           supabase.from('page_clicks').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
           supabase.from('contact_submissions').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
         ]);
+
         setAnalytics(prev => ({
           ...prev,
           totalViews: totalViews || 0,
@@ -124,8 +147,12 @@ const BrandDashboard = () => {
           landingPages: landingPages || [],
           recentQRCodes: recentQRCodes || []
         }));
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+        toast.error('Failed to load analytics data');
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
     fetchBrandAndAnalytics();
   }, []);

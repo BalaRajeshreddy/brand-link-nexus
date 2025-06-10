@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -26,10 +26,16 @@ interface QRCode {
     title: string;
     slug: string;
   } | null;
+  brand?: {
+    name: string;
+    logo: string;
+  };
 }
 
 const QRCodesList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isUserView = location.pathname.startsWith('/dashboard/user');
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState("...");
   const [qrCodes, setQRCodes] = useState<QRCode[]>([]);
@@ -53,25 +59,60 @@ const QRCodesList = () => {
         // Session exists, get user data
         const { user } = data.session;
         if (user) {
-          setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "Brand User");
+          setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "User");
           
-          // Fetch QR codes for the user with landing page details
-          const { data: codes, error: fetchError } = await supabase
-            .from('qr_codes')
-            .select(`
-              *,
-              landing_page:landing_page_id (
-                title,
-                slug
-              )
-            `)
-            .order('created_at', { ascending: false });
+          if (isUserView) {
+            // For users, fetch all QR codes with brand info
+            const { data: codes, error: fetchError } = await supabase
+              .from('qr_codes')
+              .select(`
+                *,
+                landing_page:landing_page_id (
+                  title,
+                  slug
+                ),
+                brand:brand_id (
+                  name,
+                  logo
+                )
+              `)
+              .order('created_at', { ascending: false });
+              
+            if (fetchError) {
+              throw fetchError;
+            }
             
-          if (fetchError) {
-            throw fetchError;
+            setQRCodes(codes || []);
+          } else {
+            // For brands, fetch only their QR codes
+            const { data: brand } = await supabase
+              .from('brands')
+              .select('id')
+              .eq('user_id', user.id)
+              .single();
+
+            if (!brand) {
+              throw new Error('No brand found for this user');
+            }
+
+            const { data: codes, error: fetchError } = await supabase
+              .from('qr_codes')
+              .select(`
+                *,
+                landing_page:landing_page_id (
+                  title,
+                  slug
+                )
+              `)
+              .eq('brand_id', brand.id)
+              .order('created_at', { ascending: false });
+              
+            if (fetchError) {
+              throw fetchError;
+            }
+            
+            setQRCodes(codes || []);
           }
-          
-          setQRCodes(codes || []);
         }
       } catch (error) {
         console.error("Error:", error);
@@ -82,22 +123,35 @@ const QRCodesList = () => {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, isUserView]);
 
   const handleDelete = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('qr_codes')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      
-      setQRCodes(prevCodes => prevCodes.filter(code => code.id !== id));
-      toast.success("QR code deleted successfully");
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast.error("Failed to delete QR code");
+    if (!isUserView) { // Only brands can delete QR codes
+      const confirmDelete = window.confirm(
+        "Are you sure you want to delete this QR code? This action cannot be undone."
+      );
+      if (!confirmDelete) return;
+
+      try {
+        const { error } = await supabase
+          .from('qr_codes')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
+        setQRCodes(qrCodes.filter(qr => qr.id !== id));
+        toast.success("QR code deleted successfully");
+      } catch (error) {
+        console.error("Error deleting QR code:", error);
+        toast.error("Failed to delete QR code");
+      }
+    }
+  };
+
+  const handleEdit = (id: string) => {
+    if (!isUserView) { // Only brands can edit QR codes
+      navigate(`/dashboard/brand/edit-qr/${id}`);
     }
   };
 
@@ -147,71 +201,72 @@ const QRCodesList = () => {
   }
 
   return (
-    <DashboardLayout userType="Brand" userName={userName}>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">QR Codes</h1>
-          <Link to="/dashboard/brand/create-qr">
-            <Button className="gap-2">
-              <QrCode size={16} />
+    <DashboardLayout userType={isUserView ? "User" : "Brand"} userName={userName}>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">
+            {isUserView ? "Browse QR Codes" : "Your QR Codes"}
+          </h1>
+          {!isUserView && (
+            <Button onClick={() => navigate('/dashboard/brand/create-qr')}>
               Create New QR Code
             </Button>
-          </Link>
+          )}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Your QR Codes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {qrCodes.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Target</TableHead>
-                    <TableHead>Scans</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {qrCodes.map((qr) => (
-                    <TableRow key={qr.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
-                            <QrCode size={20} />
-                          </div>
-                          <div>
-                            <p>{qr.title}</p>
-                            {qr.description && (
-                              <p className="text-xs text-muted-foreground">{qr.description}</p>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {qr.landing_page ? (
-                          <div>
-                            <p className="text-sm">{qr.landing_page.title}</p>
-                            <div className="flex items-center mt-1">
-                              <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                                /{qr.landing_page.slug}
-                              </code>
-                              <a 
-                                href={qr.url} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="text-primary hover:text-primary/80 ml-2"
-                              >
-                                <ExternalLink size={14} />
-                              </a>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center">
-                            <span className="text-sm truncate max-w-[200px]">{qr.url}</span>
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : qrCodes.length === 0 ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <QrCode className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No QR codes</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {isUserView 
+                    ? "No QR codes available to browse at the moment."
+                    : "Get started by creating a new QR code."}
+                </p>
+                {!isUserView && (
+                  <div className="mt-6">
+                    <Button onClick={() => navigate('/dashboard/brand/create-qr')}>
+                      Create QR Code
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>URL/Landing Page</TableHead>
+                  {isUserView && <TableHead>Brand</TableHead>}
+                  <TableHead>Views</TableHead>
+                  <TableHead>Created</TableHead>
+                  {!isUserView && <TableHead>Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {qrCodes.map((qr) => (
+                  <TableRow key={qr.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <QrCode className="h-4 w-4 text-gray-500" />
+                        <span>{qr.title}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {qr.landing_page ? (
+                        <div>
+                          <p className="text-sm">{qr.landing_page.title}</p>
+                          <div className="flex items-center mt-1">
+                            <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                              /{qr.landing_page.slug}
+                            </code>
                             <a 
                               href={qr.url} 
                               target="_blank" 
@@ -221,54 +276,76 @@ const QRCodesList = () => {
                               <ExternalLink size={14} />
                             </a>
                           </div>
-                        )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center">
+                          <span className="text-sm truncate max-w-[200px]">{qr.url}</span>
+                          <a 
+                            href={qr.url} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="text-primary hover:text-primary/80 ml-2"
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+                        </div>
+                      )}
+                    </TableCell>
+                    {isUserView && (
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {qr.brand?.logo ? (
+                            <img 
+                              src={qr.brand.logo} 
+                              alt={qr.brand.name}
+                              className="w-6 h-6 rounded-full"
+                            />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-xs font-medium">
+                                {qr.brand?.name?.charAt(0) || '?'}
+                              </span>
+                            </div>
+                          )}
+                          <span className="text-sm">{qr.brand?.name}</span>
+                        </div>
                       </TableCell>
-                      <TableCell>{qr.views || 0}</TableCell>
-                      <TableCell>{new Date(qr.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                    )}
+                    <TableCell>{qr.views || 0}</TableCell>
+                    <TableCell>{new Date(qr.created_at).toLocaleDateString()}</TableCell>
+                    {!isUserView && (
+                      <TableCell>
+                        <div className="flex items-center gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="Download"
-                            onClick={() => handleDownload(qr)}
+                            onClick={() => handleEdit(qr.id)}
                           >
-                            <Download size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => navigate(`/dashboard/brand/edit-qr/${qr.id}`)}
-                            title="Edit"
-                          >
-                            <Edit size={16} />
+                            <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(qr.id)}
-                            title="Delete"
                           >
-                            <Trash size={16} className="text-red-500" />
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => window.open(qr.url, '_blank')}
+                          >
+                            <ExternalLink className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-8 space-y-4">
-                <QrCode className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="text-lg font-medium">No QR codes yet</h3>
-                <p className="text-muted-foreground">You haven't created any QR codes yet.</p>
-                <Button asChild>
-                  <Link to="/dashboard/brand/create-qr">Create Your First QR Code</Link>
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );

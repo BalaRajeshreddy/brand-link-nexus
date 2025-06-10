@@ -1,192 +1,285 @@
-import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Edit, ExternalLink, Info, Share2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { LayoutPanelLeft, Edit, Trash, ExternalLink } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface LandingPage {
   id: string;
   title: string;
   slug: string;
+  status: string;
   created_at: string;
-  published: boolean;
+  brand?: {
+    name: string;
+    logo: string;
+  };
 }
 
 const LandingPagesList = () => {
-  const [pages, setPages] = useState<LandingPage[]>([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isUserView = location.pathname.startsWith('/dashboard/user');
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState("...");
-  const navigate = useNavigate();
+  const [pages, setPages] = useState<LandingPage[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
+      setIsLoading(true);
       try {
         const { data, error } = await supabase.auth.getSession();
         
-        if (error || !data.session) {
-          toast.error("You need to be logged in to view this page");
+        if (error) {
+          throw error;
+        }
+        
+        if (!data.session) {
+          toast.error("You need to be logged in to access this page");
           navigate("/auth");
           return;
         }
         
+        // Session exists, get user data
         const { user } = data.session;
         if (user) {
-          setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "Brand User");
-          fetchPages(user.id);
+          setUserName(user.user_metadata?.name || user.email?.split('@')[0] || "User");
+          
+          if (isUserView) {
+            // For users, fetch all landing pages with brand info
+            const { data: pages, error: fetchError } = await supabase
+              .from('landing_pages')
+              .select(`
+                *,
+                brand:brand_id (
+                  name,
+                  logo
+                )
+              `)
+              .order('created_at', { ascending: false });
+              
+            if (fetchError) {
+              throw fetchError;
+            }
+            
+            setPages(pages || []);
+          } else {
+            // For brands, fetch only their landing pages
+            const { data: brand } = await supabase
+              .from('brands')
+              .select('id')
+              .eq('user_id', user.id)
+              .single();
+
+            if (!brand) {
+              throw new Error('No brand found for this user');
+            }
+
+            const { data: pages, error: fetchError } = await supabase
+              .from('landing_pages')
+              .select('*')
+              .eq('brand_id', brand.id)
+              .order('created_at', { ascending: false });
+              
+            if (fetchError) {
+              throw fetchError;
+            }
+            
+            setPages(pages || []);
+          }
         }
       } catch (error) {
-        console.error("Authentication error:", error);
-        toast.error("Authentication failed");
-        navigate("/auth");
+        console.error("Error:", error);
+        toast.error("Something went wrong");
+      } finally {
+        setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, isUserView]);
 
-  const fetchPages = async (userId: string) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('landing_pages')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      setPages(data || []);
-    } catch (error) {
-      console.error("Error fetching landing pages:", error);
-      toast.error("Failed to load landing pages");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleDelete = async (id: string) => {
+    if (!isUserView) { // Only brands can delete landing pages
+      const confirmDelete = window.confirm(
+        "Are you sure you want to delete this landing page? All associated data (QR codes, page views, etc.) will be deleted and cannot be recovered."
+      );
+      if (!confirmDelete) return;
 
-  const handleDeletePage = async (id: string) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this landing page? All associated data (QR codes, page views, etc.) will be deleted and cannot be recovered."
-    );
-    if (!confirmDelete) return;
-    try {
-      // Delete associated page views
-      await supabase.from('page_views').delete().eq('landing_page_id', id);
-      // Delete associated QR codes
-      await supabase.from('qr_codes').delete().eq('landing_page_id', id);
-      // You can add more deletes for other related tables if needed
-      // Finally, delete the landing page
-      const { error } = await supabase
-        .from('landing_pages')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-      setPages(pages.filter(page => page.id !== id));
-      toast.success("Landing page and all associated data deleted successfully");
-    } catch (error) {
-      console.error("Error deleting landing page:", error);
-      toast.error("Failed to delete landing page. Please remove all references or try again.");
+      try {
+        // Delete associated page views
+        await supabase.from('page_views').delete().eq('landing_page_id', id);
+        // Delete associated QR codes
+        await supabase.from('qr_codes').delete().eq('landing_page_id', id);
+        // Finally, delete the landing page
+        const { error } = await supabase
+          .from('landing_pages')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        setPages(pages.filter(page => page.id !== id));
+        toast.success("Landing page and all associated data deleted successfully");
+      } catch (error) {
+        console.error("Error deleting landing page:", error);
+        toast.error("Failed to delete landing page. Please remove all references or try again.");
+      }
     }
   };
 
   const handleEdit = (pageId: string) => {
-    navigate(`/dashboard/brand/edit-page/${pageId}`);
+    if (!isUserView) { // Only brands can edit landing pages
+      navigate(`/dashboard/brand/edit-page/${pageId}`);
+    }
   };
 
   return (
-    <DashboardLayout userType="Brand" userName={userName}>
-      <div className="p-6">
+    <DashboardLayout userType={isUserView ? "User" : "Brand"} userName={userName}>
+      <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">Landing Pages</h1>
-            <p className="text-muted-foreground mt-1">Manage your landing pages</p>
-          </div>
-          <Button onClick={() => navigate("/dashboard/brand/create-page")}>
-            Create New Page
-          </Button>
+          <h1 className="text-2xl font-bold">
+            {isUserView ? "Browse Landing Pages" : "Your Landing Pages"}
+          </h1>
+          {!isUserView && (
+            <Button onClick={() => navigate('/dashboard/brand/create-page')}>
+              Create New Landing Page
+            </Button>
+          )}
         </div>
 
-        <Separator className="mb-6" />
-
         {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
+          <div>Loading...</div>
         ) : pages.length === 0 ? (
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-center text-muted-foreground">
-                <Info className="mr-2" />
-                <CardTitle>No Landing Pages Found</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p>You haven't created any landing pages yet.</p>
-            </CardContent>
-            <CardFooter className="flex justify-center">
-              <Button onClick={() => navigate("/dashboard/brand/create-page")}>
-                Create Your First Landing Page
-              </Button>
-            </CardFooter>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pages.map((page) => (
-              <Card key={page.id}>
-                <CardHeader>
-                  <CardTitle>{page.title}</CardTitle>
-                  <div className="flex items-center text-xs text-muted-foreground mt-1">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    <span>
-                      {new Date(page.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-2">Page URL:</p>
-                  <div className="bg-muted rounded-md p-2 flex items-center justify-between">
-                    <code className="text-xs truncate">
-                      {`${window.location.origin}/${page.slug}`}
-                    </code>
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                      <ExternalLink className="h-3 w-3" />
+            <CardContent className="p-6">
+              <div className="text-center">
+                <LayoutPanelLeft className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No landing pages</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {isUserView 
+                    ? "No landing pages available to browse at the moment."
+                    : "Get started by creating a new landing page."}
+                </p>
+                {!isUserView && (
+                  <div className="mt-6">
+                    <Button onClick={() => navigate('/dashboard/brand/create-page')}>
+                      Create Landing Page
                     </Button>
                   </div>
-                </CardContent>
-                <CardFooter className="flex justify-between space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => handleEdit(page.id)}
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => handleDeletePage(page.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>URL</TableHead>
+                  {isUserView && <TableHead>Brand</TableHead>}
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  {!isUserView && <TableHead>Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pages.map((page) => (
+                  <TableRow key={page.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <LayoutPanelLeft className="h-4 w-4 text-gray-500" />
+                        <span>{page.title}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                          /{page.slug}
+                        </code>
+                        <a 
+                          href={`/${page.slug}`}
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-primary hover:text-primary/80 ml-2"
+                        >
+                          <ExternalLink size={14} />
+                        </a>
+                      </div>
+                    </TableCell>
+                    {isUserView && (
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {page.brand?.logo ? (
+                            <img 
+                              src={page.brand.logo} 
+                              alt={page.brand.name}
+                              className="w-6 h-6 rounded-full"
+                            />
+                          ) : (
+                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-xs font-medium">
+                                {page.brand?.name?.charAt(0) || '?'}
+                              </span>
+                            </div>
+                          )}
+                          <span className="text-sm">{page.brand?.name}</span>
+                        </div>
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        page.status === 'PUBLISHED' 
+                          ? 'bg-green-100 text-green-800'
+                          : page.status === 'DRAFT'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {page.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>{new Date(page.created_at).toLocaleDateString()}</TableCell>
+                    {!isUserView && (
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(page.id)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(page.id)}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => window.open(`/${page.slug}`, '_blank')}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>

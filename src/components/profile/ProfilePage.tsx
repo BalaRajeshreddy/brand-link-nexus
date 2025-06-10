@@ -11,7 +11,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 type UserType = 'customer' | 'brand' | 'admin';
 
 const ProfilePage: React.FC = () => {
-  const [userType, setUserType] = useState<UserType>('brand');
+  const [userType, setUserType] = useState<UserType | null>(null);
   const [activeSection, setActiveSection] = useState<string>('basic');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +46,10 @@ const ProfilePage: React.FC = () => {
           if (userData && userData.role) {
             setUserType(userData.role.toLowerCase() as UserType);
           } else {
-            setUserType('brand'); // fallback to brand
+            // If no role found, redirect to auth
+            toast.error('Invalid user type. Please login again.');
+            navigate('/auth');
+            return;
           }
         }
 
@@ -61,6 +64,7 @@ const ProfilePage: React.FC = () => {
         setError('Failed to load profile. Please try again.');
         console.error('Error fetching user role:', error);
         toast.error('Failed to load profile');
+        navigate('/auth');
       } finally {
         setLoading(false);
       }
@@ -76,6 +80,9 @@ const ProfilePage: React.FC = () => {
     if (error) {
       return <div className="text-center py-8 text-red-500">{error}</div>;
     }
+    if (!userType) {
+      return <div className="text-center py-8 text-red-500">Invalid user type</div>;
+    }
     switch (userType) {
       case 'customer':
         return <CustomerProfileSection />;
@@ -84,7 +91,7 @@ const ProfilePage: React.FC = () => {
       case 'admin':
         return <AdminProfileSection />;
       default:
-        return <BrandProfileSection activeSection={activeSection} onSectionChange={setActiveSection} />;
+        return <div className="text-center py-8 text-red-500">Invalid user type</div>;
     }
   };
 
@@ -98,6 +105,10 @@ const ProfilePage: React.FC = () => {
         return 'User';
     }
   };
+
+  if (!userType) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">

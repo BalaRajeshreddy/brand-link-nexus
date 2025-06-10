@@ -25,6 +25,8 @@ import BrandSubmissions from './pages/BrandSubmissions';
 import BrandAnalytics from "./pages/BrandAnalytics";
 import BrandFiles from "./pages/BrandFiles";
 import Settings from "./pages/Settings";
+import UserQRCodesPage from './pages/UserQRCodesPage';
+import UserLandingPagesPage from './pages/UserLandingPagesPage';
 
 const queryClient = new QueryClient();
 
@@ -71,19 +73,22 @@ const App = () => {
             <Route path="/dashboard/brand/submissions" element={<BrandSubmissions />} />
             <Route path="/dashboard/brand/analytics" element={<BrandAnalytics />} />
             <Route path="/dashboard/brand/files" element={<BrandFiles />} />
-            <Route path="/dashboard/brand/settings" element={<Settings />} />
-            <Route path="/dashboard/brand/settings/categories" element={<Settings />} />
-            
-            {/* Admin Routes */}
-            <Route path="/dashboard/admin" element={<AdminDashboard />} />
+            <Route path="/dashboard/brand/settings/*" element={<Settings />} />
             
             {/* User Routes */}
             <Route path="/dashboard/user" element={<UserDashboard />} />
+            <Route path="/dashboard/user/qr-codes" element={<UserQRCodesPage />} />
+            <Route path="/dashboard/user/landing-pages" element={<UserLandingPagesPage />} />
+            <Route path="/dashboard/user/settings/*" element={<Settings />} />
+            
+            {/* Admin Routes */}
+            <Route path="/dashboard/admin" element={<AdminDashboard />} />
+            <Route path="/dashboard/admin/settings/*" element={<Settings />} />
             
             {/* Profile Route */}
             <Route path="/profile" element={<ProfilePage />} />
             
-            {/* Published Landing Page Route - Moved to the top for priority */}
+            {/* Landing Page Route */}
             <Route path="/:slug" element={<PublishedLandingPage />} />
             
             {/* 404 Route */}
