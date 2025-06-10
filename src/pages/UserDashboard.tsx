@@ -10,6 +10,7 @@ interface Brand {
   id: string;
   name: string;
   logo: string;
+  industry_category: string;
 }
 
 interface QRCode {
@@ -31,7 +32,9 @@ interface LandingPage {
 export default function UserDashboard() {
   const navigate = useNavigate();
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [industryOptions, setIndustryOptions] = useState<string[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [selectedIndustry, setSelectedIndustry] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [qrCodes, setQRCodes] = useState<QRCode[]>([]);
   const [landingPages, setLandingPages] = useState<LandingPage[]>([]);
@@ -83,7 +86,7 @@ export default function UserDashboard() {
       console.log('Fetching brands...');
       const { data, error } = await supabase
         .from('brands')
-        .select('id, name, logo')
+        .select('id, name, logo, industry_category')
         .eq('status', 'active')
         .order('name');
 
@@ -93,6 +96,8 @@ export default function UserDashboard() {
       }
       console.log('Brands fetched:', data);
       setBrands(data || []);
+      // Set industry options
+      setIndustryOptions(Array.from(new Set((data || []).map(b => b.industry_category).filter(Boolean))));
     } catch (error) {
       console.error('Error fetching brands:', error);
       toast.error('Failed to load brands');
@@ -113,7 +118,8 @@ export default function UserDashboard() {
           brand:brands (
             id,
             name,
-            logo
+            logo,
+            industry_category
           )
         `)
         .order('created_at', { ascending: false });
@@ -154,7 +160,8 @@ export default function UserDashboard() {
           brand:brands (
             id,
             name,
-            logo
+            logo,
+            industry_category
           )
         `)
         .eq('published', true)
@@ -186,13 +193,15 @@ export default function UserDashboard() {
   const filteredQRCodes = qrCodes.filter(qr => {
     const matchesSearch = qr.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesBrand = !selectedBrand || (qr.brand && qr.brand.id === selectedBrand);
-    return matchesSearch && matchesBrand;
+    const matchesIndustry = !selectedIndustry || (qr.brand && qr.brand.industry_category === selectedIndustry);
+    return matchesSearch && matchesBrand && matchesIndustry;
   });
 
   const filteredLandingPages = landingPages.filter(page => {
     const matchesSearch = page.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesBrand = !selectedBrand || (page.brand && page.brand.id === selectedBrand);
-    return matchesSearch && matchesBrand;
+    const matchesIndustry = !selectedIndustry || (page.brand && page.brand.industry_category === selectedIndustry);
+    return matchesSearch && matchesBrand && matchesIndustry;
   });
 
   if (isLoading) {
@@ -229,6 +238,16 @@ export default function UserDashboard() {
               <option key={brand.id} value={brand.id}>
                 {brand.name}
               </option>
+            ))}
+          </select>
+          <select
+            value={selectedIndustry}
+            onChange={(e) => setSelectedIndustry(e.target.value)}
+            className="px-3 py-2 border rounded-md"
+          >
+            <option value="">All Industries</option>
+            {industryOptions.map((ind) => (
+              <option key={ind} value={ind}>{ind}</option>
             ))}
           </select>
         </div>

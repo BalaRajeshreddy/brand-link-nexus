@@ -14,6 +14,9 @@ export function LandingPageWrapper({ children }: LandingPageWrapperProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showSkipPrompt, setShowSkipPrompt] = useState(false);
+  const [skipUntil, setSkipUntil] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState(0);
+  const [showPopup, setShowPopup] = useState(true);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { slug } = useParams<{ slug: string }>();
@@ -135,6 +138,43 @@ export function LandingPageWrapper({ children }: LandingPageWrapperProps) {
     };
   }, [checkAuth]);
 
+  // Handle skip logic and timer
+  useEffect(() => {
+    // On mount, check if skipUntil is in localStorage
+    const stored = localStorage.getItem('skip-auth-popup-until');
+    if (stored) {
+      const until = parseInt(stored, 10);
+      if (until > Date.now()) {
+        setShowPopup(false);
+        setSkipUntil(until);
+        setCountdown(Math.ceil((until - Date.now()) / 1000));
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!skipUntil) return;
+    const interval = setInterval(() => {
+      const remaining = Math.ceil((skipUntil - Date.now()) / 1000);
+      setCountdown(remaining);
+      if (remaining <= 0) {
+        setShowPopup(true);
+        setSkipUntil(null);
+        localStorage.removeItem('skip-auth-popup-until');
+        clearInterval(interval);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [skipUntil]);
+
+  const handleSkip = () => {
+    const until = Date.now() + 2 * 60 * 1000; // 2 minutes
+    setShowPopup(false);
+    setSkipUntil(until);
+    setCountdown(120);
+    localStorage.setItem('skip-auth-popup-until', until.toString());
+  };
+
   const recordVisit = async (userId: string) => {
     console.log('[LandingPageWrapper] recordVisit called with userId:', userId);
     try {
@@ -215,7 +255,20 @@ export function LandingPageWrapper({ children }: LandingPageWrapperProps) {
   }
 
   if (!isAuthenticated) {
-    console.log('[LandingPageWrapper] Rendering login prompt for unauthenticated user');
+    // Show popup unless user has skipped and timer is running
+    if (!showPopup) {
+      // Show countdown timer in top right
+      return (
+        <>
+          <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 1000 }}>
+            <span className="bg-gray-900 text-white px-4 py-2 rounded shadow">
+              Login popup will return in: {countdown}s
+            </span>
+          </div>
+          {children}
+        </>
+      );
+    }
     return (
       <>
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -266,10 +319,7 @@ export function LandingPageWrapper({ children }: LandingPageWrapperProps) {
               <AlertDialogCancel onClick={() => setShowSkipPrompt(false)}>
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction onClick={() => {
-                setShowSkipPrompt(false);
-                setIsAuthenticated(true);
-              }}>
+              <AlertDialogAction onClick={handleSkip}>
                 Continue without login
               </AlertDialogAction>
             </AlertDialogFooter>
