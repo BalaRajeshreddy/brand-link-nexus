@@ -32,6 +32,7 @@ import { Switch } from "@/components/ui/switch";
 import { FileSelector } from '@/components/FileSelector';
 import { FileAsset } from '@/types/file';
 import { ColorPicker } from '@/components/ColorPicker';
+import { MediaSelector } from '../ui/MediaSelector';
 
 interface EditorBlock {
   id: string;
@@ -201,36 +202,28 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary, brandId }:
                 </SelectContent>
               </Select>
             </div>
-            
-            {(content.images || [{ src: "", alt: "" }, { src: "", alt: "" }, { src: "", alt: "" }]).map((image: any, index: number) => (
-              <div key={index.toString()} className="space-y-2 border p-3 rounded-md">
+            {(content.images || [{ src: '', alt: '' }, { src: '', alt: '' }, { src: '', alt: '' }]).map((image: any, index: number) => (
+              <div key={`image-${index}`} className="space-y-2 border p-3 rounded-md">
                 <Label>Image #{index + 1}</Label>
-                <div>
-                  <Label htmlFor={`image-src-${index.toString()}`} className="text-sm">Image URL</Label>
-                  <Input
-                    id={`image-src-${index.toString()}`}
-                    value={image.src || ''}
-                    onChange={(e) => updateNestedContent(['images', index.toString(), 'src'], e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`image-alt-${index.toString()}`} className="text-sm">Alt Text</Label>
-                  <Input
-                    id={`image-alt-${index.toString()}`}
-                    value={image.alt || ''}
-                    onChange={(e) => updateNestedContent(['images', index.toString(), 'alt'], e.target.value)}
-                    placeholder="Image description"
-                  />
-                </div>
+                <MediaSelector
+                  type="image"
+                  value={{ url: image.src, alt: image.alt }}
+                  brandId={brandId}
+                  inputId={`file-upload-image-${index}`}
+                  onSelect={media => {
+                    const images = Array.isArray(content.images) ? [...content.images] : [];
+                    images[index] = { src: media.url, alt: media.alt };
+                    updateContent('images', images);
+                  }}
+                />
               </div>
             ))}
             <Button 
               variant="outline" 
               type="button" 
               onClick={() => {
-                const images = [...(content.images || [])];
-                images.push({ src: "", alt: "" });
+                const images = Array.isArray(content.images) ? [...content.images] : [];
+                images.push({ src: '', alt: '' });
                 updateContent('images', images);
               }}
             >
@@ -259,58 +252,32 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary, brandId }:
                 </SelectContent>
               </Select>
             </div>
-            
-            {(content.images || [{ src: "", alt: "", link: "", title: "" }]).map((image: any, index: number) => (
-              <div key={index.toString()} className="space-y-2 border p-3 rounded-md">
-                <Label>Image with Link #{index + 1}</Label>
-                <div>
-                  <Label htmlFor={`image-src-${index.toString()}`} className="text-sm">Image URL</Label>
-                  <Input
-                    id={`image-src-${index.toString()}`}
-                    value={image.src || ''}
-                    onChange={(e) => updateNestedContent(['images', index.toString(), 'src'], e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`image-alt-${index.toString()}`} className="text-sm">Alt Text</Label>
-                  <Input
-                    id={`image-alt-${index.toString()}`}
-                    value={image.alt || ''}
-                    onChange={(e) => updateNestedContent(['images', index.toString(), 'alt'], e.target.value)}
-                    placeholder="Image description"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`image-title-${index.toString()}`} className="text-sm">Link Title</Label>
-                  <Input
-                    id={`image-title-${index.toString()}`}
-                    value={image.title || ''}
-                    onChange={(e) => updateNestedContent(['images', index.toString(), 'title'], e.target.value)}
-                    placeholder="Click here"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`image-link-${index.toString()}`} className="text-sm">Link URL</Label>
-                  <Input
-                    id={`image-link-${index.toString()}`}
-                    value={image.link || ''}
-                    onChange={(e) => updateNestedContent(['images', index.toString(), 'link'], e.target.value)}
-                    placeholder="https://example.com"
-                  />
-                </div>
+            {(content.images || [{ src: '', alt: '', link: '' }]).map((image: any, index: number) => (
+              <div key={`image-link-${index}`} className="space-y-2 border p-3 rounded-md">
+                <Label>Image #{index + 1}</Label>
+                <MediaSelector
+                  type="image-with-link"
+                  value={{ url: image.src, alt: image.alt, link: image.link }}
+                  brandId={brandId}
+                  inputId={`file-upload-image-link-${index}`}
+                  onSelect={media => {
+                    const images = Array.isArray(content.images) ? [...content.images] : [];
+                    images[index] = { src: media.url, alt: media.alt, link: media.link };
+                    updateContent('images', images);
+                  }}
+                />
               </div>
             ))}
             <Button 
               variant="outline" 
               type="button" 
               onClick={() => {
-                const images = [...(content.images || [])];
-                images.push({ src: "", alt: "", link: "", title: "" });
+                const images = Array.isArray(content.images) ? [...content.images] : [];
+                images.push({ src: '', alt: '', link: '' });
                 updateContent('images', images);
               }}
             >
-              Add Image with Link
+              Add Image
             </Button>
           </div>
         );
@@ -1276,21 +1243,16 @@ export function BlockEditor({ block, onUpdateBlock, openMediaLibrary, brandId }:
         return (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="image-src">Image URL</Label>
-              <Input
-                id="image-src"
-                placeholder="https://example.com/image.jpg"
-                value={content.image?.src || ''}
-                onChange={(e) => updateNestedContent(['image', 'src'], e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="image-alt">Alt Text</Label>
-              <Input
-                id="image-alt"
-                placeholder="Image description"
-                value={content.image?.alt || ''}
-                onChange={(e) => updateNestedContent(['image', 'alt'], e.target.value)}
+              <Label htmlFor="image-src">Image</Label>
+              <MediaSelector
+                type="image"
+                value={{ url: content.image?.src || '', alt: content.image?.alt || '' }}
+                brandId={brandId}
+                inputId={`file-upload-image-text`}
+                onSelect={media => {
+                  updateNestedContent(['image', 'src'], media.url);
+                  updateNestedContent(['image', 'alt'], media.alt);
+                }}
               />
             </div>
             <div>

@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { QrCode, LayoutPanelLeft, Folder, BarChart2, Plus, Mail, Eye, MousePointerClick } from "lucide-react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { QrCode, LayoutPanelLeft, Folder, BarChart2, Plus, Mail, Eye, MousePointerClick, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { FileUpload } from '@/components/ui/FileUpload';
+import { ImageTextContent } from '@/components/ui/ImageTextContent';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 
 const BrandDashboard = () => {
   const navigate = useNavigate();
@@ -21,6 +25,11 @@ const BrandDashboard = () => {
     perPage: [],
     landingPages: [],
     recentQRCodes: []
+  });
+  const [brand, setBrand] = useState({
+    logo: '',
+    images: [],
+    content: []
   });
 
   // Ensure brand row exists for this user (safe, server-side check)
@@ -131,11 +140,24 @@ const BrandDashboard = () => {
         if (qrError) throw qrError;
 
         // Fetch total analytics counts
-        const [{ count: totalViews }, { count: totalQRScans }, { count: totalClicks }, { count: totalSubmissions }] = await Promise.all([
-          supabase.from('page_views').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
+        const [
+          { count: totalViews },
+          { count: totalQRScans },
+          { count: totalClicks },
+          { count: totalSubmissions },
+          { count: registeredViews },
+          { count: unregisteredViews },
+          { count: registeredScans },
+          { count: unregisteredScans }
+        ] = await Promise.all([
+          supabase.from('landing_page_views').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
           supabase.from('qr_scans').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
           supabase.from('page_clicks').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
           supabase.from('contact_submissions').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
+          supabase.from('landing_page_views').select('user_id', { count: 'exact', head: true }).eq('brand_id', brand.id).eq('is_registered', true),
+          supabase.from('landing_page_views').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id).eq('is_registered', false),
+          supabase.from('qr_scans').select('user_id', { count: 'exact', head: true }).eq('brand_id', brand.id).eq('is_registered', true),
+          supabase.from('qr_scans').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id).eq('is_registered', false),
         ]);
 
         setAnalytics(prev => ({
@@ -144,6 +166,10 @@ const BrandDashboard = () => {
           totalQRScans: totalQRScans || 0,
           totalClicks: totalClicks || 0,
           totalSubmissions: totalSubmissions || 0,
+          registeredViews: registeredViews || 0,
+          unregisteredViews: unregisteredViews || 0,
+          registeredScans: registeredScans || 0,
+          unregisteredScans: unregisteredScans || 0,
           landingPages: landingPages || [],
           recentQRCodes: recentQRCodes || []
         }));
@@ -188,16 +214,26 @@ const BrandDashboard = () => {
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard 
-            title="Total Page Views" 
-            value={analytics.totalViews}
-            icon={<Eye className="h-5 w-5 text-primary-blue" />} 
-          />
-          <StatsCard 
-            title="QR Scans" 
-            value={analytics.totalQRScans}
-            icon={<QrCode className="h-5 w-5 text-primary-green" />} 
-          />
+          <div>
+            <StatsCard 
+              title="Total Page Views" 
+              value={analytics.totalViews}
+              icon={<Eye className="h-5 w-5 text-primary-blue" />} 
+            />
+            <div className="text-xs text-muted-foreground mt-1">
+              Registered: {analytics.registeredViews || 0} | Unregistered: {analytics.unregisteredViews || 0}
+            </div>
+          </div>
+          <div>
+            <StatsCard 
+              title="QR Scans" 
+              value={analytics.totalQRScans}
+              icon={<QrCode className="h-5 w-5 text-primary-green" />} 
+            />
+            <div className="text-xs text-muted-foreground mt-1">
+              Registered: {analytics.registeredScans || 0} | Unregistered: {analytics.unregisteredScans || 0}
+            </div>
+          </div>
           <StatsCard 
             title="Page Clicks" 
             value={analytics.totalClicks}
@@ -275,6 +311,102 @@ const BrandDashboard = () => {
             )}
           </div>
         </div>
+        <Tabs defaultValue="media">
+          <TabsContent value="media" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Brand Assets</CardTitle>
+                <CardDescription>Upload and manage your brand assets</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <Label>Logo</Label>
+                    <FileUpload
+                      onFileSelect={(url) => {
+                        setBrand(prev => ({
+                          ...prev,
+                          logo: url
+                        }));
+                      }}
+                      accept="image/*"
+                      folder="brand-logos"
+                      maxSize={5}
+                    />
+                    {brand.logo && (
+                      <div className="mt-4">
+                        <img
+                          src={brand.logo}
+                          alt="Brand logo"
+                          className="w-32 h-32 object-contain rounded-lg"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label>Brand Images</Label>
+                    <FileUpload
+                      onFileSelect={(url) => {
+                        setBrand(prev => ({
+                          ...prev,
+                          images: [...(prev.images || []), url]
+                        }));
+                      }}
+                      accept="image/*"
+                      folder="brand-images"
+                      maxSize={10}
+                    />
+                    {brand.images?.length > 0 && (
+                      <div className="mt-4 grid grid-cols-2 gap-4">
+                        {brand.images.map((image, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={image}
+                              alt={`Brand image ${index + 1}`}
+                              className="w-full aspect-square object-cover rounded-lg"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2"
+                              onClick={() => {
+                                setBrand(prev => ({
+                                  ...prev,
+                                  images: prev.images?.filter((_, i) => i !== index)
+                                }));
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Brand Content</CardTitle>
+                <CardDescription>Create and manage your brand content</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageTextContent
+                  onContentChange={(content) => {
+                    setBrand(prev => ({
+                      ...prev,
+                      content: content
+                    }));
+                  }}
+                  initialContent={brand.content || []}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

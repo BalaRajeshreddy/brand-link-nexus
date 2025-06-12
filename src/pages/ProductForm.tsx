@@ -52,6 +52,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { FileUpload } from '@/components/ui/FileUpload';
+import { ProductImageUpload } from '@/components/ui/ProductImageUpload';
 
 interface Category {
   id: string;
@@ -490,114 +492,78 @@ export function ProductForm() {
 
                 {/* Media Section */}
                 {activeSection === 'media' && (
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <RequiredField>
-                        <Label>Product Images</Label>
-                      </RequiredField>
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handleImageUpload}
-                            className="hidden"
-                            id="image-upload"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => document.getElementById('image-upload')?.click()}
-                            disabled={isLoading}
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            {isLoading ? 'Uploading...' : 'Upload Images'}
-                          </Button>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {uploadedImages.length} images uploaded
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        {uploadedImages.map((url, index) => (
-                          <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
-                            <img
-                              src={url}
-                              alt={`Product image ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2"
-                              onClick={() => {
-                                setUploadedImages(images => images.filter((_, i) => i !== index));
-                                setProduct({
-                                  ...product,
-                                  images: product.images?.filter((_, i) => i !== index)
-                                });
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                  <TabsContent value="media" className="space-y-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Product Images</CardTitle>
+                        <CardDescription>Upload product images and videos</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ProductImageUpload
+                          onImagesChange={(images) => {
+                            setProduct(prev => ({
+                              ...prev,
+                              images: images.map(img => img.image),
+                              ecommerce_links: images.map(img => ({
+                                platform: 'custom',
+                                url: img.link
+                              }))
+                            }));
+                          }}
+                          initialImages={product.images?.map((img, index) => ({
+                            image: img,
+                            link: product.ecommerce_links?.[index]?.url || ''
+                          })) || []}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Product Videos</CardTitle>
+                        <CardDescription>Upload product videos</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <FileUpload
+                          onFileSelect={(url) => {
+                            setProduct(prev => ({
+                              ...prev,
+                              videos: [...(prev.videos || []), url]
+                            }));
+                          }}
+                          accept="video/*"
+                          folder="product-videos"
+                          maxSize={50}
+                        />
+                        {product.videos?.length > 0 && (
+                          <div className="mt-4 grid grid-cols-2 gap-4">
+                            {product.videos.map((video, index) => (
+                              <div key={index} className="relative">
+                                <video
+                                  src={video}
+                                  className="w-full rounded-lg"
+                                  controls
+                                />
+                                <Button
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute top-2 right-2"
+                                  onClick={() => {
+                                    setProduct(prev => ({
+                                      ...prev,
+                                      videos: prev.videos?.filter((_, i) => i !== index)
+                                    }));
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <Label>Product Videos</Label>
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <input
-                            type="file"
-                            accept="video/*"
-                            multiple
-                            onChange={handleVideoUpload}
-                            className="hidden"
-                            id="video-upload"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => document.getElementById('video-upload')?.click()}
-                            disabled={isLoading}
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            {isLoading ? 'Uploading...' : 'Upload Videos'}
-                          </Button>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {uploadedVideos.length} videos uploaded
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        {uploadedVideos.map((url, index) => (
-                          <div key={index} className="relative aspect-video rounded-lg overflow-hidden border">
-                            <video
-                              src={url}
-                              controls
-                              className="w-full h-full object-cover"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2"
-                              onClick={() => {
-                                setUploadedVideos(videos => videos.filter((_, i) => i !== index));
-                                setProduct({
-                                  ...product,
-                                  videos: product.videos?.filter((_, i) => i !== index)
-                                });
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
                 )}
 
                 {/* Product Details */}

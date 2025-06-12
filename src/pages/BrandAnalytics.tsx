@@ -15,6 +15,10 @@ const BrandAnalytics = () => {
     totalQRScans: 0,
     totalClicks: 0,
     totalSubmissions: 0,
+    registeredViews: 0,
+    unregisteredViews: 0,
+    registeredScans: 0,
+    unregisteredScans: 0,
     perPage: [],
     landingPages: [],
     recentClicks: [],
@@ -69,31 +73,38 @@ const BrandAnalytics = () => {
           });
         }
         // Fetch analytics
-        const [{ count: totalViews }, { count: totalQRScans }, { count: totalClicks }, { count: totalSubmissions }] = await Promise.all([
-          supabase.from('page_views').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
+        const [
+          { count: totalViews },
+          { count: totalQRScans },
+          { count: totalClicks },
+          { count: totalSubmissions },
+          { count: registeredViews },
+          { count: unregisteredViews },
+          { count: registeredScans },
+          { count: unregisteredScans }
+        ] = await Promise.all([
+          supabase.from('landing_page_views').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
           supabase.from('qr_scans').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
           supabase.from('page_clicks').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
           supabase.from('contact_submissions').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id),
+          supabase.from('landing_page_views').select('user_id', { count: 'exact', head: true }).eq('brand_id', brand.id).eq('is_registered', true),
+          supabase.from('landing_page_views').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id).eq('is_registered', false),
+          supabase.from('qr_scans').select('user_id', { count: 'exact', head: true }).eq('brand_id', brand.id).eq('is_registered', true),
+          supabase.from('qr_scans').select('id', { count: 'exact', head: true }).eq('brand_id', brand.id).eq('is_registered', false),
         ]);
         // Per-landing-page breakdown
         const [viewsData, qrScansData, clicksData, submissionsData] = await Promise.all([
-          supabase.from('page_views').select('landing_page_id').eq('brand_id', brand.id),
-          supabase.from('qr_scans').select('landing_page_id').eq('brand_id', brand.id),
+          supabase.from('landing_page_views').select('landing_page_id, is_registered').eq('brand_id', brand.id),
+          supabase.from('qr_scans').select('landing_page_id, is_registered').eq('brand_id', brand.id),
           supabase.from('page_clicks').select('landing_page_id').eq('brand_id', brand.id),
           supabase.from('contact_submissions').select('landing_page_id').eq('brand_id', brand.id),
         ]);
-        // Fetch recent clicks
-        const { data: recentClicks } = await supabase
-          .from('page_clicks')
-          .select('id, button_text, link_url, customer_email, created_at')
-          .eq('brand_id', brand.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
-        function countByPage(arr) {
+        function countByPage(arr, key = 'landing_page_id', filter = null) {
           const map = {};
           arr?.data?.forEach(row => {
-            if (!row.landing_page_id) return;
-            map[row.landing_page_id] = (map[row.landing_page_id] || 0) + 1;
+            if (!row[key]) return;
+            if (filter && !filter(row)) return;
+            map[row[key]] = (map[row[key]] || 0) + 1;
           });
           return map;
         }
@@ -101,11 +112,20 @@ const BrandAnalytics = () => {
         const qrScansByPage = countByPage(qrScansData);
         const clicksByPage = countByPage(clicksData);
         const submissionsByPage = countByPage(submissionsData);
+        // Registered/unregistered breakdown per page
+        const registeredViewsByPage = countByPage(viewsData, 'landing_page_id', row => row.is_registered);
+        const unregisteredViewsByPage = countByPage(viewsData, 'landing_page_id', row => !row.is_registered);
+        const registeredScansByPage = countByPage(qrScansData, 'landing_page_id', row => row.is_registered);
+        const unregisteredScansByPage = countByPage(qrScansData, 'landing_page_id', row => !row.is_registered);
         setAnalytics({
           totalViews: totalViews || 0,
           totalQRScans: totalQRScans || 0,
           totalClicks: totalClicks || 0,
           totalSubmissions: totalSubmissions || 0,
+          registeredViews: registeredViews || 0,
+          unregisteredViews: unregisteredViews || 0,
+          registeredScans: registeredScans || 0,
+          unregisteredScans: unregisteredScans || 0,
           perPage: landingPages?.map(page => ({
             id: page.id,
             title: page.title,
@@ -113,9 +133,13 @@ const BrandAnalytics = () => {
             qrScans: qrScansByPage[page.id] || 0,
             clicks: clicksByPage[page.id] || 0,
             submissions: submissionsByPage[page.id] || 0,
+            registeredViews: registeredViewsByPage[page.id] || 0,
+            unregisteredViews: unregisteredViewsByPage[page.id] || 0,
+            registeredScans: registeredScansByPage[page.id] || 0,
+            unregisteredScans: unregisteredScansByPage[page.id] || 0,
           })) || [],
           landingPages: landingPages || [],
-          recentClicks: recentClicks || [],
+          recentClicks: [],
           qrCodes,
         });
       }
@@ -166,16 +190,26 @@ const BrandAnalytics = () => {
           <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard 
-            title="Total Page Views" 
-            value={analytics.totalViews}
-            icon={<Eye className="h-5 w-5 text-primary-blue" />} 
-          />
-          <StatsCard 
-            title="QR Scans" 
-            value={analytics.totalQRScans}
-            icon={<QrCode className="h-5 w-5 text-primary-green" />} 
-          />
+          <div>
+            <StatsCard 
+              title="Total Page Views" 
+              value={analytics.totalViews}
+              icon={<Eye className="h-5 w-5 text-primary-blue" />} 
+            />
+            <div className="text-xs text-muted-foreground mt-1">
+              Registered: {analytics.registeredViews || 0} | Unregistered: {analytics.unregisteredViews || 0}
+            </div>
+          </div>
+          <div>
+            <StatsCard 
+              title="QR Scans" 
+              value={analytics.totalQRScans}
+              icon={<QrCode className="h-5 w-5 text-primary-green" />} 
+            />
+            <div className="text-xs text-muted-foreground mt-1">
+              Registered: {analytics.registeredScans || 0} | Unregistered: {analytics.unregisteredScans || 0}
+            </div>
+          </div>
           <StatsCard 
             title="Page Clicks" 
             value={analytics.totalClicks}
@@ -225,6 +259,10 @@ const BrandAnalytics = () => {
                   <th className="text-left p-2">QR Scans</th>
                   <th className="text-left p-2">Clicks</th>
                   <th className="text-left p-2">Submissions</th>
+                  <th className="text-left p-2">Reg Views</th>
+                  <th className="text-left p-2">Unreg Views</th>
+                  <th className="text-left p-2">Reg Scans</th>
+                  <th className="text-left p-2">Unreg Scans</th>
                 </tr>
               </thead>
               <tbody>
@@ -239,6 +277,10 @@ const BrandAnalytics = () => {
                     <td className="p-2">{page.qrScans}</td>
                     <td className="p-2">{page.clicks}</td>
                     <td className="p-2">{page.submissions}</td>
+                    <td className="p-2">{page.registeredViews}</td>
+                    <td className="p-2">{page.unregisteredViews}</td>
+                    <td className="p-2">{page.registeredScans}</td>
+                    <td className="p-2">{page.unregisteredScans}</td>
                   </tr>
                 ))}
               </tbody>

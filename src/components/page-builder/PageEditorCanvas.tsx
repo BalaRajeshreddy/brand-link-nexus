@@ -111,8 +111,8 @@ export function PageEditorCanvas({
   brandId
 }: PageEditorCanvasProps) {
   return (
-    <div className="flex-1 h-[calc(100vh-4rem)] flex flex-col">
-      <ScrollArea className="flex-1 h-full">
+    <div className="flex-1 flex flex-col min-h-0">
+      <ScrollArea className="flex-1 min-h-0">
         <div 
           className="p-8 min-h-full"
           style={{

@@ -3,17 +3,16 @@ import { Block } from '@/types/block';
 import { MediaSelector } from '../ui/MediaSelector';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
 import { Trash2 } from 'lucide-react';
 
-interface ImageTextBlockProps {
+interface ImageWithLinkBlockProps {
   block: Block;
   onChange: (block: Block) => void;
   brandId: string;
 }
 
-export const ImageTextBlock: React.FC<ImageTextBlockProps> = ({
+export const ImageWithLinkBlock: React.FC<ImageWithLinkBlockProps> = ({
   block,
   onChange,
   brandId
@@ -21,8 +20,7 @@ export const ImageTextBlock: React.FC<ImageTextBlockProps> = ({
   const [content, setContent] = useState(block.content || {
     title: '',
     description: '',
-    image: { url: '', alt: '' },
-    text: ''
+    image: { url: '', alt: '', link: '' }
   });
 
   const handleChange = (field: string, value: any) => {
@@ -37,10 +35,11 @@ export const ImageTextBlock: React.FC<ImageTextBlockProps> = ({
     });
   };
 
-  const handleImageSelect = (media: { url: string; alt?: string }) => {
+  const handleImageSelect = (media: { url: string; alt?: string; link?: string }) => {
     handleChange('image', {
       url: media.url,
-      alt: media.alt || 'Image'
+      alt: media.alt || 'Image',
+      link: media.link || content.image?.link || ''
     });
   };
 
@@ -58,7 +57,7 @@ export const ImageTextBlock: React.FC<ImageTextBlockProps> = ({
 
         <div className="space-y-2">
           <Label>Description</Label>
-          <Textarea
+          <Input
             value={content.description || ''}
             onChange={(e) => handleChange('description', e.target.value)}
             placeholder="Enter section description"
@@ -66,23 +65,13 @@ export const ImageTextBlock: React.FC<ImageTextBlockProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label>Image</Label>
+          <Label>Image with Link</Label>
           <MediaSelector
-            type="image"
+            type="image-with-link"
             onSelect={handleImageSelect}
             value={content.image}
             brandId={brandId}
             folder="content-images"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Text Content</Label>
-          <Textarea
-            value={content.text || ''}
-            onChange={(e) => handleChange('text', e.target.value)}
-            placeholder="Enter text content"
-            rows={4}
           />
         </div>
       </div>
@@ -99,11 +88,16 @@ export const ImageTextBlock: React.FC<ImageTextBlockProps> = ({
               variant="destructive"
               size="icon"
               className="absolute top-2 right-2"
-              onClick={() => handleChange('image', { url: '', alt: '' })}
+              onClick={() => handleChange('image', { url: '', alt: '', link: '' })}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
+          {content.image.link && (
+            <div className="mt-2 text-sm text-muted-foreground">
+              Link: {content.image.link}
+            </div>
+          )}
         </div>
       )}
     </div>

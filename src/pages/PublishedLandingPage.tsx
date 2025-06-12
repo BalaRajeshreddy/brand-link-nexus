@@ -5,6 +5,7 @@ import { Block, BlockType } from '@/types/block';
 import { BlockEditorMain } from '@/components/page-builder/block-renderers/BlockEditorMain';
 import { toast } from "sonner";
 import { LandingPageWrapper } from '@/components/landing/LandingPageWrapper';
+import { trackLandingPageView } from '@/services/analytics';
 
 declare global {
   interface Window {
@@ -72,6 +73,13 @@ const PublishedLandingPage = () => {
         // Expose brand_id and landing_page_id on window for analytics tracking
         window.BRAND_ID = pageData.brand_id || pageData.brandId;
         window.LANDING_PAGE_ID = pageData.id;
+
+        // Track landing page view for analytics
+        try {
+          await trackLandingPageView(pageData.id, pageData.brand_id || pageData.brandId, 'direct');
+        } catch (err) {
+          console.error('Failed to record landing page view:', err);
+        }
 
         // Then get all components for this page
         const { data: components, error: componentsError } = await supabase

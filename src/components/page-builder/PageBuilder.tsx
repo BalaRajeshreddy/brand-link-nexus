@@ -583,47 +583,39 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <PageEditorSidebar onAddBlock={handleAddBlock} />
-        
-        <DndContext 
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="flex-1 overflow-hidden flex">
-            <div className={`flex-1 ${showMobilePreview ? 'w-1/2' : 'w-full'} h-full overflow-hidden`}>
-              <SortableContext
-                items={blocks.map(block => block.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <PageEditorCanvas 
-                  blocks={blocks} 
-                  onDeleteBlock={handleDeleteBlock}
-                  onUpdateBlock={handleUpdateBlock}
-                  openMediaLibrary={openMediaLibrary}
-                  pageStyles={{
-                    backgroundColor: pageData.backgroundColor,
-                    fontFamily: pageData.fontFamily
-                  }}
-                  brandId={brandId || ''}
-                />
-              </SortableContext>
-            </div>
-            
-            {showMobilePreview && (
-              <div className="w-1/2 border-l bg-gray-50">
-                <PageEditorPreview 
-                  blocks={blocks} 
-                  pageStyles={{
-                    backgroundColor: pageData.backgroundColor,
-                    fontFamily: pageData.fontFamily
-                  }}
-                />
-              </div>
-            )}
+        <div className="flex-1 min-h-0 flex overflow-hidden">
+          <div className={`flex-1 min-h-0 flex flex-col ${showMobilePreview ? 'w-1/2' : 'w-full'} h-full overflow-hidden`}>
+            <SortableContext
+              items={blocks.map(block => block.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <PageEditorCanvas 
+                blocks={blocks} 
+                onDeleteBlock={handleDeleteBlock}
+                onUpdateBlock={handleUpdateBlock}
+                openMediaLibrary={openMediaLibrary}
+                pageStyles={{
+                  backgroundColor: pageData.backgroundColor,
+                  fontFamily: pageData.fontFamily
+                }}
+                brandId={brandId || ''}
+              />
+            </SortableContext>
           </div>
-        </DndContext>
+          {showMobilePreview && (
+            <div className="w-1/2 border-l bg-gray-50 min-h-0 flex flex-col">
+              <PageEditorPreview 
+                blocks={blocks} 
+                pageStyles={{
+                  backgroundColor: pageData.backgroundColor,
+                  fontFamily: pageData.fontFamily
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
       
       <PageSettingsDialog

@@ -1,4 +1,3 @@
-
 import { Block, BlockType } from "@/types/block";
 import { BlockEditorMain } from "./block-renderers/BlockEditorMain";
 
@@ -17,10 +16,9 @@ export function PageEditorPreview({ blocks, pageStyles }: PageEditorPreviewProps
         <h3 className="font-medium">Mobile Preview</h3>
         <p className="text-xs text-muted-foreground mt-1">See how your page looks on mobile</p>
       </div>
-      
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 overflow-y-auto">
         <div 
-          className="mx-auto border border-gray-300 rounded-3xl overflow-hidden w-[390px]"
+          className="mx-auto border border-gray-300 rounded-3xl overflow-hidden w-[390px] bg-white shadow-lg"
           style={{ height: '844px' }}
         >
           <div className="bg-black p-2 w-full flex justify-center items-center">
