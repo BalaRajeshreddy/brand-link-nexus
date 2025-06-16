@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AppointmentCalendarBlock,
   SmartFeedbackBlock,
@@ -231,7 +231,31 @@ async function handleBlockClick({ blockType, blockLabel, linkUrl }) {
   });
 }
 
-export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditorMainProps) {
+export function BlockEditorMain({ blockType, content, styles = {}, onUpdateBlock }: BlockEditorMainProps & { onUpdateBlock?: (newContent: any) => void }) {
+  // Inline editing state for Heading
+  const [isEditing, setIsEditing] = useState(false);
+  const [headingValue, setHeadingValue] = useState(content.title || content.text || '');
+  React.useEffect(() => {
+    setHeadingValue(content.title || content.text || '');
+  }, [content.title, content.text]);
+
+  // Inline editing state for Text
+  const [isEditingText, setIsEditingText] = useState(false);
+  const [textValue, setTextValue] = useState(content.text || '');
+  React.useEffect(() => {
+    setTextValue(content.text || '');
+  }, [content.text]);
+
+  // Inline editing state for Heading+Text
+  const [isEditingHeadingHT, setIsEditingHeadingHT] = useState(false);
+  const [isEditingTextHT, setIsEditingTextHT] = useState(false);
+  const [headingValueHT, setHeadingValueHT] = useState(content.heading || '');
+  const [textValueHT, setTextValueHT] = useState(content.text || '');
+  React.useEffect(() => {
+    setHeadingValueHT(content.heading || '');
+    setTextValueHT(content.text || '');
+  }, [content.heading, content.text]);
+
   const applyContainerStyles = (additionalClasses?: string) => {
     const containerStyles = {
       backgroundColor: styles.backgroundColor || content.backgroundColor,
@@ -293,11 +317,53 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
     
     switch (blockTypeString) {
       case BlockType.HEADING:
+      case 'heading':
         return (
           <div {...applyContainerStyles()}>
-            <h2 {...applyTextStyles('text-2xl font-bold')}>
-              {content.title}
-            </h2>
+            {isEditing ? (
+              <input
+                className="text-2xl font-bold w-full outline-none border-b border-primary"
+                value={headingValue}
+                autoFocus
+                onChange={e => {
+                  setHeadingValue(e.target.value);
+                  console.log('Heading input changed:', e.target.value);
+                }}
+                onBlur={() => {
+                  setIsEditing(false);
+                  console.log('Heading input blur, value:', headingValue);
+                  if (headingValue !== (content.title || content.text)) {
+                    if (onUpdateBlock) {
+                      console.log('Calling onUpdateBlock with:', headingValue);
+                      onUpdateBlock({ ...content, title: headingValue, text: headingValue });
+                    }
+                  }
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    setIsEditing(false);
+                    console.log('Heading input enter, value:', headingValue);
+                    if (headingValue !== (content.title || content.text)) {
+                      if (onUpdateBlock) {
+                        console.log('Calling onUpdateBlock with:', headingValue);
+                        onUpdateBlock({ ...content, title: headingValue, text: headingValue });
+                      }
+                    }
+                  }
+                }}
+              />
+            ) : (
+              <h2
+                {...applyTextStyles('text-2xl font-bold cursor-pointer')}
+                onClick={() => {
+                  setIsEditing(true);
+                  console.log('Heading clicked for inline edit');
+                }}
+                title="Click to edit heading"
+              >
+                {content.title || content.text}
+              </h2>
+            )}
             {content.description && (
               <p {...applyTextStyles('text-muted-foreground mt-2')}>
                 {content.description}
@@ -307,127 +373,151 @@ export function BlockEditorMain({ blockType, content, styles = {} }: BlockEditor
         );
 
       case BlockType.TEXT:
+      case 'text':
         return (
           <div {...applyContainerStyles()}>
-            <div {...applyTextStyles()}>
-              {content.text}
-            </div>
-          </div>
-        );
-
-      case BlockType.IMAGE:
-        return (
-          <div {...applyContainerStyles('space-y-4')}>
-            {content.title && (
-              <h2 {...applyTextStyles('text-2xl font-bold')}>
-                {content.title}
-              </h2>
-            )}
-            {content.description && (
-              <p {...applyTextStyles('text-muted-foreground')}>
-                {content.description}
-              </p>
-            )}
-            {content.image?.url ? (
-              <div className="relative rounded-lg overflow-hidden" style={{ aspectRatio: styles.aspectRatio || '16/9' }}>
-                <img
-                  src={content.image.url}
-                  alt={content.image.alt || 'Image'}
-                  className={cn(
-                    'w-full h-full',
-                    styles.objectFit && `object-${styles.objectFit}`
-                  )}
-                  onClick={() => handleBlockClick({ blockType: 'image', blockLabel: content.alt || content.title || '', linkUrl: undefined })}
-                />
-              </div>
+            {isEditingText ? (
+              <textarea
+                className="w-full outline-none border-b border-primary"
+                value={textValue}
+                autoFocus
+                rows={2}
+                onChange={e => {
+                  setTextValue(e.target.value);
+                  console.log('Text block changed:', e.target.value);
+                }}
+                onBlur={() => {
+                  setIsEditingText(false);
+                  if (textValue !== content.text) {
+                    if (onUpdateBlock) {
+                      console.log('Calling onUpdateBlock for text:', textValue);
+                      onUpdateBlock({ ...content, text: textValue });
+                    }
+                  }
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    setIsEditingText(false);
+                    if (textValue !== content.text) {
+                      if (onUpdateBlock) {
+                        console.log('Calling onUpdateBlock for text:', textValue);
+                        onUpdateBlock({ ...content, text: textValue });
+                      }
+                    }
+                    e.preventDefault();
+                  }
+                }}
+              />
             ) : (
-              <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
-                <p className="text-muted-foreground">No image selected</p>
+              <div
+                {...applyTextStyles('cursor-pointer')}
+                onClick={() => {
+                  setIsEditingText(true);
+                  console.log('Text block clicked for inline edit');
+                }}
+                title="Click to edit text"
+              >
+                {content.text}
               </div>
             )}
           </div>
         );
-
-      case BlockType.IMAGE_TEXT:
-        return (
-          <div {...applyContainerStyles(cn(
-            'gap-8',
-            content.imagePosition === 'left' && 'flex-row',
-            content.imagePosition === 'right' && 'flex-row-reverse',
-            content.imagePosition === 'top' && 'flex-col',
-            content.imagePosition === 'bottom' && 'flex-col-reverse'
-          ))}>
-            <div className="flex-1 space-y-4">
-              {content.title && (
-                <h2 {...applyTextStyles('text-2xl font-bold')}>
-                  {content.title}
-                </h2>
-              )}
-              {content.description && (
-                <p {...applyTextStyles('text-muted-foreground')}>
-                  {content.description}
-                </p>
-              )}
-            </div>
-            {content.image?.url ? (
-              <div className="flex-1 relative rounded-lg overflow-hidden" style={{ aspectRatio: styles.aspectRatio || '16/9' }}>
-                <img
-                  src={content.image.url}
-                  alt={content.image.alt || 'Image'}
-                  className={cn(
-                    'w-full h-full',
-                    styles.objectFit && `object-${styles.objectFit}`
-                  )}
-                  onClick={() => handleBlockClick({ blockType: 'image', blockLabel: content.alt || content.title || '', linkUrl: undefined })}
-                />
-              </div>
-            ) : (
-              <div className="flex-1 aspect-video rounded-lg bg-muted flex items-center justify-center">
-                <p className="text-muted-foreground">No image selected</p>
-              </div>
-            )}
-          </div>
-        );
-
-      case 'heading':
-        if ('text' in content) {
-          return (
-            <h2 
-              style={{
-                fontSize: styles.fontSize || '32px',
-                fontWeight: styles.fontWeight || 'bold',
-                color: styles.textColor || '#000000',
-                textAlign: styles.textAlign as any || 'left',
-              }}
-            >
-              {content.text}
-            </h2>
-          );
-        }
-        return null;
-      
-      case 'text':
-        if ('text' in content) {
-          return (
-            <div 
-              style={{
-                fontSize: styles.fontSize || '16px',
-                color: styles.textColor || '#000000',
-                textAlign: styles.textAlign as any || 'left',
-              }}
-            >
-              {content.text}
-            </div>
-          );
-        }
-        return null;
 
       case 'heading + text':
         if ('heading' in content && 'text' in content) {
-          return <HeadingTextBlock content={content as any} styles={styles} />;
+          return (
+            <div {...applyContainerStyles()}>
+              {isEditingHeadingHT ? (
+                <input
+                  className="text-2xl font-bold w-full outline-none border-b border-primary mb-2"
+                  value={headingValueHT}
+                  autoFocus
+                  onChange={e => {
+                    setHeadingValueHT(e.target.value);
+                    console.log('Heading+Text heading changed:', e.target.value);
+                  }}
+                  onBlur={() => {
+                    setIsEditingHeadingHT(false);
+                    if (headingValueHT !== content.heading) {
+                      if (onUpdateBlock) {
+                        console.log('Calling onUpdateBlock for heading+text heading:', headingValueHT);
+                        onUpdateBlock({ ...content, heading: headingValueHT });
+                      }
+                    }
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      setIsEditingHeadingHT(false);
+                      if (headingValueHT !== content.heading) {
+                        if (onUpdateBlock) {
+                          console.log('Calling onUpdateBlock for heading+text heading:', headingValueHT);
+                          onUpdateBlock({ ...content, heading: headingValueHT });
+                        }
+                      }
+                    }
+                  }}
+                />
+              ) : (
+                <h2
+                  {...applyTextStyles('text-2xl font-bold cursor-pointer')}
+                  onClick={() => {
+                    setIsEditingHeadingHT(true);
+                    console.log('Heading+Text heading clicked for inline edit');
+                  }}
+                  title="Click to edit heading"
+                >
+                  {content.heading}
+                </h2>
+              )}
+              {isEditingTextHT ? (
+                <textarea
+                  className="w-full outline-none border-b border-primary mt-2"
+                  value={textValueHT}
+                  autoFocus
+                  rows={2}
+                  onChange={e => {
+                    setTextValueHT(e.target.value);
+                    console.log('Heading+Text text changed:', e.target.value);
+                  }}
+                  onBlur={() => {
+                    setIsEditingTextHT(false);
+                    if (textValueHT !== content.text) {
+                      if (onUpdateBlock) {
+                        console.log('Calling onUpdateBlock for heading+text text:', textValueHT);
+                        onUpdateBlock({ ...content, text: textValueHT });
+                      }
+                    }
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      setIsEditingTextHT(false);
+                      if (textValueHT !== content.text) {
+                        if (onUpdateBlock) {
+                          console.log('Calling onUpdateBlock for heading+text text:', textValueHT);
+                          onUpdateBlock({ ...content, text: textValueHT });
+                        }
+                      }
+                      e.preventDefault();
+                    }
+                  }}
+                />
+              ) : (
+                <p
+                  {...applyTextStyles('text-muted-foreground mt-2 cursor-pointer')}
+                  onClick={() => {
+                    setIsEditingTextHT(true);
+                    console.log('Heading+Text text clicked for inline edit');
+                  }}
+                  title="Click to edit text"
+                >
+                  {content.text}
+                </p>
+              )}
+            </div>
+          );
         }
         return null;
-        
+
       case 'image':
         if ('src' in content) {
           return (

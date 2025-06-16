@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -21,6 +21,7 @@ export function LandingPageWrapper({ children }: LandingPageWrapperProps) {
   const [searchParams] = useSearchParams();
   const { slug } = useParams<{ slug: string }>();
   const qrId = searchParams.get('qr_id');
+  const visitRecorded = useRef(false);
 
   console.log('[LandingPageWrapper] Initialized with:', {
     slug,
@@ -49,8 +50,9 @@ export function LandingPageWrapper({ children }: LandingPageWrapperProps) {
       if (parsedSession?.expires_at && parsedSession.expires_at > currentTime) {
         console.log('[LandingPageWrapper] Valid stored session found');
         setIsAuthenticated(true);
-        if (parsedSession.user?.id) {
+        if (parsedSession.user?.id && !visitRecorded.current) {
           await recordVisit(parsedSession.user.id);
+          visitRecorded.current = true;
         }
         setIsLoading(false);
         return;
@@ -79,7 +81,10 @@ export function LandingPageWrapper({ children }: LandingPageWrapperProps) {
       if (session && session.user && session.expires_at && session.expires_at * 1000 > Date.now()) {
         console.log('[LandingPageWrapper] Valid session found, setting authenticated to true');
         setIsAuthenticated(true);
-        await recordVisit(session.user.id);
+        if (!visitRecorded.current) {
+          await recordVisit(session.user.id);
+          visitRecorded.current = true;
+        }
       } else {
         console.log('[LandingPageWrapper] No valid session found, setting authenticated to false');
         setIsAuthenticated(false);

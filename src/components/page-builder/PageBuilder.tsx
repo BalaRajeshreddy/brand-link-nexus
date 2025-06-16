@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -59,6 +59,8 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor)
   );
+
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const loadPageData = async () => {
@@ -231,6 +233,41 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
         toast.error("You need to be logged in to save a page");
         navigate("/auth");
         return;
+      }
+      
+      if (!pageData.title || pageData.title.trim() === "" || pageData.title === "Untitled Landing Page") {
+        toast.error("Please enter a unique name for your landing page.");
+        if (titleInputRef.current) titleInputRef.current.focus();
+        setIsSaving(false);
+        return;
+      }
+      
+      let brandIdToCheck = brandId;
+      if (!brandIdToCheck) {
+        const { data: brand } = await supabase
+          .from('brands')
+          .select('id')
+          .eq('user_id', userId)
+          .maybeSingle();
+        if (brand && brand.id) brandIdToCheck = brand.id;
+      }
+      if (brandIdToCheck) {
+        const { data: existingPages, error: uniqueError } = await supabase
+          .from('landing_pages')
+          .select('id')
+          .eq('brand_id', brandIdToCheck)
+          .eq('title', pageData.title);
+        if (uniqueError) {
+          toast.error("Error checking page name uniqueness");
+          setIsSaving(false);
+          return;
+        }
+        if (existingPages && existingPages.length > 0 && (!currentPageId || existingPages[0].id !== currentPageId)) {
+          toast.error("A landing page with this name already exists for your brand. Please choose a different name.");
+          if (titleInputRef.current) titleInputRef.current.focus();
+          setIsSaving(false);
+          return;
+        }
       }
       
       let landingPageId = currentPageId;
@@ -550,6 +587,7 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
       <div className="border-b py-3 px-6 flex items-center justify-between bg-white">
         <div className="flex items-center">
           <Input
+            ref={titleInputRef}
             value={pageData.title}
             onChange={(e) => setPageData({...pageData, title: e.target.value})}
             className="border-none text-lg font-semibold focus-visible:ring-0 focus-visible:ring-offset-0 w-auto"
@@ -587,22 +625,28 @@ export function PageBuilder({ userId, pageId }: PageBuilderProps) {
         <PageEditorSidebar onAddBlock={handleAddBlock} />
         <div className="flex-1 min-h-0 flex overflow-hidden">
           <div className={`flex-1 min-h-0 flex flex-col ${showMobilePreview ? 'w-1/2' : 'w-full'} h-full overflow-hidden`}>
-            <SortableContext
-              items={blocks.map(block => block.id)}
-              strategy={verticalListSortingStrategy}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
             >
-              <PageEditorCanvas 
-                blocks={blocks} 
-                onDeleteBlock={handleDeleteBlock}
-                onUpdateBlock={handleUpdateBlock}
-                openMediaLibrary={openMediaLibrary}
-                pageStyles={{
-                  backgroundColor: pageData.backgroundColor,
-                  fontFamily: pageData.fontFamily
-                }}
-                brandId={brandId || ''}
-              />
-            </SortableContext>
+              <SortableContext
+                items={blocks.map(block => block.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <PageEditorCanvas 
+                  blocks={blocks} 
+                  onDeleteBlock={handleDeleteBlock}
+                  onUpdateBlock={handleUpdateBlock}
+                  openMediaLibrary={openMediaLibrary}
+                  pageStyles={{
+                    backgroundColor: pageData.backgroundColor,
+                    fontFamily: pageData.fontFamily
+                  }}
+                  brandId={brandId || ''}
+                />
+              </SortableContext>
+            </DndContext>
           </div>
           {showMobilePreview && (
             <div className="w-1/2 border-l bg-gray-50 min-h-0 flex flex-col">

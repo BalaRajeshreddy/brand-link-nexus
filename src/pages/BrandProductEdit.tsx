@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { FileSelector } from '@/components/FileSelector';
 import { MediaLibrary } from '@/components/page-builder/MediaLibrary';
@@ -11,58 +11,91 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
-const BrandProducts = () => {
-  const [products, setProducts] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
+interface ProductForm {
+  name: string;
+  description: string;
+  image: string;
+  images: string[];
+  category: string;
+  subcategory: string;
+  price: string;
+  ecommerce_links: string[];
+  ingredients: Array<{ name: string; quantity: string; unit: string }>;
+  ingredients_data: string;
+  allergens: Array<{ name: string; type_code: string; contains: string }>;
+  allergen_spec_agency: string;
+  allergen_spec_name: string;
+  allergen_statement: string;
+  recycling_type: string;
+  how_to_recycle: string;
+  is_recyclable: boolean | null;
+  recycle_count: string;
+  cooking_steps: Array<{ instruction: string; video_url: string; image: string }>;
+  serve_with: string;
+  suggest_product: string;
+  can_be_used_with: string;
+  weight: string;
+  weight_unit: string;
+  batch_number: string;
+  media_url: string;
+  certifications: string[];
+  faqs: string[];
+  reviews: Array<{ name: string; text: string; rating: number }>;
+  buy_links: Array<{ label: string; url: string }>;
+}
+
+interface NutritionalInfo {
+  nutrient: string;
+  value: string;
+  unit: string;
+  per_quantity: string;
+}
+
+const BrandProductEdit = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState('Brand User');
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [activeTab, setActiveTab] = useState('basic');
+  const [nutritionalInfo, setNutritionalInfo] = useState<NutritionalInfo[]>([]);
+  const [ecommerceLinks, setEcommerceLinks] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [form, setForm] = useState<ProductForm>({
     name: '',
     description: '',
     image: '',
     images: [],
-    category_id: '',
-    subcategory_id: '',
+    category: '',
+    subcategory: '',
     price: '',
+    ecommerce_links: [],
     ingredients: [],
     ingredients_data: '',
-    materials: '',
-    usage_instructions: '',
-    usage_video: '',
-    shelf_life: '',
-    manufacturing_details: '',
-    sustainability: '',
-    recycling: '',
-    certifications: [],
-    faqs: [],
-    weight: '',
-    weight_unit: 'Kg',
-    batch_number: '',
-    media_url: '',
     allergens: [],
     allergen_spec_agency: '',
     allergen_spec_name: '',
     allergen_statement: '',
     recycling_type: '',
     how_to_recycle: '',
-    is_recyclable: true,
+    is_recyclable: null,
     recycle_count: '',
     cooking_steps: [],
     serve_with: '',
     suggest_product: '',
     can_be_used_with: '',
+    weight: '',
+    weight_unit: 'Kg',
+    batch_number: '',
+    media_url: '',
+    certifications: [],
+    faqs: [],
     reviews: [],
     buy_links: [],
   });
-  const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState('Brand User');
-  const navigate = useNavigate();
-  const [brandId, setBrandId] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [subcategories, setSubcategories] = useState([]);
-  const [nutritionalInfo, setNutritionalInfo] = useState([]);
-  const [ecommerceLinks, setEcommerceLinks] = useState([]);
-  const [reviews, setReviews] = useState([]);
-  const [activeTab, setActiveTab] = useState('basic');
 
   const sectionOptions = [
     { value: 'basic', label: 'Product Basic Information' },
@@ -75,30 +108,66 @@ const BrandProducts = () => {
   ];
 
   useEffect(() => {
-    async function fetchProducts() {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      setUserName(user.user_metadata?.name || user.email?.split('@')[0] || 'Brand User');
-      // Get brand for this user
-      const { data: brand } = await supabase
-        .from('brands')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-      if (!brand) return;
-      setBrandId(brand.id);
-      // Fetch products for this brand
-      const { data: products } = await supabase
-        .from('products')
-        .select('*')
-        .eq('brand_id', brand.id)
-        .order('created_at', { ascending: false });
-      setProducts(products || []);
-      setLoading(false);
-    }
-    fetchProducts();
-  }, [showForm]);
+    const fetchProduct = async () => {
+      try {
+        const { data: product, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) throw error;
+
+        if (product) {
+          setForm({
+            name: product.name || '',
+            description: product.description || '',
+            image: product.image || '',
+            images: Array.isArray(product.images) ? product.images : [],
+            category: product.category_id || '',
+            subcategory: product.subcategory_id || '',
+            price: product.price || '',
+            ecommerce_links: Array.isArray(product.ecommerce_links) ? product.ecommerce_links : [],
+            ingredients: Array.isArray(product.ingredients) ? product.ingredients : [],
+            ingredients_data: product.ingredients_data || '',
+            allergens: Array.isArray(product.allergens) ? product.allergens : [],
+            allergen_spec_agency: product.allergen_spec_agency || '',
+            allergen_spec_name: product.allergen_spec_name || '',
+            allergen_statement: product.allergen_statement || '',
+            recycling_type: product.recycling_type || '',
+            how_to_recycle: product.how_to_recycle || '',
+            is_recyclable: product.is_recyclable,
+            recycle_count: product.recycle_count || '',
+            cooking_steps: Array.isArray(product.cooking_steps) ? product.cooking_steps : [],
+            serve_with: product.serve_with || '',
+            suggest_product: product.suggest_product || '',
+            can_be_used_with: product.can_be_used_with || '',
+            weight: product.weight || '',
+            weight_unit: product.weight_unit || 'Kg',
+            batch_number: product.batch_number || '',
+            media_url: product.media_url || '',
+            certifications: Array.isArray(product.certifications) ? product.certifications : [],
+            faqs: Array.isArray(product.faqs) ? product.faqs : [],
+            reviews: Array.isArray(product.reviews) ? product.reviews : [],
+            buy_links: Array.isArray(product.ecommerce_links)
+              ? product.ecommerce_links
+              : (typeof product.ecommerce_links === 'string' && product.ecommerce_links
+                  ? JSON.parse(product.ecommerce_links)
+                  : []),
+          });
+
+          setNutritionalInfo(Array.isArray(product.nutritional_info) ? product.nutritional_info : []);
+        }
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        toast.error('Failed to fetch product details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
 
   useEffect(() => {
     supabase
@@ -109,228 +178,249 @@ const BrandProducts = () => {
   }, []);
 
   useEffect(() => {
-    if (form.category_id) {
+    if (form.category) {
       supabase
         .from('product_subcategories')
         .select('*')
-        .eq('category_id', form.category_id)
+        .eq('category_id', form.category)
         .order('name')
         .then(({ data }) => setSubcategories(data || []));
     } else {
       setSubcategories([]);
     }
-  }, [form.category_id]);
+  }, [form.category]);
 
-  const handleInput = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    setForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
-  const handleAddProduct = async (e) => {
-    e.preventDefault();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: brand, error: brandError } = await supabase
-      .from('brands')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    if (!brand || brandError) {
-      alert('No brand found for this user.');
-      return;
-    }
-    // Prepare data for saving
-    const payload = {
-      ...form,
-      price: form.price === '' ? null : Number(form.price),
-      weight: form.weight === '' ? null : Number(form.weight),
-      recycle_count: form.recycle_count === '' ? null : Number(form.recycle_count),
-      brand_id: brand.id,
-      nutritional_info: JSON.stringify(nutritionalInfo),
-      ecommerce_links: JSON.stringify(ecommerceLinks),
-      reviews: JSON.stringify(reviews),
-      buy_links: JSON.stringify(form.buy_links),
-      ingredients: JSON.stringify(form.ingredients),
-      allergens: JSON.stringify(form.allergens),
-      certifications: JSON.stringify(form.certifications),
-      faqs: JSON.stringify(form.faqs),
-      cooking_steps: JSON.stringify(form.cooking_steps),
-    };
-    // Remove UI-only fields before saving
-    delete payload.ingredients_data;
-    const { error } = await supabase.from('products').insert(payload);
-    if (!error) {
-      setShowForm(false);
-      setForm({
-        name: '', description: '', image: '', images: [], category_id: '', subcategory_id: '', price: '',
-        ingredients: [], ingredients_data: '', materials: '', usage_instructions: '', usage_video: '',
-        shelf_life: '', manufacturing_details: '', sustainability: '', recycling: '', certifications: [], faqs: [],
-        weight: '', weight_unit: 'Kg', batch_number: '', media_url: '', allergens: [],
-        allergen_spec_agency: '', allergen_spec_name: '', allergen_statement: '',
-        recycling_type: '', how_to_recycle: '', is_recyclable: true, recycle_count: '',
-        cooking_steps: [], serve_with: '', suggest_product: '', can_be_used_with: '',
-        reviews: [], buy_links: [],
-      });
-      setNutritionalInfo([]);
-      setEcommerceLinks([]);
-      setReviews([]);
-    } else {
-      alert('Error saving product');
-    }
-  };
+  const uploadImages = async () => {
+    const uploads: Promise<{ path: string; type: 'main' | 'additional' | 'cooking'; index?: number }>[] = [];
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: brand } = await supabase
-      .from('brands')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    if (!brand) return;
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${uuidv4()}.${fileExt}`;
-    const filePath = `${brand.id}/${fileName}`;
-    const { error: uploadError } = await supabase.storage
-      .from('product-images')
-      .upload(filePath, file);
-    if (uploadError) {
-      alert('Error uploading image');
-      return;
-    }
-    const { data: { publicUrl } } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(filePath);
-    setForm((prev) => ({ ...prev, image: publicUrl }));
-  };
-
-  function isFileWithUrl(img: unknown): img is { url: string } {
-    return typeof img === 'object' && img !== null && 'url' in img && typeof (img as any).url === 'string';
-  }
-
-  function ProductImageInput({ value, onChange, brandId }) {
-    const [showLibrary, setShowLibrary] = useState(false);
-    const [url, setUrl] = useState(value || '');
-    return (
-      <div>
-        <Tabs defaultValue="upload">
-          <TabsList>
-            <TabsTrigger value="upload">Upload</TabsTrigger>
-            <TabsTrigger value="library">Select</TabsTrigger>
-            <TabsTrigger value="url">Paste URL</TabsTrigger>
-          </TabsList>
-          <TabsContent value="upload">
-            <FileSelector
-              type="image"
-              onSelect={file => file && (typeof file === 'object' && file !== null && 'url' in file ? onChange(file.url) : onChange(file))}
-              brandId={brandId}
-              value={value}
-            />
-          </TabsContent>
-          <TabsContent value="library">
-            <Button onClick={() => setShowLibrary(true)}>Open Media Library</Button>
-            <MediaLibrary
-              open={showLibrary}
-              onOpenChange={setShowLibrary}
-              onSelectImage={img => {
-                if (img == null) return;
-                if (isFileWithUrl(img)) {
-                  onChange(img.url);
-                } else {
-                  onChange(img);
-                }
-                setShowLibrary(false);
-              }}
-            />
-          </TabsContent>
-          <TabsContent value="url">
-            <Input
-              placeholder="Paste image URL"
-              value={url}
-              onChange={e => setUrl(e.target.value)}
-              onBlur={() => onChange(url)}
-            />
-          </TabsContent>
-        </Tabs>
-        {value && <img src={value} alt="Product" className="mt-2 h-24 rounded" />}
-      </div>
-    );
-  }
-
-  function IngredientsInput({ value, onChange }) {
-    const [ingredients, setIngredients] = useState(value || []);
-    const handleChange = (idx, field, val) => {
-      const updated = ingredients.map((ing, i) =>
-        i === idx ? { ...ing, [field]: val } : ing
+    // Upload main image if changed
+    if (form.image && form.image.startsWith('data:')) {
+      uploads.push(
+        supabase.storage
+          .from('product-images')
+          .upload(`${id}/main-image`, form.image.split(',')[1], {
+            contentType: 'image/jpeg',
+            upsert: true
+          })
+          .then(({ data, error }) => {
+            if (error) throw error;
+            return { path: data.path, type: 'main' as const };
+          })
       );
-      setIngredients(updated);
-      onChange(updated);
+    }
+
+    // Upload additional images if changed
+    form.images.forEach((img, index) => {
+      if (img.startsWith('data:')) {
+        uploads.push(
+          supabase.storage
+            .from('product-images')
+            .upload(`${id}/image-${index}`, img.split(',')[1], {
+              contentType: 'image/jpeg',
+              upsert: true
+            })
+            .then(({ data, error }) => {
+              if (error) throw error;
+              return { path: data.path, type: 'additional' as const, index };
+            })
+        );
+      }
+    });
+
+    // Upload cooking step images if changed
+    form.cooking_steps.forEach((step, index) => {
+      if (step.image && step.image.startsWith('data:')) {
+        uploads.push(
+          supabase.storage
+            .from('product-images')
+            .upload(`${id}/cooking-step-${index}`, step.image.split(',')[1], {
+              contentType: 'image/jpeg',
+              upsert: true
+            })
+            .then(({ data, error }) => {
+              if (error) throw error;
+              return { path: data.path, type: 'cooking' as const, index };
+            })
+        );
+      }
+    });
+
+    const results = await Promise.all(uploads);
+    
+    // Update form with uploaded image paths
+    const newForm = { ...form };
+    
+    results.forEach(result => {
+      if (result.type === 'main') {
+        newForm.image = result.path;
+      } else if (result.type === 'additional' && result.index !== undefined) {
+        newForm.images[result.index] = result.path;
+      } else if (result.type === 'cooking' && result.index !== undefined) {
+        newForm.cooking_steps[result.index] = {
+          ...newForm.cooking_steps[result.index],
+          image: result.path
+        };
+      }
+    });
+
+    setForm(newForm);
+  };
+
+  const handleUpdateProduct = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Upload images first and update form with URLs
+      await uploadImages();
+
+      // Basic product data with updated image URLs
+      const updateData = {
+        name: form.name,
+        description: form.description,
+        image: form.image,
+        images: Array.isArray(form.images) ? form.images : [],
+        category_id: form.category ? form.category : null,
+        subcategory_id: form.subcategory ? form.subcategory : null,
+        price: form.price ? parseFloat(form.price) : null,
+        ecommerce_links: JSON.stringify(form.buy_links),
+        ingredients: Array.isArray(form.ingredients) ? form.ingredients : [],
+        ingredients_data: form.ingredients_data,
+        allergens: Array.isArray(form.allergens) ? form.allergens : [],
+        allergen_spec_agency: form.allergen_spec_agency,
+        allergen_spec_name: form.allergen_spec_name,
+        allergen_statement: form.allergen_statement,
+        recycling_type: form.recycling_type,
+        how_to_recycle: form.how_to_recycle,
+        is_recyclable: form.is_recyclable,
+        recycle_count: form.recycle_count ? parseInt(form.recycle_count) : null,
+        cooking_steps: Array.isArray(form.cooking_steps) ? form.cooking_steps : [],
+        serve_with: form.serve_with,
+        suggest_product: form.suggest_product,
+        can_be_used_with: form.can_be_used_with,
+        weight: form.weight ? parseFloat(form.weight) : null,
+        weight_unit: form.weight_unit,
+        batch_number: form.batch_number,
+        media_url: form.media_url,
+        certifications: Array.isArray(form.certifications) ? form.certifications : [],
+        faqs: Array.isArray(form.faqs) ? form.faqs : [],
+        nutritional_info: Array.isArray(nutritionalInfo) ? nutritionalInfo : [],
+        reviews: Array.isArray(form.reviews) ? form.reviews : [],
+      };
+
+      // Update product in database
+      const { error: updateError } = await supabase
+        .from('products')
+        .update(updateData)
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      toast.success('Product updated successfully');
+      navigate('/dashboard/brand/products');
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast.error('Failed to update product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result;
+      if (result && typeof result === 'string') {
+        setForm(prev => ({ ...prev, image: result }));
+      }
     };
-    const addIngredient = () => {
-      setIngredients([...ingredients, { name: '', quantity: '' }]);
-      onChange([...ingredients, { name: '', quantity: '' }]);
+    reader.readAsDataURL(file);
+  };
+
+  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const readers = files.map(file => {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result;
+          if (result && typeof result === 'string') {
+            resolve(result);
+          } else {
+            reject(new Error('Failed to read file as data URL'));
+          }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(readers)
+      .then(results => {
+        setForm(prev => ({ ...prev, images: [...prev.images, ...results] }));
+      })
+      .catch(error => {
+        console.error('Error reading files:', error);
+        toast.error('Failed to read some files');
+      });
+  };
+
+  const handleCookingStepImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result;
+      if (result && typeof result === 'string') {
+        const updated = [...(form.cooking_steps || [])];
+        updated[index] = { ...updated[index], image: result };
+        setForm(prev => ({ ...prev, cooking_steps: updated }));
+      }
     };
-    const removeIngredient = idx => {
-      const updated = ingredients.filter((_, i) => i !== idx);
-      setIngredients(updated);
-      onChange(updated);
-    };
+    reader.readAsDataURL(file);
+  };
+
+  if (loading) {
     return (
-      <div>
-        {ingredients.map((ing, idx) => (
-          <div key={idx} className="flex gap-2 mb-2">
-            <Input
-              placeholder="Name"
-              value={ing.name}
-              onChange={e => handleChange(idx, 'name', e.target.value)}
-            />
-            <Input
-              placeholder="Quantity"
-              value={ing.quantity}
-              onChange={e => handleChange(idx, 'quantity', e.target.value)}
-            />
-            <Button type="button" onClick={() => removeIngredient(idx)}>Remove</Button>
-          </div>
-        ))}
-        <Button type="button" onClick={addIngredient}>Add Ingredient</Button>
-      </div>
+      <DashboardLayout userType="Brand" userName={userName}>
+        <div className="container mx-auto px-4 py-8">
+          <div>Loading...</div>
+        </div>
+      </DashboardLayout>
     );
   }
-
-  // When loading a product for edit, parse JSON fields
-  const loadProductForEdit = (product) => {
-    setForm({
-      ...product,
-      ingredients: product.ingredients ? JSON.parse(product.ingredients) : [],
-      allergens: product.allergens ? JSON.parse(product.allergens) : [],
-      nutritionalInfo: product.nutritional_info ? JSON.parse(product.nutritional_info) : [],
-      certifications: product.certifications ? JSON.parse(product.certifications) : [],
-      faqs: product.faqs ? JSON.parse(product.faqs) : [],
-      cooking_steps: product.cooking_steps ? JSON.parse(product.cooking_steps) : [],
-      ecommerceLinks: product.ecommerce_links ? JSON.parse(product.ecommerce_links) : [],
-      reviews: product.reviews ? JSON.parse(product.reviews) : [],
-      buy_links: product.buy_links ? JSON.parse(product.buy_links) : [],
-    });
-  };
 
   return (
     <DashboardLayout userType="Brand" userName={userName}>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Products</h1>
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            onClick={() => setShowForm(true)}
+          <h1 className="text-2xl font-bold">Edit Product</h1>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/dashboard/brand/products')}
           >
-            Add Product
-          </button>
+            Back to Products
+          </Button>
         </div>
-        {showForm && (
+        <form onSubmit={handleUpdateProduct}>
           <Card className="p-8 w-full max-w-4xl mb-12">
             <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="font-semibold text-lg">Add a New Product</div>
+              <div className="font-semibold text-lg">Edit Product Details</div>
               <Select value={activeTab} onValueChange={setActiveTab}>
                 <SelectTrigger className="w-full md:w-80">
                   <SelectValue placeholder="Select Section" />
@@ -342,9 +432,11 @@ const BrandProducts = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Basic Information Tab */}
             {activeTab === 'basic' && (
-              <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Product Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Product Details (Left) */}
                 <div className="space-y-6">
                   <div>
                     <label className="block font-semibold mb-1">Product Name<span className="text-red-500">*</span></label>
@@ -367,7 +459,6 @@ const BrandProducts = () => {
                         <option value="mg">mg</option>
                       </select>
                     </div>
-                    
                   </div>
                   <div>
                     <label className="block font-semibold mb-1">Price<span className="text-red-500">*</span></label>
@@ -380,9 +471,9 @@ const BrandProducts = () => {
                   <div>
                     <label className="block font-semibold mb-1">Category<span className="text-red-500">*</span></label>
                     <Select
-                      name="category_id"
-                      value={form.category_id}
-                      onValueChange={value => setForm(prev => ({ ...prev, category_id: value, subcategory_id: '' }))}
+                      name="category"
+                      value={form.category}
+                      onValueChange={value => setForm(prev => ({ ...prev, category: value, subcategory: '' }))}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select category" />
@@ -397,17 +488,17 @@ const BrandProducts = () => {
                   <div>
                     <label className="block font-semibold mb-1">Subcategory</label>
                     <Select
-                      name="subcategory_id"
-                      value={form.subcategory_id}
-                      onValueChange={value => setForm(prev => ({ ...prev, subcategory_id: value }))}
-                      disabled={!form.category_id}
+                      name="subcategory"
+                      value={form.subcategory}
+                      onValueChange={value => setForm(prev => ({ ...prev, subcategory: value }))}
+                      disabled={!form.category}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select subcategory" />
                       </SelectTrigger>
                       <SelectContent>
                         {subcategories
-                          .filter(sub => sub.category_id === form.category_id)
+                          .filter(sub => sub.category_id === form.category)
                           .map(sub => (
                             <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
                           ))}
@@ -438,7 +529,8 @@ const BrandProducts = () => {
                     <button type="button" onClick={() => setForm(prev => ({ ...prev, buy_links: [...(prev.buy_links || []), { label: '', url: '' }] }))} className="text-blue-600">Add Buy Link</button>
                   </div>
                 </div>
-                {/* Product Images/Videos */}
+
+                {/* Product Images/Videos (Right) */}
                 <div className="space-y-6">
                   <div>
                     <label className="block font-semibold mb-1">Products Images/Videos</label>
@@ -452,7 +544,7 @@ const BrandProducts = () => {
                       <label className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed rounded cursor-pointer hover:border-blue-400 transition-colors">
                         <span className="text-gray-400 text-2xl">+</span>
                         <span className="text-xs text-gray-500">Upload</span>
-                        <input type="file" accept="image/*,video/*" className="hidden" onChange={handleImageUpload} />
+                        <input type="file" accept="image/*,video/*" className="hidden" onChange={handleImageChange} />
                       </label>
                     </div>
                   </div>
@@ -461,14 +553,12 @@ const BrandProducts = () => {
                     <Input name="media_url" value={form.media_url || ''} onChange={handleInput} className="w-full" placeholder="Paste image or video URL" />
                   </div>
                 </div>
-                <div className="md:col-span-2 flex justify-end gap-4 mt-8">
-                  <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-                  <Button type="submit" className="bg-blue-600 text-white">Save Product</Button>
-                </div>
-              </form>
+              </div>
             )}
+
+            {/* Ingredients Tab */}
             {activeTab === 'ingredients' && (
-              <form className="space-y-8">
+              <div className="space-y-8">
                 <div>
                   <h2 className="text-xl font-bold mb-4">Ingredients</h2>
                   <label className="block font-semibold mb-1">Ingredients data</label>
@@ -565,10 +655,12 @@ const BrandProducts = () => {
                     </Button>
                   </div>
                 </div>
-              </form>
+              </div>
             )}
+
+            {/* Nutrition Tab */}
             {activeTab === 'nutrition' && (
-              <form className="space-y-8">
+              <div className="space-y-8">
                 <div>
                   <h2 className="text-xl font-bold mb-4">Nutritional Facts</h2>
                   <div className="overflow-x-auto">
@@ -664,10 +756,12 @@ const BrandProducts = () => {
                     </Button>
                   </div>
                 </div>
-              </form>
+              </div>
             )}
+
+            {/* Allergens Tab */}
             {activeTab === 'allergens' && (
-              <form className="space-y-8">
+              <div className="space-y-8">
                 <div>
                   <h2 className="text-xl font-bold mb-4">Allergen Related Details</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -767,10 +861,12 @@ const BrandProducts = () => {
                     </Button>
                   </div>
                 </div>
-              </form>
+              </div>
             )}
+
+            {/* Recycling Tab */}
             {activeTab === 'recycling' && (
-              <form className="space-y-8">
+              <div className="space-y-8">
                 <div>
                   <h2 className="text-xl font-bold mb-4">Products Recycle Details</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -801,10 +897,12 @@ const BrandProducts = () => {
                     </div>
                   </div>
                 </div>
-              </form>
+              </div>
             )}
+
+            {/* Cooking Tab */}
             {activeTab === 'cooking' && (
-              <form className="space-y-8">
+              <div className="space-y-8">
                 <div>
                   <h2 className="text-xl font-bold mb-4">Cooking Instructions</h2>
                   <div className="overflow-x-auto">
@@ -828,7 +926,7 @@ const BrandProducts = () => {
                                 value={step.instruction || ''}
                                 onChange={e => {
                                   const updated = [...(form.cooking_steps || [])];
-                                  updated[idx].instruction = e.target.value;
+                                  updated[idx] = { ...updated[idx], instruction: e.target.value };
                                   setForm(prev => ({ ...prev, cooking_steps: updated }));
                                 }}
                               />
@@ -839,26 +937,17 @@ const BrandProducts = () => {
                                 value={step.video_url || ''}
                                 onChange={e => {
                                   const updated = [...(form.cooking_steps || [])];
-                                  updated[idx].video_url = e.target.value;
+                                  updated[idx] = { ...updated[idx], video_url: e.target.value };
                                   setForm(prev => ({ ...prev, cooking_steps: updated }));
                                 }}
                               />
                             </td>
                             <td className="p-2">
-                              <Input
+                              <input
                                 type="file"
                                 accept="image/*"
-                                onChange={e => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  const reader = new FileReader();
-                                  reader.onloadend = () => {
-                                    const updated = [...(form.cooking_steps || [])];
-                                    updated[idx].image = reader.result;
-                                    setForm(prev => ({ ...prev, cooking_steps: updated }));
-                                  };
-                                  reader.readAsDataURL(file);
-                                }}
+                                onChange={(e) => handleCookingStepImageChange(e, idx)}
+                                className="border rounded p-1 w-full"
                               />
                               {step.image && <img src={step.image} alt="Step" className="mt-2 h-12 rounded" />}
                             </td>
@@ -895,10 +984,12 @@ const BrandProducts = () => {
                     </Button>
                   </div>
                 </div>
-              </form>
+              </div>
             )}
+
+            {/* Suggestions Tab */}
             {activeTab === 'suggestions' && (
-              <form className="space-y-8">
+              <div className="space-y-8">
                 <div>
                   <h2 className="text-xl font-bold mb-4">Product Suggestions</h2>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -916,53 +1007,18 @@ const BrandProducts = () => {
                     </div>
                   </div>
                 </div>
-              </form>
+              </div>
             )}
-          </Card>
-        )}
-        <div className="mt-16">
-          {loading ? (
-            <div>Loading...</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map((product) => (
-                <div
-                  key={product.id}
-                  className="bg-white border rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-200 cursor-pointer flex flex-col overflow-hidden group"
-                  onClick={() => navigate(`/dashboard/brand/products/${product.id}`)}
-                >
-                  {product.image && (
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
-                    />
-                  )}
-                  <div className="p-5 flex flex-col flex-1">
-                    <div className="text-xl font-bold text-gray-900 mb-1 truncate">{product.name}</div>
-                    {Array.isArray(product.reviews) && product.reviews.length > 0 && (() => {
-                      const avgRating = product.reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / product.reviews.length;
-                      return (
-                        <div className="flex items-center mb-1">
-                          <span className="text-yellow-400 text-base mr-1">{'★'.repeat(Math.round(avgRating))}</span>
-                          <span className="text-gray-400 text-base mr-1">{'★'.repeat(5 - Math.round(avgRating))}</span>
-                          <span className="text-sm text-gray-700 ml-1">{avgRating.toFixed(1)}</span>
-                        </div>
-                      );
-                    })()}
-                    <div className="text-gray-500 text-sm mb-2 line-clamp-2">{product.description?.slice(0, 100)}{product.description?.length > 100 ? '...' : ''}</div>
-                    <div className="mt-auto flex items-center justify-between">
-                      <span className="text-lg font-semibold text-blue-600">{product.price ? `₹${product.price}` : ''}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+
+            <div className="md:col-span-2 flex justify-end gap-4 mt-8">
+              <Button type="button" variant="outline" onClick={() => navigate('/dashboard/brand/products')}>Cancel</Button>
+              <Button type="submit" className="bg-blue-600 text-white">Update Product</Button>
             </div>
-          )}
-        </div>
+          </Card>
+        </form>
       </div>
     </DashboardLayout>
   );
 };
 
-export default BrandProducts; 
+export default BrandProductEdit; 

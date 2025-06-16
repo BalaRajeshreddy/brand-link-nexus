@@ -18,6 +18,12 @@ const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>('');
 
+  const mapUserType = (type: string): UserType => {
+    const lowerType = type.toLowerCase();
+    if (lowerType === 'user') return 'customer';
+    return lowerType as UserType;
+  };
+
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
@@ -30,10 +36,16 @@ const ProfilePage: React.FC = () => {
           return;
         }
 
+        console.log('Session user metadata:', session.user.user_metadata);
+        
         // Get user metadata which contains the userType
-        const userType = session.user.user_metadata.userType?.toLowerCase() as UserType;
-        if (userType) {
-          setUserType(userType);
+        const rawUserType = session.user.user_metadata.userType;
+        console.log('Raw user type from metadata:', rawUserType);
+        
+        if (rawUserType) {
+          const mappedType = mapUserType(rawUserType);
+          console.log('Mapped user type:', mappedType);
+          setUserType(mappedType);
         } else {
           // Fallback to checking the role in the users table
           const { data: userData, error: userError } = await supabase
@@ -42,11 +54,20 @@ const ProfilePage: React.FC = () => {
             .eq('id', session.user.id)
             .single();
 
-          if (userError) throw userError;
+          if (userError) {
+            console.error('Error fetching user role:', userError);
+            throw userError;
+          }
+          
+          console.log('User data from database:', userData);
+          
           if (userData && userData.role) {
-            setUserType(userData.role.toLowerCase() as UserType);
+            const mappedType = mapUserType(userData.role);
+            console.log('Setting user type from database role:', mappedType);
+            setUserType(mappedType);
           } else {
             // If no role found, redirect to auth
+            console.error('No user type found in metadata or database');
             toast.error('Invalid user type. Please login again.');
             navigate('/auth');
             return;
@@ -61,8 +82,8 @@ const ProfilePage: React.FC = () => {
           ''
         );
       } catch (error) {
+        console.error('Error in fetchUserRole:', error);
         setError('Failed to load profile. Please try again.');
-        console.error('Error fetching user role:', error);
         toast.error('Failed to load profile');
         navigate('/auth');
       } finally {

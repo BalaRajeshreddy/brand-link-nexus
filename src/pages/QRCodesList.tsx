@@ -12,8 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { QrCode, Edit, Trash, Download, ExternalLink } from "lucide-react";
+import { QrCode, Edit, Trash, Download, ExternalLink, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface QRCode {
   id: string;
@@ -39,6 +40,8 @@ const QRCodesList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState("...");
   const [qrCodes, setQRCodes] = useState<QRCode[]>([]);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [selectedQR, setSelectedQR] = useState<QRCode | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -190,6 +193,11 @@ const QRCodesList = () => {
     }
   };
 
+  const handleViewQR = (qr: QRCode) => {
+    setSelectedQR(qr);
+    setShowQRModal(true);
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout userType="Brand" userName="...">
@@ -319,6 +327,20 @@ const QRCodesList = () => {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => handleViewQR(qr)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDownload(qr)}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleEdit(qr.id)}
                           >
                             <Edit className="h-4 w-4" />
@@ -344,6 +366,32 @@ const QRCodesList = () => {
                 ))}
               </TableBody>
             </Table>
+            {/* QR Code View Modal */}
+            <Dialog open={showQRModal} onOpenChange={setShowQRModal}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{selectedQR?.title}</DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col items-center space-y-4">
+                  {selectedQR && (
+                    <>
+                      <img
+                        src={getQRImageUrl(selectedQR)}
+                        alt={`QR Code for ${selectedQR.title}`}
+                        className="w-64 h-64 object-contain"
+                      />
+                      <Button
+                        onClick={() => handleDownload(selectedQR)}
+                        className="w-full"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download QR Code
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
       </div>

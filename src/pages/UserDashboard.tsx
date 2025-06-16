@@ -220,10 +220,10 @@ export default function UserDashboard() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Dashboard</h1>
         </div>
-
+        
         <div className="flex gap-4">
-          <Input
-            placeholder="Search QR codes and landing pages..."
+          <Input 
+            placeholder="Search QR codes and landing pages..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="max-w-sm"
@@ -273,7 +273,7 @@ export default function UserDashboard() {
                             className="w-10 h-10 rounded-full"
                           />
                         )}
-                        <div>
+        <div>
                           <h3 className="font-medium">{qr.title}</h3>
                           <p className="text-sm text-muted-foreground">{qr.brand?.name || 'Unknown Brand'}</p>
                         </div>
@@ -312,18 +312,18 @@ export default function UserDashboard() {
                         <div>
                           <h3 className="font-medium">{page.title}</h3>
                           <p className="text-sm text-muted-foreground">{page.brand?.name || 'Unknown Brand'}</p>
-                        </div>
-                      </div>
+                    </div>
+                  </div>
                       <div className="text-right">
                         <p className="font-medium">{page.views || 0}</p>
                         <p className="text-sm text-muted-foreground">views</p>
-                      </div>
+                    </div>
                     </div>
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
         </div>
       </div>
     </DashboardLayout>

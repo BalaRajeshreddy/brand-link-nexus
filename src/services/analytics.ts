@@ -7,6 +7,7 @@ export const trackQRCodeScan = async (
 ) => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
+    console.log('QR Scan Debug:', { qrCodeId, brandId, landingPageId, userId: user?.id });
     await supabase.from('qr_scans').upsert({
       qr_id: qrCodeId,
       brand_id: brandId,
@@ -17,6 +18,7 @@ export const trackQRCodeScan = async (
       country: null,
       user_agent: navigator.userAgent
     }, { onConflict: 'qr_id,user_id' });
+    console.log('QR Scan inserted successfully');
   } catch (error) {
     console.error('Error tracking QR code scan:', error);
   }

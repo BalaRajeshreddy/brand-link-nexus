@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card } from "@/components/ui/card";
@@ -40,6 +39,12 @@ export const VideoBlock = ({ content, styles }: VideoBlockProps) => {
     return content.src;
   };
 
+  // Helper to get YouTube thumbnail
+  const getYoutubeThumbnail = (url) => {
+    const match = url && url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+    return match ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
+  };
+
   return (
     <div 
       className="video-block w-full my-4"
@@ -68,6 +73,12 @@ export const VideoBlock = ({ content, styles }: VideoBlockProps) => {
                 <img 
                   src={content.thumbnail} 
                   alt="Video thumbnail" 
+                  className="w-full h-full object-cover"
+                />
+              ) : content.provider === 'youtube' && content.src && getYoutubeThumbnail(content.src) ? (
+                <img
+                  src={getYoutubeThumbnail(content.src)}
+                  alt="YouTube video thumbnail"
                   className="w-full h-full object-cover"
                 />
               ) : (

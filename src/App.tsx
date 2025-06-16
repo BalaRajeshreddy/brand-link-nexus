@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProfilePage from './components/profile/ProfilePage';
 import { supabase, setupStorageBuckets } from "@/integrations/supabase/client";
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // Pages
 import Index from "./pages/Index";
@@ -20,7 +21,7 @@ import UserDashboard from "./pages/UserDashboard";
 import NotFound from "./pages/NotFound";
 import PublishedLandingPage from "./pages/PublishedLandingPage";
 import BrandProducts from "./pages/BrandProducts";
-import BrandProductDetail from "./pages/BrandProductDetail";
+import BrandProductEdit from "./pages/BrandProductEdit";
 import BrandSubmissions from './pages/BrandSubmissions';
 import BrandAnalytics from "./pages/BrandAnalytics";
 import BrandFiles from "./pages/BrandFiles";
@@ -47,56 +48,58 @@ const App = () => {
   }, []);
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            {/* Redirect /auth/login and /auth/register to /auth */}
-            <Route path="/auth/login" element={<Navigate to="/auth" replace />} />
-            <Route path="/auth/register" element={<Navigate to="/auth" replace />} />
-            
-            {/* Brand Routes */}
-            <Route path="/dashboard/brand" element={<BrandDashboard />} />
-            <Route path="/dashboard/brand/create-qr" element={<QRCreator />} />
-            <Route path="/dashboard/brand/create-page" element={<PageCreator />} />
-            <Route path="/dashboard/brand/edit-page/:pageId" element={<PageCreator />} />
-            <Route path="/dashboard/brand/edit-qr/:qrid" element={<QRCreator />} />
-            <Route path="/dashboard/brand/landing-pages" element={<LandingPagesList />} />
-            <Route path="/dashboard/brand/qr-codes" element={<QRCodesList />} />
-            <Route path="/dashboard/brand/products" element={<BrandProducts />} />
-            <Route path="/dashboard/brand/products/:id" element={<BrandProductDetail />} />
-            <Route path="/dashboard/brand/submissions" element={<BrandSubmissions />} />
-            <Route path="/dashboard/brand/analytics" element={<BrandAnalytics />} />
-            <Route path="/dashboard/brand/files" element={<BrandFiles />} />
-            <Route path="/dashboard/brand/settings/*" element={<Settings />} />
-            
-            {/* User Routes */}
-            <Route path="/dashboard/user" element={<UserDashboard />} />
-            <Route path="/dashboard/user/qr-codes" element={<UserQRCodesPage />} />
-            <Route path="/dashboard/user/landing-pages" element={<UserLandingPagesPage />} />
-            <Route path="/dashboard/user/settings/*" element={<Settings />} />
-            
-            {/* Admin Routes */}
-            <Route path="/dashboard/admin" element={<AdminDashboard />} />
-            <Route path="/dashboard/admin/settings/*" element={<Settings />} />
-            
-            {/* Profile Route */}
-            <Route path="/profile" element={<ProfilePage />} />
-            
-            {/* Landing Page Route */}
-            <Route path="/:slug" element={<PublishedLandingPage />} />
-            
-            {/* 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              {/* Redirect /auth/login and /auth/register to /auth */}
+              <Route path="/auth/login" element={<Navigate to="/auth" replace />} />
+              <Route path="/auth/register" element={<Navigate to="/auth" replace />} />
+              
+              {/* Brand Routes */}
+              <Route path="/dashboard/brand" element={<BrandDashboard />} />
+              <Route path="/dashboard/brand/create-qr" element={<QRCreator />} />
+              <Route path="/dashboard/brand/create-page" element={<PageCreator />} />
+              <Route path="/dashboard/brand/edit-page/:pageId" element={<PageCreator />} />
+              <Route path="/dashboard/brand/edit-qr/:qrid" element={<QRCreator />} />
+              <Route path="/dashboard/brand/landing-pages" element={<LandingPagesList />} />
+              <Route path="/dashboard/brand/qr-codes" element={<QRCodesList />} />
+              <Route path="/dashboard/brand/products" element={<BrandProducts />} />
+              <Route path="/dashboard/brand/products/:id" element={<BrandProductEdit />} />
+              <Route path="/dashboard/brand/submissions" element={<BrandSubmissions />} />
+              <Route path="/dashboard/brand/analytics" element={<BrandAnalytics />} />
+              <Route path="/dashboard/brand/files" element={<BrandFiles />} />
+              <Route path="/dashboard/brand/settings/*" element={<Settings />} />
+              
+              {/* User Routes */}
+              <Route path="/dashboard/user" element={<UserDashboard />} />
+              <Route path="/dashboard/user/qr-codes" element={<UserQRCodesPage />} />
+              <Route path="/dashboard/user/landing-pages" element={<UserLandingPagesPage />} />
+              <Route path="/dashboard/user/settings/*" element={<Settings />} />
+              
+              {/* Admin Routes */}
+              <Route path="/dashboard/admin" element={<AdminDashboard />} />
+              <Route path="/dashboard/admin/settings/*" element={<Settings />} />
+              
+              {/* Profile Route */}
+              <Route path="/profile" element={<ProfilePage />} />
+              
+              {/* Landing Page Route */}
+              <Route path="/:slug" element={<PublishedLandingPage />} />
+              
+              {/* 404 Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </AuthProvider>
   );
 };
 

@@ -83,6 +83,7 @@ const SortableBlock = ({ block, onDeleteBlock, onUpdateBlock, openMediaLibrary, 
             blockType={block.type as BlockType}
             content={block.content as BlockContent}
             styles={{}}
+            onUpdateBlock={(newContent) => onUpdateBlock(block.id, newContent, block.styles)}
           />
         </div>
       )}

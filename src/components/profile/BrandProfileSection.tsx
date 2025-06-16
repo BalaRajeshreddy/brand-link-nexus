@@ -683,9 +683,9 @@ const BrandProfileSection: React.FC<BrandProfileSectionProps> = ({
               </AccordionItem>
             </Accordion>
 
-            <div className="flex justify-end">
+          <div className="flex justify-end">
               <Button 
-                type="submit" 
+              type="submit"
                 size="lg"
                 disabled={completedSections.length !== sections.length}
             >
